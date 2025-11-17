@@ -58,25 +58,25 @@ https://www.figma.com/design/sTyMbtyzsur2K5reeIWjxo/Untitled?node-id=0-1&t=gH3GW
 
 ## PLAN PER WEEK:
 PLAN PER WEEK:
--17-23 November:
-Alvin : Buat library untuk register
-Abhi : Membuat API Fitur Scoreboard
+-17-23 November:<br>
+Alvin : Buat library untuk register<br>
+Abhi : Membuat API Fitur Scoreboard<br>
 
--24-30 November:
-Alvin : Membuat API Fitur Highlights
-Abhi : UI scoreboard
+-24-30 November:<br>
+Alvin : Membuat API Fitur Highlights<br>
+Abhi : UI scoreboard<br>
 
--01-07 Desember:
-Alvin : Membuat API Fitur Teams & Players (bagian dari lineup)
-Abhi : Integrasi API
+-01-07 Desember:<br>
+Alvin : Membuat API Fitur Teams & Players (bagian dari lineup)<br>
+Abhi : Integrasi API<br>
 
--08-14 Desember:
-Alvin : Menggabungkan rounting antar fitur
-Abhi : Finalisasi
+-08-14 Desember:<br>
+Alvin : Menggabungkan rounting antar fitur<br>
+Abhi : Finalisasi<br>
 
--15-21 Desember:
-Alvin : Recheck kode
-Abhi : Bikin video
+-15-21 Desember:<br>
+Alvin : Recheck kode<br>
+Abhi : Bikin video<br>
 
 
 
