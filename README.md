@@ -46,10 +46,31 @@ Prediction adalah tempat dimana pengguna dapat memberika prediksi siapa yang aka
 
 ## Alur
 Alur pengintegrasian dengan web service untuk terhubung dengan aplikasi web yang sudah dibuat saat Proyek Tengah Semester
+1. Mobile mengirim request ke API
+2. Django menerima & memproses data
+3. Django mengirim response JSON
+4. Mobile menampilkan hasil pada user
+5. Sistem authentikasi (guest, user, admin) membatasi akses fitur
+6. Semua data ditarik secara dinamis dari server
 
 ## Design
 https://www.figma.com/design/sTyMbtyzsur2K5reeIWjxo/Untitled?node-id=0-1&t=gH3GWdAi5VQOSjXW-1
 
+## PLAN PER WEEK:
+-17-23 November:
+Alvin : Buat library untuk register
+
+-24-30 November:
+Alvin : Membuat API Fitur Highlights
+
+-01-07 Desember:
+Alvin : Membuat API Fitur Teams & Players (bagian dari lineup)
+
+-08-14 Desember:
+Alvin : Menggabungkan rounting antar fitur
+
+-15-21 Desember:
+Alvin : Recheck kode
 
 
 
