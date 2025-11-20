@@ -27,6 +27,7 @@ jobs:
         run: |
           version=$(grep 'version:' pubspec.yaml | cut -c10-)
           echo "version=$version" >> "$GITHUB_OUTPUT"
+        working-directory: xcore_mobile
 
       - name: Setup Java
         uses: actions/setup-java@v3
@@ -41,9 +42,11 @@ jobs:
 
       - name: Get packages
         run: flutter pub get
+        working-directory: xcore_mobile
 
       - name: Build APK
         run: flutter build apk --split-per-abi
+        working-directory: xcore_mobile
 
       - name: Get current date
         id: date
@@ -60,7 +63,7 @@ jobs:
         uses: ncipollo/release-action@v1
         with:
           allowUpdates: false
-          artifacts: "build/app/outputs/flutter-apk/*.apk"
+          artifacts: "xcore_mobile/build/app/outputs/flutter-apk/*.apk"
           body: "Published at ${{ steps.date.outputs.date }}"
           name: "v${{ steps.version.outputs.version }} - ${{ steps.date.outputs.date }}"
           token: ${{ secrets.GITHUB_TOKEN }}
