@@ -1,8 +1,6 @@
 # xcore-mobile
 Aplikasi Mobile Untuk xcore
 
-# XCORE
-
 ## Deskripsi
 Xcore adalah sebuah website berbasis django yang menyediakan layanan pendataan skor pertandingan sepakbola piala dunia secara akurat. Website bertujuan agar para penonton sepakbola untuk melihat hasil pertandingan, statistik pemain, polling pertandingan yang akan datang, serta terlibat aktif dalam diskusi seputar pertandingan. Aplikasi ini merupakan aplikasi versi mobile untuk xcore.
 
