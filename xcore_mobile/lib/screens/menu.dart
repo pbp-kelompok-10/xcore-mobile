@@ -2,10 +2,6 @@ import 'package:flutter/material.dart';
 
 class MyHomePage extends StatelessWidget {
     MyHomePage({super.key});
-    final String nama = "Alvin Christian Halim"; //nama
-    final String npm = "240640070"; //npm
-    final String kelas = "F"; //kelas
-
     final List<ItemHomepage> items = [
     ItemHomepage("See Football News", Icons.newspaper),
     ItemHomepage("Add News", Icons.add),
@@ -20,7 +16,7 @@ class MyHomePage extends StatelessWidget {
       appBar: AppBar(
         // Judul aplikasi "Football News" dengan teks putih dan tebal.
         title: const Text(
-          'Football News',
+          'Xcore',
           style: TextStyle(
             color: Colors.white,
             fontWeight: FontWeight.bold,
@@ -37,15 +33,6 @@ class MyHomePage extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.center,
           children: [
             // Row untuk menampilkan 3 InfoCard secara horizontal.
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-              children: [
-                InfoCard(title: 'NPM', content: npm),
-                InfoCard(title: 'Name', content: nama),
-                InfoCard(title: 'Class', content: kelas),
-              ],
-            ),
-
             // Memberikan jarak vertikal 16 unit.
             const SizedBox(height: 16.0),
 
@@ -59,7 +46,7 @@ class MyHomePage extends StatelessWidget {
                   const Padding(
                     padding: EdgeInsets.only(top: 16.0),
                     child: Text(
-                      'Selamat datang di Football News',
+                      'Selamat datang di Xcore',
                       style: TextStyle(
                         fontWeight: FontWeight.bold,
                         fontSize: 18.0,
