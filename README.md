@@ -55,20 +55,30 @@ Alur pengintegrasian dengan web service untuk terhubung dengan aplikasi web yang
 https://www.figma.com/design/sTyMbtyzsur2K5reeIWjxo/Untitled?node-id=0-1&t=gH3GWdAi5VQOSjXW-1
 
 ## PLAN PER WEEK:
--17-23 November:
-Alvin : Buat library untuk register
-
--24-30 November:
-Alvin : Membuat API Fitur Highlights
-
--01-07 Desember:
-Alvin : Membuat API Fitur Teams & Players (bagian dari lineup)
-
--08-14 Desember:
-Alvin : Menggabungkan rounting antar fitur
-
--15-21 Desember:
-Alvin : Recheck kode
-
+PLAN PER WEEK:<br>
+-17-23 November:<br>
+Alvin : Buat library untuk register<br>
+Abhi : Membuat API Fitur Scoreboard<br>
+Zita : Membuat API Fitur Forum dan UI nya<br>
+<br>
+-24-30 November:<br>
+Alvin : Membuat API Fitur Highlights<br>
+Abhi : UI scoreboard<br>
+Zita : Membuat API Fitur Lineup dan UI nya<br>
+<br>
+-01-07 Desember:<br>
+Alvin : Membuat API Fitur Teams & Players (bagian dari lineup)<br>
+Abhi : Integrasi API<br>
+Zita : Styling dan merapihkan kode<br>
+<br>
+-08-14 Desember:<br>
+Alvin : Menggabungkan rounting antar fitur<br>
+Abhi : Finalisasi<br>
+Zita : Finishing<br>
+<br>
+-15-21 Desember:<br>
+Alvin : Recheck kode<br>
+Abhi : Bikin video<br>
+Zita : Recheck kode & bikin video<br>
 
 
