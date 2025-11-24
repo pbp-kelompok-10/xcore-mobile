@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:xcore_mobile/models/scoreboard_entry.dart';
 import 'package:xcore_mobile/screens/scoreboard/scoreboard_service.dart';
+import 'package:xcore_mobile/screens/statistik/match_statistik.dart';
 
 class ScoreboardPage extends StatefulWidget {
   const ScoreboardPage({super.key});
@@ -45,6 +46,16 @@ class _ScoreboardPageState extends State<ScoreboardPage> {
                 subtitle: Text(
                     "${item.homeScore} - ${item.awayScore} | ${item.stadium}"
                 ),
+                  
+                // UNTUK KE STATISTIK
+                onTap: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => MatchStatisticsPage(matchId: item.id),
+                    ),
+                  );
+                },
               );
             },
           );
