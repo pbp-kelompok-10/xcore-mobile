@@ -1,7 +1,4 @@
-// To parse this JSON data, do
-//
-//     final postEntry = postEntryFromJson(jsonString);
-
+// post_entry.dart
 import 'dart:convert';
 
 List<PostEntry> postEntryFromJson(String str) =>
@@ -32,17 +29,33 @@ class PostEntry {
   });
 
   factory PostEntry.fromJson(Map<String, dynamic> json) => PostEntry(
-    id: json["id"],
-    authorId: json["author_id"],
-    authorName: json["author_name"],
-    message: json["message"],
-    authorPicture: json["author_picture"],
-    // Perhatikan: Key di sini "creaated_at" (sesuai input awal Anda)
-    // Pastikan backend memang mengirim typo ini, atau ubah jadi "created_at" jika perlu.
-    createdAt: DateTime.parse(json["creaated_at"]),
-    isEdited: json["is_edited"],
-    editedAt: json["edited_at"] == null ? null : DateTime.parse(json["edited_at"]),
+    id: json["id"]?.toString() ?? '',
+    // Pastikan author_id di-parse sebagai int
+    authorId: _parseInt(json["author_id"]),
+    authorName: json["author_name"]?.toString() ?? 'Unknown',
+    message: json["message"]?.toString() ?? '',
+    authorPicture: json["author_picture"]?.toString(),
+    // Gunakan key yang benar dan handle parsing
+    createdAt: _parseDateTime(json["created_at"] ?? json["created_at"]),
+    isEdited: json["is_edited"] ?? false,
+    editedAt: _parseDateTime(json["edited_at"]),
   );
+
+  static int _parseInt(dynamic value) {
+    if (value == null) return 0;
+    if (value is int) return value;
+    if (value is String) return int.tryParse(value) ?? 0;
+    return 0;
+  }
+
+  static DateTime _parseDateTime(dynamic dateString) {
+    if (dateString == null) return DateTime.now();
+    try {
+      return DateTime.parse(dateString.toString());
+    } catch (e) {
+      return DateTime.now();
+    }
+  }
 
   Map<String, dynamic> toJson() => {
     "id": id,

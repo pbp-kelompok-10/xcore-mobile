@@ -1,7 +1,4 @@
-// To parse this JSON data, do
-//
-//     final forumEntry = forumEntryFromJson(jsonString);
-
+// forum_entry.dart
 import 'dart:convert';
 
 List<ForumEntry> forumEntryFromJson(String str) =>
@@ -13,9 +10,7 @@ String forumEntryToJson(List<ForumEntry> data) =>
 class ForumEntry {
   String id;
   String nama;
-
-  // match data (nullable jika null di Django)
-  int? matchId;
+  String? matchId; // Ubah dari int? menjadi String?
   String? matchHome;
   String? matchAway;
 
@@ -28,13 +23,12 @@ class ForumEntry {
   });
 
   factory ForumEntry.fromJson(Map<String, dynamic> json) => ForumEntry(
-    id: json["id"],
-    nama: json["nama"],
-
-    // null-safe match info
-    matchId: json["match_id"],
-    matchHome: json["match_home"],
-    matchAway: json["match_away"],
+    id: json["id"]?.toString() ?? '',
+    nama: json["nama"]?.toString() ?? 'Forum',
+    // match_id di-parse sebagai String
+    matchId: json["match_id"]?.toString(),
+    matchHome: json["match_home"]?.toString(),
+    matchAway: json["match_away"]?.toString(),
   );
 
   Map<String, dynamic> toJson() => {
