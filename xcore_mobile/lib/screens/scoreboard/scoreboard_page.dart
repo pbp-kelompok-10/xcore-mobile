@@ -50,23 +50,42 @@ class _ScoreboardPageState extends State<ScoreboardPage> {
               return ListTile(
                 title: Text("${item.homeTeam} vs ${item.awayTeam}"),
                 subtitle: Text(
-                    "${item.homeScore} - ${item.awayScore} | ${item.stadium}"
+                  "${item.homeScore} - ${item.awayScore} | ${item.stadium}"
                 ),
-                  
+
                 // UNTUK KE STATISTIK
                 onTap: () {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (context) => MatchStatisticsPage(
-                        matchId: item.id,
-                        homeTeam: item.homeTeam,
-                        awayTeam: item.awayTeam,
-                        homeTeamCode: item.homeTeamCode, // TAMBAH INI
-                        awayTeamCode: item.awayTeamCode, // TAMBAH INI
+
+                  // ✅ Snackbar ditambahkan di sini
+                  ScaffoldMessenger.of(context)
+                    ..hideCurrentSnackBar()
+                    ..showSnackBar(
+                      SnackBar(
+                        content: Text("Membuka Statistics..."),
+                        duration: Duration(seconds: 1),
+                        backgroundColor: Colors.green[700],
+                        behavior: SnackBarBehavior.floating,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(10),
+                        ),
                       ),
-                    ),
-                  );
+                    );
+
+                  // Delay sedikit supaya snackbar muncul dulu
+                  Future.delayed(Duration(milliseconds: 300), () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => MatchStatisticsPage(
+                          matchId: item.id,
+                          homeTeam: item.homeTeam,
+                          awayTeam: item.awayTeam,
+                          homeTeamCode: item.homeTeamCode, // TAMBAH INI
+                          awayTeamCode: item.awayTeamCode, // TAMBAH INI
+                        ),
+                      ),
+                    );
+                  });
                 },
               );
             },

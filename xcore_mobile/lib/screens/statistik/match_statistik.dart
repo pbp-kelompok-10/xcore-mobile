@@ -6,21 +6,24 @@ import '../forum/forum_page.dart';
 import '../prediction/prediction_page.dart';
 import '../highlight/highlight_page.dart';
 import '../lineup/lineup_page.dart';
+import 'widgets/header_section.dart';
+import 'widgets/navigation_cards.dart';
+import 'widgets/statistik_row.dart';
 
 class MatchStatisticsPage extends StatefulWidget {
   final String matchId;
   final String homeTeam;
   final String awayTeam;
-  final String homeTeamCode; // TAMBAH INI
-  final String awayTeamCode; // TAMBAH INI
+  final String homeTeamCode;
+  final String awayTeamCode;
 
   const MatchStatisticsPage({
     super.key,
     required this.matchId,
     required this.homeTeam,
     required this.awayTeam,
-    required this.homeTeamCode, // TAMBAH INI
-    required this.awayTeamCode, // TAMBAH INI
+    required this.homeTeamCode,
+    required this.awayTeamCode,
   });
 
   @override
@@ -56,7 +59,7 @@ class _MatchStatisticsPageState extends State<MatchStatisticsPage> {
   // Fungsi navigation yang konsisten
   void _navigateToScoreboard() {
     _showSnackBar("Kembali ke Scoreboard");
-    Navigator.pop(context); // Kembali ke scoreboard dengan sekali tekan
+    Navigator.pop(context);
   }
 
   void _navigateToForum() {
@@ -91,209 +94,6 @@ class _MatchStatisticsPageState extends State<MatchStatisticsPage> {
     );
   }
 
-  Widget _buildNavigationCard(String title, IconData icon, Function() onTap) {
-    return Expanded(
-      child: Card(
-        elevation: 2,
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(10),
-        ),
-        child: InkWell(
-          borderRadius: BorderRadius.circular(10),
-          onTap: onTap,
-          child: Container(
-            padding: EdgeInsets.symmetric(vertical: 12, horizontal: 4),
-            decoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(10),
-              gradient: LinearGradient(
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
-                colors: [Colors.green[700]!, Colors.green[600]!],
-              ),
-            ),
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Icon(icon, size: 18, color: Colors.white),
-                SizedBox(height: 4),
-                Text(
-                  title,
-                  style: TextStyle(
-                    fontSize: 10,
-                    color: Colors.white,
-                    fontWeight: FontWeight.w500,
-                  ),
-                  textAlign: TextAlign.center,
-                  maxLines: 1,
-                ),
-              ],
-            ),
-          ),
-        ),
-      ),
-    );
-  }
-
-  Widget _buildStatRow(String title, dynamic homeValue, dynamic awayValue, 
-                      {bool isPercentage = false, IconData? icon}) {
-    String formatValue(dynamic value) {
-      if (isPercentage) {
-        if (value is double) {
-          return '${value.toStringAsFixed(1)}%';
-        } else if (value is int) {
-          return '$value%';
-        }
-        return '$value%';
-      }
-      return value.toString();
-    }
-
-    return Container(
-      padding: EdgeInsets.symmetric(vertical: 14, horizontal: 16),
-      decoration: BoxDecoration(
-        border: Border(bottom: BorderSide(color: Colors.grey[200]!)),
-        gradient: LinearGradient(
-          begin: Alignment.centerLeft,
-          end: Alignment.centerRight,
-          colors: [Colors.white, Colors.grey[50]!],
-        ),
-      ),
-      child: Row(
-        children: [
-          // Home value dengan background
-          Container(
-            width: 60,
-            padding: EdgeInsets.symmetric(vertical: 6, horizontal: 8),
-            decoration: BoxDecoration(
-              color: Colors.green[50],
-              borderRadius: BorderRadius.circular(8),
-              border: Border.all(color: Colors.green[100]!),
-            ),
-            child: Text(
-              formatValue(homeValue),
-              style: TextStyle(
-                fontSize: 16, 
-                fontWeight: FontWeight.bold,
-                color: Colors.green[800],
-              ),
-              textAlign: TextAlign.center,
-            ),
-          ),
-          
-          Expanded(
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                if (icon != null) ...[
-                  Icon(icon, size: 16, color: Colors.grey[600]),
-                  SizedBox(width: 6),
-                ],
-                Text(
-                  title,
-                  style: TextStyle(
-                    fontSize: 14, 
-                    fontWeight: FontWeight.w600,
-                    color: Colors.grey[700],
-                  ),
-                  textAlign: TextAlign.center,
-                ),
-              ],
-            ),
-          ),
-          
-          // Away value dengan background
-          Container(
-            width: 60,
-            padding: EdgeInsets.symmetric(vertical: 6, horizontal: 8),
-            decoration: BoxDecoration(
-              color: Colors.red[50],
-              borderRadius: BorderRadius.circular(8),
-              border: Border.all(color: Colors.red[100]!),
-            ),
-            child: Text(
-              formatValue(awayValue),
-              style: TextStyle(
-                fontSize: 16, 
-                fontWeight: FontWeight.bold,
-                color: Colors.red[800],
-              ),
-              textAlign: TextAlign.center,
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  // Fungsi untuk build bendera
-  Widget _buildFlagWidget(String teamCode, bool isHome) {
-    // Pastikan teamCode lowercase dan valid
-    String effectiveCode = teamCode.toLowerCase();
-    if (effectiveCode.isEmpty || effectiveCode.length != 2) {
-      // Fallback jika teamCode tidak valid
-      effectiveCode = isHome ? 'id' : 'sg'; // default Indonesia vs Singapore
-    }
-
-    final flagUrl = "https://flagcdn.com/w80/$effectiveCode.png";
-    
-    return Container(
-      width: 60,
-      height: 40,
-      decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(4),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black26,
-            blurRadius: 4,
-            offset: Offset(0, 2),
-          ),
-        ],
-        border: Border.all(color: Colors.white.withOpacity(0.5), width: 1),
-      ),
-      child: ClipRRect(
-        borderRadius: BorderRadius.circular(4),
-        child: Image.network(
-          flagUrl,
-          width: 60,
-          height: 40,
-          fit: BoxFit.cover,
-          errorBuilder: (context, error, stackTrace) {
-            print("Error loading flag: $flagUrl");
-            // Fallback ke container berwarna dengan inisial
-            return Container(
-              color: isHome ? Colors.green[500] : Colors.red[500],
-              child: Center(
-                child: Text(
-                  effectiveCode.toUpperCase(),
-                  style: TextStyle(
-                    color: Colors.white,
-                    fontSize: 16,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-              ),
-            );
-          },
-          loadingBuilder: (context, child, loadingProgress) {
-            if (loadingProgress == null) return child;
-            return Container(
-              color: Colors.grey[200],
-              child: Center(
-                child: CircularProgressIndicator(
-                  value: loadingProgress.expectedTotalBytes != null
-                      ? loadingProgress.cumulativeBytesLoaded / 
-                        loadingProgress.expectedTotalBytes!
-                      : null,
-                  strokeWidth: 2,
-                ),
-              ),
-            );
-          },
-        ),
-      ),
-    );
-  }
-
   void _showSnackBar(String message) {
     ScaffoldMessenger.of(context)
       ..hideCurrentSnackBar()
@@ -308,38 +108,6 @@ class _MatchStatisticsPageState extends State<MatchStatisticsPage> {
           ),
         ),
       );
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: Colors.grey[50],
-      appBar: AppBar(
-        title: Text(
-          'Match Statistics',
-          style: TextStyle(
-            fontWeight: FontWeight.bold,
-            color: Colors.white,
-            fontSize: 18,
-          ),
-        ),
-        backgroundColor: Colors.green[700],
-        elevation: 0,
-        leading: IconButton(
-          icon: Icon(Icons.arrow_back_ios_new_rounded, 
-                    size: 20, color: Colors.white),
-          onPressed: _navigateToScoreboard,
-        ),
-        centerTitle: true,
-      ),
-      body: _isLoading
-          ? _buildLoadingState()
-          : _error.isNotEmpty
-              ? _buildErrorState()
-              : _statistik == null
-                  ? _buildEmptyState()
-                  : _buildContent(),
-    );
   }
 
   Widget _buildLoadingState() {
@@ -378,8 +146,7 @@ class _MatchStatisticsPageState extends State<MatchStatisticsPage> {
                 color: Colors.red[50],
                 shape: BoxShape.circle,
               ),
-              child: Icon(Icons.error_outline, 
-                         size: 48, color: Colors.red[400]),
+              child: Icon(Icons.error_outline, size: 48, color: Colors.red[400]),
             ),
             SizedBox(height: 20),
             Text(
@@ -432,8 +199,7 @@ class _MatchStatisticsPageState extends State<MatchStatisticsPage> {
                 color: Colors.green[50],
                 shape: BoxShape.circle,
               ),
-              child: Icon(Icons.analytics_outlined, 
-                         size: 48, color: Colors.green[400]),
+              child: Icon(Icons.analytics_outlined, size: 48, color: Colors.green[400]),
             ),
             SizedBox(height: 20),
             Text(
@@ -478,184 +244,26 @@ class _MatchStatisticsPageState extends State<MatchStatisticsPage> {
       physics: BouncingScrollPhysics(),
       child: Column(
         children: [
-          // Header Section - DESAIN BARU
-          Container(
-            width: double.infinity,
-            padding: EdgeInsets.all(20),
-            decoration: BoxDecoration(
-              gradient: LinearGradient(
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
-                colors: [Colors.green[700]!, Colors.green[500]!],
-              ),
-              borderRadius: BorderRadius.only(
-                bottomLeft: Radius.circular(20),
-                bottomRight: Radius.circular(20),
-              ),
-            ),
-            child: Column(
-              children: [
-                // Stadium dan Waktu di atas
-                Column(
-                  children: [
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Icon(Icons.stadium, size: 16, color: Colors.white70),
-                        SizedBox(width: 6),
-                        Text(
-                          _statistik!.stadium,
-                          style: TextStyle(
-                            color: Colors.white70,
-                            fontSize: 14,
-                            fontWeight: FontWeight.w500,
-                          ),
-                        ),
-                      ],
-                    ),
-                    SizedBox(height: 4),
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Icon(Icons.calendar_today, size: 14, color: Colors.white70),
-                        SizedBox(width: 6),
-                        Text(
-                          _formatDate(_statistik!.matchDate),
-                          style: TextStyle(
-                            color: Colors.white70,
-                            fontSize: 12,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ],
-                ),
-                
-                SizedBox(height: 16),
-                
-                // Score dan Bendera Section
-                Container(
-                  padding: EdgeInsets.all(16),
-                  decoration: BoxDecoration(
-                    color: Colors.white.withOpacity(0.15),
-                    borderRadius: BorderRadius.circular(16),
-                    border: Border.all(color: Colors.white.withOpacity(0.3)),
-                  ),
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      // Home Team - Bendera dan Nama
-                      Expanded(
-                        child: Column(
-                          children: [
-                            // Bendera Home
-                            _buildFlagWidget(widget.homeTeamCode, true),
-                            SizedBox(height: 8),
-                            Text(
-                              widget.homeTeam,
-                              style: TextStyle(
-                                fontSize: 12,
-                                fontWeight: FontWeight.w600,
-                                color: Colors.white,
-                              ),
-                              textAlign: TextAlign.center,
-                              maxLines: 2,
-                            ),
-                          ],
-                        ),
-                      ),
-                      
-                      // Score di tengah
-                      Container(
-                        padding: EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                        decoration: BoxDecoration(
-                          color: Colors.white,
-                          borderRadius: BorderRadius.circular(20),
-                          boxShadow: [
-                            BoxShadow(
-                              color: Colors.black26,
-                              blurRadius: 8,
-                              offset: Offset(0, 4),
-                            ),
-                          ],
-                        ),
-                        child: Row(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            Text(
-                              _statistik!.homeScore.toString(),
-                              style: TextStyle(
-                                fontSize: 24,
-                                fontWeight: FontWeight.bold,
-                                color: Colors.green[700],
-                              ),
-                            ),
-                            Padding(
-                              padding: EdgeInsets.symmetric(horizontal: 8),
-                              child: Text(
-                                '-',
-                                style: TextStyle(
-                                  fontSize: 20,
-                                  fontWeight: FontWeight.bold,
-                                  color: Colors.grey[700],
-                                ),
-                              ),
-                            ),
-                            Text(
-                              _statistik!.awayScore.toString(),
-                              style: TextStyle(
-                                fontSize: 24,
-                                fontWeight: FontWeight.bold,
-                                color: Colors.green[700],
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                      
-                      // Away Team - Bendera dan Nama
-                      Expanded(
-                        child: Column(
-                          children: [
-                            // Bendera Away
-                            _buildFlagWidget(widget.awayTeamCode, false),
-                            SizedBox(height: 8),
-                            Text(
-                              widget.awayTeam,
-                              style: TextStyle(
-                                fontSize: 12,
-                                fontWeight: FontWeight.w600,
-                                color: Colors.white,
-                              ),
-                              textAlign: TextAlign.center,
-                              maxLines: 2,
-                            ),
-                          ],
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ],
-            ),
+          // Header Section menggunakan widget terpisah
+          HeaderSection(
+            stadium: _statistik!.stadium,
+            matchDate: _statistik!.matchDate,
+            homeTeam: widget.homeTeam,
+            awayTeam: widget.awayTeam,
+            homeTeamCode: widget.homeTeamCode,
+            awayTeamCode: widget.awayTeamCode,
+            homeScore: _statistik!.homeScore,
+            awayScore: _statistik!.awayScore,
           ),
           
           SizedBox(height: 20),
           
-          // Navigation Cards
-          Padding(
-            padding: EdgeInsets.symmetric(horizontal: 16),
-            child: Row(
-              children: [
-                _buildNavigationCard('Forum', Icons.forum, _navigateToForum),
-                SizedBox(width: 8),
-                _buildNavigationCard('Highlight', Icons.video_library, _navigateToHighlight),
-                SizedBox(width: 8),
-                _buildNavigationCard('Prediction', Icons.analytics, _navigateToPrediction),
-                SizedBox(width: 8),
-                _buildNavigationCard('Lineup', Icons.people, _navigateToLineup),
-              ],
-            ),
+          // Navigation Cards menggunakan widget terpisah
+          NavigationCards(
+            onForumTap: _navigateToForum,
+            onHighlightTap: _navigateToHighlight,
+            onPredictionTap: _navigateToPrediction,
+            onLineupTap: _navigateToLineup,
           ),
           
           SizedBox(height: 24),
@@ -683,54 +291,100 @@ class _MatchStatisticsPageState extends State<MatchStatisticsPage> {
                         ),
                       ),
                       child: Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        // diubah
                         children: [
-                          Text(
-                            widget.homeTeam,
-                            style: TextStyle(
-                              color: Colors.white,
-                              fontWeight: FontWeight.bold,
-                              fontSize: 14,
+                          Expanded(
+                            child: Text(
+                              widget.homeTeam,
+                              style: TextStyle(
+                                color: Colors.white,
+                                fontWeight: FontWeight.bold,
+                                fontSize: 14,
+                              ),
+                              textAlign: TextAlign.left,
+                              overflow: TextOverflow.ellipsis,
                             ),
                           ),
-                          Text(
-                            'TEAM STATISTICS',
-                            style: TextStyle(
-                              color: Colors.white,
-                              fontWeight: FontWeight.bold,
-                              fontSize: 14,
-                              letterSpacing: 0.5,
+                          Expanded(
+                            child: Text(
+                              'TEAM STATISTICS',
+                              style: TextStyle(
+                                color: Colors.white,
+                                fontWeight: FontWeight.bold,
+                                fontSize: 14,
+                                letterSpacing: 0.5,
+                              ),
+                              textAlign: TextAlign.center,
                             ),
                           ),
-                          Text(
-                            widget.awayTeam,
-                            style: TextStyle(
-                              color: Colors.white,
-                              fontWeight: FontWeight.bold,
-                              fontSize: 14,
+                          Expanded(
+                            child: Text(
+                              widget.awayTeam,
+                              style: TextStyle(
+                                color: Colors.white,
+                                fontWeight: FontWeight.bold,
+                                fontSize: 14,
+                              ),
+                              textAlign: TextAlign.right,
+                              overflow: TextOverflow.ellipsis,
                             ),
                           ),
                         ],
+                        // end diubah
                       ),
+
                     ),
                     
-                    // Statistics Rows
-                    _buildStatRow('Passes', _statistik!.homePasses, _statistik!.awayPasses, 
-                                icon: Icons.swap_horiz),
-                    _buildStatRow('Shoot', _statistik!.homeShots, _statistik!.awayShots, 
-                                icon: Icons.sports_soccer),
-                    _buildStatRow('Shoot on Target', _statistik!.homeShotsOnTarget, _statistik!.awayShotsOnTarget, 
-                                icon: Icons.flag),
-                    _buildStatRow('Ball Possession', _statistik!.homePossession, _statistik!.awayPossession, 
-                                isPercentage: true, icon: Icons.pie_chart),
-                    _buildStatRow('Red Card', _statistik!.homeRedCards, _statistik!.awayRedCards, 
-                                icon: Icons.error),
-                    _buildStatRow('Yellow Card', _statistik!.homeYellowCards, _statistik!.awayYellowCards, 
-                                icon: Icons.warning),
-                    _buildStatRow('Offside', _statistik!.homeOffsides, _statistik!.awayOffsides, 
-                                icon: Icons.gps_not_fixed),
-                    _buildStatRow('Corner', _statistik!.homeCorners, _statistik!.awayCorners, 
-                                icon: Icons.circle),
+                    // Statistics Rows menggunakan widget terpisah
+                    StatistikRow(
+                      title: 'Passes',
+                      homeValue: _statistik!.homePasses,
+                      awayValue: _statistik!.awayPasses,
+                      icon: Icons.swap_horiz,
+                    ),
+                    StatistikRow(
+                      title: 'Shoot',
+                      homeValue: _statistik!.homeShots,
+                      awayValue: _statistik!.awayShots,
+                      icon: Icons.sports_soccer,
+                    ),
+                    StatistikRow(
+                      title: 'Shoot on Target',
+                      homeValue: _statistik!.homeShotsOnTarget,
+                      awayValue: _statistik!.awayShotsOnTarget,
+                      icon: Icons.flag,
+                    ),
+                    StatistikRow(
+                      title: 'Ball Possession',
+                      homeValue: _statistik!.homePossession,
+                      awayValue: _statistik!.awayPossession,
+                      isPercentage: true,
+                      icon: Icons.pie_chart,
+                    ),
+                    StatistikRow(
+                      title: 'Red Card',
+                      homeValue: _statistik!.homeRedCards,
+                      awayValue: _statistik!.awayRedCards,
+                      icon: Icons.error,
+                    ),
+                    StatistikRow(
+                      title: 'Yellow Card',
+                      homeValue: _statistik!.homeYellowCards,
+                      awayValue: _statistik!.awayYellowCards,
+                      icon: Icons.warning,
+                    ),
+                    StatistikRow(
+                      title: 'Offside',
+                      homeValue: _statistik!.homeOffsides,
+                      awayValue: _statistik!.awayOffsides,
+                      icon: Icons.gps_not_fixed,
+                    ),
+                    StatistikRow(
+                      title: 'Corner',
+                      homeValue: _statistik!.homeCorners,
+                      awayValue: _statistik!.awayCorners,
+                      icon: Icons.circle,
+                    ),
                   ],
                 ),
               ),
@@ -743,12 +397,34 @@ class _MatchStatisticsPageState extends State<MatchStatisticsPage> {
     );
   }
 
-  String _formatDate(String dateString) {
-    try {
-      DateTime date = DateTime.parse(dateString);
-      return "${date.day}/${date.month}/${date.year} ${date.hour}:${date.minute.toString().padLeft(2, '0')}";
-    } catch (e) {
-      return dateString;
-    }
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      backgroundColor: Colors.grey[50],
+      appBar: AppBar(
+        title: Text(
+          'Match Statistics',
+          style: TextStyle(
+            fontWeight: FontWeight.bold,
+            color: Colors.white,
+            fontSize: 18,
+          ),
+        ),
+        backgroundColor: Colors.green[700],
+        elevation: 0,
+        leading: IconButton(
+          icon: Icon(Icons.arrow_back_ios_new_rounded, size: 20, color: Colors.white),
+          onPressed: _navigateToScoreboard,
+        ),
+        centerTitle: true,
+      ),
+      body: _isLoading
+          ? _buildLoadingState()
+          : _error.isNotEmpty
+              ? _buildErrorState()
+              : _statistik == null
+                  ? _buildEmptyState()
+                  : _buildContent(),
+    );
   }
 }
