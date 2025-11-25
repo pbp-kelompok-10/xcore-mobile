@@ -11,12 +11,16 @@ class MatchStatisticsPage extends StatefulWidget {
   final String matchId;
   final String homeTeam;
   final String awayTeam;
+  final String homeTeamCode; // TAMBAH INI
+  final String awayTeamCode; // TAMBAH INI
 
   const MatchStatisticsPage({
     super.key,
     required this.matchId,
     required this.homeTeam,
     required this.awayTeam,
+    required this.homeTeamCode, // TAMBAH INI
+    required this.awayTeamCode, // TAMBAH INI
   });
 
   @override
@@ -221,6 +225,75 @@ class _MatchStatisticsPageState extends State<MatchStatisticsPage> {
     );
   }
 
+  // Fungsi untuk build bendera
+  Widget _buildFlagWidget(String teamCode, bool isHome) {
+    // Pastikan teamCode lowercase dan valid
+    String effectiveCode = teamCode.toLowerCase();
+    if (effectiveCode.isEmpty || effectiveCode.length != 2) {
+      // Fallback jika teamCode tidak valid
+      effectiveCode = isHome ? 'id' : 'sg'; // default Indonesia vs Singapore
+    }
+
+    final flagUrl = "https://flagcdn.com/w80/$effectiveCode.png";
+    
+    return Container(
+      width: 60,
+      height: 40,
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(4),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black26,
+            blurRadius: 4,
+            offset: Offset(0, 2),
+          ),
+        ],
+        border: Border.all(color: Colors.white.withOpacity(0.5), width: 1),
+      ),
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(4),
+        child: Image.network(
+          flagUrl,
+          width: 60,
+          height: 40,
+          fit: BoxFit.cover,
+          errorBuilder: (context, error, stackTrace) {
+            print("Error loading flag: $flagUrl");
+            // Fallback ke container berwarna dengan inisial
+            return Container(
+              color: isHome ? Colors.green[500] : Colors.red[500],
+              child: Center(
+                child: Text(
+                  effectiveCode.toUpperCase(),
+                  style: TextStyle(
+                    color: Colors.white,
+                    fontSize: 16,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              ),
+            );
+          },
+          loadingBuilder: (context, child, loadingProgress) {
+            if (loadingProgress == null) return child;
+            return Container(
+              color: Colors.grey[200],
+              child: Center(
+                child: CircularProgressIndicator(
+                  value: loadingProgress.expectedTotalBytes != null
+                      ? loadingProgress.cumulativeBytesLoaded / 
+                        loadingProgress.expectedTotalBytes!
+                      : null,
+                  strokeWidth: 2,
+                ),
+              ),
+            );
+          },
+        ),
+      ),
+    );
+  }
+
   void _showSnackBar(String message) {
     ScaffoldMessenger.of(context)
       ..hideCurrentSnackBar()
@@ -405,10 +478,10 @@ class _MatchStatisticsPageState extends State<MatchStatisticsPage> {
       physics: BouncingScrollPhysics(),
       child: Column(
         children: [
-          // Header Section
+          // Header Section - DESAIN BARU
           Container(
             width: double.infinity,
-            padding: EdgeInsets.all(24),
+            padding: EdgeInsets.all(20),
             decoration: BoxDecoration(
               gradient: LinearGradient(
                 begin: Alignment.topLeft,
@@ -422,151 +495,146 @@ class _MatchStatisticsPageState extends State<MatchStatisticsPage> {
             ),
             child: Column(
               children: [
-                // Match Title
-                Text(
-                  '${widget.homeTeam} vs ${widget.awayTeam}',
-                  style: TextStyle(
-                    fontSize: 18,
-                    fontWeight: FontWeight.bold,
-                    color: Colors.white,
-                  ),
-                  textAlign: TextAlign.center,
+                // Stadium dan Waktu di atas
+                Column(
+                  children: [
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Icon(Icons.stadium, size: 16, color: Colors.white70),
+                        SizedBox(width: 6),
+                        Text(
+                          _statistik!.stadium,
+                          style: TextStyle(
+                            color: Colors.white70,
+                            fontSize: 14,
+                            fontWeight: FontWeight.w500,
+                          ),
+                        ),
+                      ],
+                    ),
+                    SizedBox(height: 4),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Icon(Icons.calendar_today, size: 14, color: Colors.white70),
+                        SizedBox(width: 6),
+                        Text(
+                          _formatDate(_statistik!.matchDate),
+                          style: TextStyle(
+                            color: Colors.white70,
+                            fontSize: 12,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
                 ),
+                
                 SizedBox(height: 16),
                 
-                // Score Section
+                // Score dan Bendera Section
                 Container(
-                  padding: EdgeInsets.all(20),
+                  padding: EdgeInsets.all(16),
                   decoration: BoxDecoration(
                     color: Colors.white.withOpacity(0.15),
                     borderRadius: BorderRadius.circular(16),
                     border: Border.all(color: Colors.white.withOpacity(0.3)),
                   ),
                   child: Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceAround,
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      Column(
-                        children: [
-                          Container(
-                            width: 80,
-                            height: 80,
-                            decoration: BoxDecoration(
-                              color: Colors.white,
-                              shape: BoxShape.circle,
-                              boxShadow: [
-                                BoxShadow(
-                                  color: Colors.black26,
-                                  blurRadius: 8,
-                                  offset: Offset(0, 4),
-                                ),
-                              ],
-                            ),
-                            child: Center(
-                              child: Text(
-                                _statistik!.homeScore.toString(),
-                                style: TextStyle(
-                                  fontSize: 28,
-                                  fontWeight: FontWeight.bold,
-                                  color: Colors.green[700],
-                                ),
+                      // Home Team - Bendera dan Nama
+                      Expanded(
+                        child: Column(
+                          children: [
+                            // Bendera Home
+                            _buildFlagWidget(widget.homeTeamCode, true),
+                            SizedBox(height: 8),
+                            Text(
+                              widget.homeTeam,
+                              style: TextStyle(
+                                fontSize: 12,
+                                fontWeight: FontWeight.w600,
+                                color: Colors.white,
                               ),
+                              textAlign: TextAlign.center,
+                              maxLines: 2,
                             ),
-                          ),
-                          SizedBox(height: 8),
-                          Text(
-                            widget.homeTeam,
-                            style: TextStyle(
-                              fontSize: 14,
-                              fontWeight: FontWeight.w600,
-                              color: Colors.white,
-                            ),
-                          ),
-                        ],
+                          ],
+                        ),
                       ),
                       
+                      // Score di tengah
                       Container(
-                        padding: EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                        padding: EdgeInsets.symmetric(horizontal: 16, vertical: 8),
                         decoration: BoxDecoration(
                           color: Colors.white,
                           borderRadius: BorderRadius.circular(20),
-                        ),
-                        child: Text(
-                          'VS',
-                          style: TextStyle(
-                            fontSize: 16,
-                            fontWeight: FontWeight.bold,
-                            color: Colors.green[700],
-                          ),
-                        ),
-                      ),
-                      
-                      Column(
-                        children: [
-                          Container(
-                            width: 80,
-                            height: 80,
-                            decoration: BoxDecoration(
-                              color: Colors.white,
-                              shape: BoxShape.circle,
-                              boxShadow: [
-                                BoxShadow(
-                                  color: Colors.black26,
-                                  blurRadius: 8,
-                                  offset: Offset(0, 4),
-                                ),
-                              ],
+                          boxShadow: [
+                            BoxShadow(
+                              color: Colors.black26,
+                              blurRadius: 8,
+                              offset: Offset(0, 4),
                             ),
-                            child: Center(
+                          ],
+                        ),
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Text(
+                              _statistik!.homeScore.toString(),
+                              style: TextStyle(
+                                fontSize: 24,
+                                fontWeight: FontWeight.bold,
+                                color: Colors.green[700],
+                              ),
+                            ),
+                            Padding(
+                              padding: EdgeInsets.symmetric(horizontal: 8),
                               child: Text(
-                                _statistik!.awayScore.toString(),
+                                '-',
                                 style: TextStyle(
-                                  fontSize: 28,
+                                  fontSize: 20,
                                   fontWeight: FontWeight.bold,
-                                  color: Colors.green[700],
+                                  color: Colors.grey[700],
                                 ),
                               ),
                             ),
-                          ),
-                          SizedBox(height: 8),
-                          Text(
-                            widget.awayTeam,
-                            style: TextStyle(
-                              fontSize: 14,
-                              fontWeight: FontWeight.w600,
-                              color: Colors.white,
+                            Text(
+                              _statistik!.awayScore.toString(),
+                              style: TextStyle(
+                                fontSize: 24,
+                                fontWeight: FontWeight.bold,
+                                color: Colors.green[700],
+                              ),
                             ),
-                          ),
-                        ],
+                          ],
+                        ),
+                      ),
+                      
+                      // Away Team - Bendera dan Nama
+                      Expanded(
+                        child: Column(
+                          children: [
+                            // Bendera Away
+                            _buildFlagWidget(widget.awayTeamCode, false),
+                            SizedBox(height: 8),
+                            Text(
+                              widget.awayTeam,
+                              style: TextStyle(
+                                fontSize: 12,
+                                fontWeight: FontWeight.w600,
+                                color: Colors.white,
+                              ),
+                              textAlign: TextAlign.center,
+                              maxLines: 2,
+                            ),
+                          ],
+                        ),
                       ),
                     ],
                   ),
-                ),
-                SizedBox(height: 12),
-                
-                // Match Info
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Icon(Icons.stadium, size: 14, color: Colors.white70),
-                    SizedBox(width: 6),
-                    Text(
-                      _statistik!.stadium,
-                      style: TextStyle(
-                        color: Colors.white70,
-                        fontSize: 12,
-                      ),
-                    ),
-                    SizedBox(width: 16),
-                    Icon(Icons.calendar_today, size: 14, color: Colors.white70),
-                    SizedBox(width: 6),
-                    Text(
-                      _formatDate(_statistik!.matchDate),
-                      style: TextStyle(
-                        color: Colors.white70,
-                        fontSize: 12,
-                      ),
-                    ),
-                  ],
                 ),
               ],
             ),

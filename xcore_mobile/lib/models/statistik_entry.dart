@@ -3,6 +3,8 @@ class StatistikEntry {
   final String matchId;
   final String homeTeam;
   final String awayTeam;
+  final String homeTeamCode; // TAMBAH INI
+  final String awayTeamCode; // TAMBAH INI
   final int homeScore;
   final int awayScore;
   final int homeShots;
@@ -29,6 +31,8 @@ class StatistikEntry {
     required this.matchId,
     required this.homeTeam,
     required this.awayTeam,
+    required this.homeTeamCode, // TAMBAH INI
+    required this.awayTeamCode, // TAMBAH INI
     required this.homeScore,
     required this.awayScore,
     required this.homeShots,
@@ -57,6 +61,8 @@ class StatistikEntry {
       matchId: json['match_id'] ?? '',
       homeTeam: json['home_team'] ?? '',
       awayTeam: json['away_team'] ?? '',
+      homeTeamCode: json['home_team_code'] ?? '', // TAMBAH INI
+      awayTeamCode: json['away_team_code'] ?? '', // TAMBAH INI
       homeScore: json['home_score'] ?? 0,
       awayScore: json['away_score'] ?? 0,
       homeShots: json['home_shots'] ?? 0,

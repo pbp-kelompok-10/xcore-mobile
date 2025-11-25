@@ -41,6 +41,12 @@ class _ScoreboardPageState extends State<ScoreboardPage> {
             itemBuilder: (context, index) {
               final item = list[index];
 
+              // DEBUG: Print untuk cek data
+              print("=== SCOREBOARD ITEM ===");
+              print("Home: ${item.homeTeam} (${item.homeTeamCode})");
+              print("Away: ${item.awayTeam} (${item.awayTeamCode})");
+              print("======================");
+
               return ListTile(
                 title: Text("${item.homeTeam} vs ${item.awayTeam}"),
                 subtitle: Text(
@@ -56,6 +62,8 @@ class _ScoreboardPageState extends State<ScoreboardPage> {
                         matchId: item.id,
                         homeTeam: item.homeTeam,
                         awayTeam: item.awayTeam,
+                        homeTeamCode: item.homeTeamCode, // TAMBAH INI
+                        awayTeamCode: item.awayTeamCode, // TAMBAH INI
                       ),
                     ),
                   );
