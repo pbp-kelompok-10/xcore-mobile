@@ -1,73 +1,127 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+import 'package:pbp_django_auth/pbp_django_auth.dart';
+import 'package:xcore_mobile/screens/scoreboard/scoreboard_page.dart';
+import 'package:xcore_mobile/screens/prediction/prediction_page.dart';
+import 'package:xcore_mobile/screens/teams/teams_page.dart';
+import 'package:xcore_mobile/screens/players/players_page.dart';
+import 'package:xcore_mobile/screens/login.dart';
+import 'left_drawer.dart';
 
 class MyHomePage extends StatelessWidget {
-    MyHomePage({super.key});
-    final List<ItemHomepage> items = [
-    ItemHomepage("See Football News", Icons.newspaper),
-    ItemHomepage("Add News", Icons.add),
-    ItemHomepage("Logout", Icons.logout),
+  MyHomePage({super.key});
+
+  final List<ItemHomepage> items = [
+    ItemHomepage("Scoreboard", Icons.scoreboard, Colors.orange[400]!),
+    ItemHomepage("Prediction", Icons.analytics, Colors.blue[400]!),
+    ItemHomepage("Teams", Icons.people, Colors.purple[400]!),
+    ItemHomepage("Players", Icons.person, Colors.teal[400]!),
   ];
 
   @override
-    Widget build(BuildContext context) {
-    // Scaffold menyediakan struktur dasar halaman dengan AppBar dan body.
+  Widget build(BuildContext context) {
     return Scaffold(
-      // AppBar adalah bagian atas halaman yang menampilkan judul.
       appBar: AppBar(
-        // Judul aplikasi "Football News" dengan teks putih dan tebal.
         title: const Text(
-          'Xcore',
+          'Xcore Football',
           style: TextStyle(
             color: Colors.white,
             fontWeight: FontWeight.bold,
+            fontSize: 20,
           ),
         ),
-        // Warna latar belakang AppBar diambil dari skema warna tema aplikasi.
-        backgroundColor: Theme.of(context).colorScheme.primary,
+        backgroundColor: Colors.green[700],
+        elevation: 0,
+        iconTheme: IconThemeData(color: Colors.white),
+        actions: [
+          // Logout Button di AppBar
+          IconButton(
+            icon: Icon(Icons.logout),
+            onPressed: () {
+              _showLogoutDialog(context);
+            },
+          ),
+        ],
       ),
-      // Body halaman dengan padding di sekelilingnya.
-      body: Padding(
-        padding: const EdgeInsets.all(16.0),
-        // Menyusun widget secara vertikal dalam sebuah kolom.
+      drawer: LeftDrawer(),
+      backgroundColor: Colors.grey[50],
+      body: SingleChildScrollView(
         child: Column(
-          crossAxisAlignment: CrossAxisAlignment.center,
           children: [
-            // Row untuk menampilkan 3 InfoCard secara horizontal.
-            // Memberikan jarak vertikal 16 unit.
-            const SizedBox(height: 16.0),
-
-            // Menempatkan widget berikutnya di tengah halaman.
-            Center(
+            // Header dengan gradien hijau
+            Container(
+              width: double.infinity,
+              padding: EdgeInsets.all(24),
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                  colors: [Colors.green[700]!, Colors.green[500]!],
+                ),
+                borderRadius: BorderRadius.only(
+                  bottomLeft: Radius.circular(20),
+                  bottomRight: Radius.circular(20),
+                ),
+              ),
               child: Column(
-                // Menyusun teks dan grid item secara vertikal.
-
                 children: [
-                  // Menampilkan teks sambutan dengan gaya tebal dan ukuran 18.
-                  const Padding(
-                    padding: EdgeInsets.only(top: 16.0),
-                    child: Text(
-                      'Selamat datang di Xcore',
-                      style: TextStyle(
-                        fontWeight: FontWeight.bold,
-                        fontSize: 18.0,
-                      ),
+                  // Welcome text
+                  Text(
+                    'Selamat Datang di',
+                    style: TextStyle(
+                      color: Colors.white70,
+                      fontSize: 16,
                     ),
                   ),
+                  SizedBox(height: 4),
+                  Text(
+                    'Xcore Football',
+                    style: TextStyle(
+                      color: Colors.white,
+                      fontSize: 28,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                  SizedBox(height: 8),
+                  Text(
+                    'Platform terbaik untuk statistik sepakbola',
+                    style: TextStyle(
+                      color: Colors.white70,
+                      fontSize: 14,
+                    ),
+                    textAlign: TextAlign.center,
+                  ),
+                ],
+              ),
+            ),
 
-                  // Grid untuk menampilkan ItemCard dalam bentuk grid 3 kolom.
-                  GridView.count(
-                    primary: true,
-                    padding: const EdgeInsets.all(20),
-                    crossAxisSpacing: 10,
-                    mainAxisSpacing: 10,
-                    crossAxisCount: 3,
-                    // Agar grid menyesuaikan tinggi kontennya.
-                    shrinkWrap: true,
+            SizedBox(height: 20),
 
-                    // Menampilkan ItemCard untuk setiap item dalam list items.
-                    children: items.map((ItemHomepage item) {
-                      return ItemCard(item);
-                    }).toList(),
+            // Tombol Horizontal
+            Padding(
+              padding: EdgeInsets.symmetric(horizontal: 16),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    'All Features',
+                    style: TextStyle(
+                      fontSize: 18,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.grey[800],
+                    ),
+                  ),
+                  SizedBox(height: 12),
+                  SingleChildScrollView(
+                    scrollDirection: Axis.horizontal,
+                    child: Row(
+                      children: items.map((item) {
+                        return Padding(
+                          padding: EdgeInsets.only(right: 12),
+                          child: _buildHorizontalButton(item),
+                        );
+                      }).toList(),
+                    ),
                   ),
                 ],
               ),
@@ -76,99 +130,186 @@ class MyHomePage extends StatelessWidget {
         ),
       ),
     );
-}
-}
+  }
 
-class InfoCard extends StatelessWidget {
-  // Kartu informasi yang menampilkan title dan content.
-
-  final String title;  // Judul kartu.
-  final String content;  // Isi kartu.
-
-  const InfoCard({super.key, required this.title, required this.content});
-
-  @override
-  Widget build(BuildContext context) {
-    return Card(
-      // Membuat kotak kartu dengan bayangan dibawahnya.
-      elevation: 2.0,
-      child: Container(
-        // Mengatur ukuran dan jarak di dalam kartu.
-        width: MediaQuery.of(context).size.width / 3.5, // menyesuaikan dengan lebar device yang digunakan.
-        padding: const EdgeInsets.all(16.0),
-        // Menyusun title dan content secara vertikal.
-        child: Column(
-          children: [
-            Text(
-              title,
-              style: const TextStyle(fontWeight: FontWeight.bold),
+  Widget _buildHorizontalButton(ItemHomepage item) {
+    return Builder(
+      builder: (context) {
+        return Card(
+          elevation: 3,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(12),
+          ),
+          child: InkWell(
+            borderRadius: BorderRadius.circular(12),
+            onTap: () {
+              _handleTap(context, item);
+            },
+            child: Container(
+              width: 80, // Ukuran lebih kecil
+              height: 80, // Ukuran lebih kecil
+              padding: EdgeInsets.all(8),
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(12),
+                gradient: LinearGradient(
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                  colors: [item.color, _darkenColor(item.color, 0.2)],
+                ),
+              ),
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Icon(
+                    item.icon,
+                    color: Colors.white,
+                    size: 24, // Icon lebih kecil
+                  ),
+                  SizedBox(height: 6),
+                  Text(
+                    item.name,
+                    textAlign: TextAlign.center,
+                    style: TextStyle(
+                      color: Colors.white,
+                      fontWeight: FontWeight.w600,
+                      fontSize: 10, // Font lebih kecil
+                    ),
+                    maxLines: 2,
+                  ),
+                ],
+              ),
             ),
-            const SizedBox(height: 8.0),
-            Text(content),
-          ],
-        ),
-      ),
+          ),
+        );
+      },
     );
+  }
+
+  void _handleTap(BuildContext context, ItemHomepage item) {
+    // Tampilkan snackbar pemberitahuan
+    _showSnackBar(context, "Membuka ${item.name}");
+
+    switch (item.name) {
+      case "Scoreboard":
+        Navigator.push(
+          context,
+          MaterialPageRoute(builder: (context) => const ScoreboardPage()),
+        );
+        break;
+      case "Prediction":
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (context) => PredictionPage.selectMatch(),
+          ),
+        );
+        break;
+      case "Teams":
+        Navigator.push(
+          context,
+          MaterialPageRoute(builder: (context) => const TeamsPage()),
+        );
+        break;
+      case "Players":
+        Navigator.push(
+          context,
+          MaterialPageRoute(builder: (context) => const PlayersPage()),
+        );
+        break;
+    }
+  }
+
+  void _showSnackBar(BuildContext context, String message) {
+    ScaffoldMessenger.of(context)
+      ..hideCurrentSnackBar()
+      ..showSnackBar(
+        SnackBar(
+          content: Text(message),
+          backgroundColor: Colors.green[600],
+          duration: Duration(seconds: 2),
+          behavior: SnackBarBehavior.floating,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(10),
+          ),
+        ),
+      );
+  }
+
+  void _showLogoutDialog(BuildContext context) {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: Text("Logout"),
+          content: Text("Apakah Anda yakin ingin logout?"),
+          actions: [
+            TextButton(
+              onPressed: () {
+                Navigator.of(context).pop();
+              },
+              child: Text("Batal"),
+            ),
+            TextButton(
+              onPressed: () {
+                Navigator.of(context).pop();
+                _performLogout(context);
+              },
+              child: Text(
+                "Logout",
+                style: TextStyle(color: Colors.red),
+              ),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  void _performLogout(BuildContext context) async {
+    final request = context.read<CookieRequest>();
+    
+    try {
+      // Coba logout ke Django
+      final response = await request.logout(
+        "http://localhost:8000/auth/logout/",
+      );
+
+      // Navigasi ke login page
+      _navigateToLogin(context, "Logout berhasil!");
+    } catch (e) {
+      // Jika error, tetap navigasi ke login (fallback)
+      _navigateToLogin(context, "Logout berhasil!");
+    }
+  }
+
+  void _navigateToLogin(BuildContext context, String message) {
+    Navigator.pushReplacement(
+      context,
+      MaterialPageRoute(builder: (context) => LoginPage()),
+    );
+    
+    ScaffoldMessenger.of(context)
+      ..hideCurrentSnackBar()
+      ..showSnackBar(
+        SnackBar(
+          content: Text(message),
+          backgroundColor: Colors.green[600],
+          duration: Duration(seconds: 2),
+        ),
+      );
+  }
+
+  Color _darkenColor(Color color, double factor) {
+    final hsl = HSLColor.fromColor(color);
+    final hslDark = hsl.withLightness((hsl.lightness - factor).clamp(0.0, 1.0));
+    return hslDark.toColor();
   }
 }
 
 class ItemHomepage {
- final String name;
- final IconData icon;
+  final String name;
+  final IconData icon;
+  final Color color;
 
- ItemHomepage(this.name, this.icon);
-}
-
-class ItemCard extends StatelessWidget {
-  // Menampilkan kartu dengan ikon dan nama.
-
-  final ItemHomepage item; 
-
-  const ItemCard(this.item, {super.key}); 
-
-  @override
-  Widget build(BuildContext context) {
-    return Material(
-      // Menentukan warna latar belakang dari tema aplikasi.
-      color: Theme.of(context).colorScheme.secondary,
-      // Membuat sudut kartu melengkung.
-      borderRadius: BorderRadius.circular(12),
-
-      child: InkWell(
-        // Aksi ketika kartu ditekan.
-        onTap: () {
-          // Menampilkan pesan SnackBar saat kartu ditekan.
-          ScaffoldMessenger.of(context)
-            ..hideCurrentSnackBar()
-            ..showSnackBar(
-              SnackBar(content: Text("Kamu telah menekan tombol ${item.name}!"))
-            );
-        },
-        // Container untuk menyimpan Icon dan Text
-        child: Container(
-          padding: const EdgeInsets.all(8),
-          child: Center(
-            child: Column(
-              // Menyusun ikon dan teks di tengah kartu.
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Icon(
-                  item.icon,
-                  color: Colors.white,
-                  size: 30.0,
-                ),
-                const Padding(padding: EdgeInsets.all(3)),
-                Text(
-                  item.name,
-                  textAlign: TextAlign.center,
-                  style: const TextStyle(color: Colors.white),
-                ),
-              ],
-            ),
-          ),
-        ),
-      ),
-    );
-  }
-
+  ItemHomepage(this.name, this.icon, this.color);
 }
