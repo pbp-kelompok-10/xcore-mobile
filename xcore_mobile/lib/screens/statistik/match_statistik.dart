@@ -9,9 +9,9 @@ import '../lineup/lineup_page.dart';
 import 'widgets/header_section.dart';
 import 'widgets/navigation_cards.dart';
 import 'widgets/statistik_row.dart';
-import 'package:xcore_mobile/services/auth_service.dart'; // IMPORT BARU
-import 'admin/add_statistik_page.dart'; // IMPORT BARU
-import 'admin/edit_statistik_page.dart'; // IMPORT BARU
+import 'package:xcore_mobile/services/auth_service.dart';
+import 'admin/add_statistik_page.dart';
+import 'admin/edit_statistik_page.dart';
 
 class MatchStatisticsPage extends StatefulWidget {
   final String matchId;
@@ -159,9 +159,7 @@ class _MatchStatisticsPageState extends State<MatchStatisticsPage> {
         final success = await StatistikService.deleteStatistik(widget.matchId);
         if (success) {
           _showSnackBar('Statistik berhasil dihapus');
-          setState(() {
-            _statistik = null;
-          });
+          _loadStatistik(); // Auto refresh setelah delete
         } else {
           _showSnackBar('Gagal menghapus statistik');
         }
@@ -234,7 +232,7 @@ class _MatchStatisticsPageState extends State<MatchStatisticsPage> {
     );
   }
 
-  // Existing build methods (loading, error, empty states) tetap sama...
+  // Loading state - TANPA TOMBOL REFRESH
   Widget _buildLoadingState() {
     return Center(
       child: Column(
@@ -253,6 +251,7 @@ class _MatchStatisticsPageState extends State<MatchStatisticsPage> {
               color: Colors.grey[600],
             ),
           ),
+          // HANYA TAMPILKAN TAMBAH STATISTIK JIKA ADMIN DAN BELUM ADA STATISTIK
           if (_isAdmin && _statistik == null) ...[
             SizedBox(height: 20),
             ElevatedButton.icon(
@@ -270,6 +269,7 @@ class _MatchStatisticsPageState extends State<MatchStatisticsPage> {
     );
   }
 
+  // Error state - TANPA TOMBOL REFRESH
   Widget _buildErrorState() {
     return Center(
       child: Padding(
@@ -304,21 +304,8 @@ class _MatchStatisticsPageState extends State<MatchStatisticsPage> {
               ),
             ),
             SizedBox(height: 24),
-            ElevatedButton.icon(
-              icon: Icon(Icons.refresh_rounded, size: 18),
-              label: Text('Try Again'),
-              onPressed: _loadStatistik,
-              style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.green[700],
-                foregroundColor: Colors.white,
-                padding: EdgeInsets.symmetric(horizontal: 20, vertical: 12),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(8),
-                ),
-              ),
-            ),
-            if (_isAdmin) ...[
-              SizedBox(height: 12),
+            // HANYA TAMPILKAN TAMBAH STATISTIK UNTUK ADMIN (TANPA TOMBOL REFRESH)
+            if (_isAdmin) 
               ElevatedButton.icon(
                 icon: Icon(Icons.add, size: 18),
                 label: Text('Tambah Statistik'),
@@ -332,13 +319,13 @@ class _MatchStatisticsPageState extends State<MatchStatisticsPage> {
                   ),
                 ),
               ),
-            ],
           ],
         ),
       ),
     );
   }
 
+  // Empty state - TANPA TOMBOL REFRESH
   Widget _buildEmptyState() {
     return Center(
       child: Padding(
@@ -373,21 +360,8 @@ class _MatchStatisticsPageState extends State<MatchStatisticsPage> {
               ),
             ),
             SizedBox(height: 24),
-            ElevatedButton.icon(
-              icon: Icon(Icons.refresh_rounded, size: 18),
-              label: Text('Refresh'),
-              onPressed: _loadStatistik,
-              style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.green[700],
-                foregroundColor: Colors.white,
-                padding: EdgeInsets.symmetric(horizontal: 20, vertical: 12),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(8),
-                ),
-              ),
-            ),
-            if (_isAdmin) ...[
-              SizedBox(height: 12),
+            // HANYA TAMPILKAN TAMBAH STATISTIK UNTUK ADMIN (TANPA TOMBOL REFRESH)
+            if (_isAdmin) 
               ElevatedButton.icon(
                 icon: Icon(Icons.add, size: 18),
                 label: Text('Tambah Statistik'),
@@ -401,7 +375,6 @@ class _MatchStatisticsPageState extends State<MatchStatisticsPage> {
                   ),
                 ),
               ),
-            ],
           ],
         ),
       ),
