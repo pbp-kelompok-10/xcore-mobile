@@ -222,8 +222,6 @@ class LeftDrawer extends StatelessWidget {
     );
   }
 
-  // Lokasi: lib/screens/left_drawer.dart (dan lib/screens/menu.dart)
-
 void _performLogout(BuildContext context) async {
   final request = context.read<CookieRequest>();
   
