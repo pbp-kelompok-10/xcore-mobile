@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:xcore_mobile/models/scoreboard_entry.dart';
 import 'package:xcore_mobile/screens/forum/forum_page.dart';
 import 'package:xcore_mobile/screens/scoreboard/admin/add_match_page.dart';
+import 'package:xcore_mobile/screens/scoreboard/admin/edit_match_page.dart';
 import 'package:xcore_mobile/screens/scoreboard/scoreboard_service.dart';
 import 'package:xcore_mobile/screens/statistik/match_statistik.dart';
 import 'package:xcore_mobile/screens/prediction/prediction_page.dart';
@@ -38,7 +39,7 @@ class _ScoreboardPageState extends State<ScoreboardPage> {
       // ------------------------------
       appBar: AppBar(
         title: const Text(
-          "⚽ Scoreboard",
+          "⚽ Xcore",
           style: TextStyle(fontWeight: FontWeight.bold),
         ),
         centerTitle: true,
@@ -117,6 +118,30 @@ class _ScoreboardPageState extends State<ScoreboardPage> {
                       awayScore: item.awayScore,
                       stadium: item.stadium,
                       group: item.group,
+                    ),
+                  ),
+
+                  const SizedBox(height: 8),
+
+                  SizedBox(
+                    width: double.infinity,
+                    child: ElevatedButton.icon(
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: Colors.teal,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                      ),
+                      icon: const Icon(Icons.forum, color: Colors.white),
+                      label: const Text("Edit Match", style: TextStyle(color: Colors.white)),
+                      onPressed: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (_) => EditMatchPage(matchId: item.id),
+                          ),
+                        );
+                      },
                     ),
                   ),
 
