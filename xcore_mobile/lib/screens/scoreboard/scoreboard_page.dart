@@ -9,6 +9,7 @@ import 'package:xcore_mobile/screens/prediction/prediction_page.dart';
 import 'package:xcore_mobile/screens/scoreboard/scoreboard_card.dart';
 import 'package:xcore_mobile/screens/scoreboard/admin/add_match_page.dart';
 import 'package:xcore_mobile/screens/forum/forum_page.dart';
+import 'package:xcore_mobile/services/auth_service.dart';
 
 class ScoreboardPage extends StatefulWidget {
   const ScoreboardPage({super.key});
@@ -19,14 +20,20 @@ class ScoreboardPage extends StatefulWidget {
 
 class _ScoreboardPageState extends State<ScoreboardPage> {
   late Future<List<ScoreboardEntry>> futureScoreboard;
-
-  /// sementara (nanti sambung dari auth / backend)
-  bool isAdmin = true;
+  bool isAdmin = false; // Ubah dari true ke false
 
   @override
   void initState() {
     super.initState();
     futureScoreboard = ScoreboardService.fetchScoreboard();
+    _checkAdminStatus();
+  }
+
+  Future<void> _checkAdminStatus() async {
+    final adminStatus = await AuthService.isAdmin();
+    setState(() {
+      isAdmin = adminStatus;
+    });
   }
 
   @override
