@@ -222,22 +222,28 @@ class LeftDrawer extends StatelessWidget {
     );
   }
 
-  void _performLogout(BuildContext context) async {
-    final request = context.read<CookieRequest>();
-    
-    try {
-      // Coba logout ke Django
-      final response = await request.logout(
-        "http://localhost:8000/auth/logout/",
-      );
+  // Lokasi: lib/screens/left_drawer.dart (dan lib/screens/menu.dart)
 
-      // Navigasi ke login page
-      _navigateToLogin(context, "Logout berhasil!");
-    } catch (e) {
-      // Jika error, tetap navigasi ke login (fallback)
-      _navigateToLogin(context, "Logout berhasil!");
-    }
+void _performLogout(BuildContext context) async {
+  final request = context.read<CookieRequest>();
+  
+  // Tentukan pesan default
+  String snackbarMessage = "Logout berhasil!";
+  
+  try {
+    // Coba logout ke Django
+    final response = await request.logout(
+      "http://localhost:8000/auth/logout/",
+    );
+
+  } catch (e) {
+    print("Logout network error: $e");
+    snackbarMessage = "Logout berhasil secara lokal, tetapi gagal menghubungi server.";
   }
+  
+  // Navigasi ke login page setelah upaya logout, berhasil atau gagal.
+  _navigateToLogin(context, snackbarMessage);
+}
 
   void _navigateToLogin(BuildContext context, String message) {
     Navigator.pushReplacement(
