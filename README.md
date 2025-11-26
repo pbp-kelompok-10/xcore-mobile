@@ -54,31 +54,39 @@ Alur pengintegrasian dengan web service untuk terhubung dengan aplikasi web yang
 ## Design
 https://www.figma.com/design/sTyMbtyzsur2K5reeIWjxo/Untitled?node-id=0-1&t=gH3GWdAi5VQOSjXW-1
 
-## PLAN PER WEEK:
-PLAN PER WEEK:<br>
--17-23 November:<br>
-Alvin : Buat library untuk register<br>
-Abhi : Membuat API Fitur Scoreboard<br>
-Zita : Membuat API Fitur Forum dan UI nya<br>
-<br>
--24-30 November:<br>
-Alvin : Membuat API Fitur Highlights<br>
-Abhi : UI scoreboard<br>
-Zita : Membuat API Fitur Lineup dan UI nya<br>
-<br>
--01-07 Desember:<br>
-Alvin : Membuat API Fitur Teams & Players (bagian dari lineup)<br>
-Abhi : Integrasi API<br>
-Zita : Styling dan merapihkan kode<br>
-<br>
--08-14 Desember:<br>
-Alvin : Menggabungkan rounting antar fitur<br>
-Abhi : Finalisasi<br>
-Zita : Finishing<br>
-<br>
--15-21 Desember:<br>
-Alvin : Recheck kode<br>
-Abhi : Bikin video<br>
-Zita : Recheck kode & bikin video<br>
+# PLAN PER WEEK
 
+## 17-23 November:
+- **Alvin**: Buat library untuk register
+- **Abhi**: Membuat API Fitur Scoreboard  
+- **Zita**: Membuat API Fitur Forum dan UI nya
+- **Kasa**: Membuat design aplikasi di Figma
+- **Garuga**: Membuat API Fitur Statistik
 
+## 24-30 November:
+- **Alvin**: Membuat API Fitur Highlights
+- **Abhi**: UI scoreboard
+- **Zita**: Membuat API Fitur Lineup dan UI nya
+- **Kasa**: Membuat fitur API Prediction
+- **Garuga**: UI statistik
+
+## 01-07 Desember:
+- **Alvin**: Membuat API Fitur Teams & Players (bagian dari lineup)
+- **Abhi**: Integrasi API
+- **Zita**: Styling dan merapihkan kode
+- **Kasa**: Integrasi API
+- **Garuga**: Integrasi API
+
+## 08-14 Desember:
+- **Alvin**: Menggabungkan rounting antar fitur
+- **Abhi**: Finalisasi
+- **Zita**: Finishing
+- **Kasa**: Styling dan merapikan kode
+- **Garuga**: Finalisasi
+
+## 15-21 Desember:
+- **Alvin**: Recheck kode
+- **Abhi**: Bikin video
+- **Zita**: Recheck kode & bikin video
+- **Kasa**: Finishing
+- **Garuga**: Bikin video

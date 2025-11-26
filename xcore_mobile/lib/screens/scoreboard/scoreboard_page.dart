@@ -100,7 +100,7 @@ class _ScoreboardPageState extends State<ScoreboardPage> {
                         Navigator.push(
                           context,
                           MaterialPageRoute(
-                            builder: (_) => MatchStatisticsPage(matchId: item.id),
+                            builder: (_) => MatchStatisticsPage(matchId: item.id, homeTeam: item.homeTeam, awayTeam:item.awayTeam, homeTeamCode: item.homeTeamCode, awayTeamCode: item.awayTeamCode),
                           ),
                         );
                       }
