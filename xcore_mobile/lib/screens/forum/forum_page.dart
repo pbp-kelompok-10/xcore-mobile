@@ -1,4 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:pbp_django_auth/pbp_django_auth.dart';
+import 'package:provider/provider.dart';
+import 'package:xcore_mobile/config.dart';
 import 'package:xcore_mobile/models/forum_entry.dart';
 import 'package:xcore_mobile/models/post_entry.dart';
 import 'forum_service.dart';
@@ -20,10 +23,15 @@ class _ForumPageState extends State<ForumPage> {
   final TextEditingController _postController = TextEditingController();
   final Map<String, TextEditingController> _editControllers = {};
 
+  // Variabel untuk current user yang sedang login
+  int? _currentUserId;
+  bool? _isAdmin;
+
   @override
   void initState() {
     super.initState();
     _loadForumData();
+    _getCurrentUserInfo();
   }
 
   Future<void> _loadForumData() async {
@@ -36,6 +44,7 @@ class _ForumPageState extends State<ForumPage> {
         _posts = posts;
         _isLoading = false;
       });
+
     } catch (e) {
       setState(() {
         _error = e.toString();
@@ -44,12 +53,30 @@ class _ForumPageState extends State<ForumPage> {
     }
   }
 
+  void _getCurrentUserInfo() {
+    // Cara 1: Jika Django mengembalikan user info di response login
+    final request = context.read<CookieRequest>();
+
+    // Cek apakah user sudah login
+    if (request.loggedIn) {
+      // Jika Django menyimpan user info di session, kita perlu endpoint khusus
+      // Untuk sementara, kita akan cek dari posts yang ada
+      setState(() {
+        _currentUserId = request.jsonData['user_id'];
+        _isAdmin = request.jsonData['user_is_admin'];
+      });
+    }
+  }
+
   Future<void> _addPost() async {
     final message = _postController.text.trim();
-    if (message.isEmpty || _forum == null) return;
+    if (message.isEmpty || _forum == null) {
+      _showSnackBar('Message cannot be empty!');
+      return;
+    };
 
     try {
-      await ForumService.addPost(_forum!.id, message);
+      await ForumService.addPost(_forum!.id, message, context);
       _postController.clear();
       await _loadForumData(); // Refresh posts
       _showSnackBar('Post added successfully!');
@@ -59,12 +86,19 @@ class _ForumPageState extends State<ForumPage> {
   }
 
   Future<void> _editPost(String postId, String newMessage) async {
-    if (newMessage.isEmpty || _forum == null) return;
+    if (newMessage.isEmpty || _forum == null) {
+      _showSnackBar('Message cannot be empty!');
+      return;
+    }
 
     try {
-      await ForumService.editPost(_forum!.id, postId, newMessage);
+      await ForumService.editPost(_forum!.id, postId, newMessage, context);
       await _loadForumData(); // Refresh posts
-      _showSnackBar('Post updated successfully!');
+
+      _editControllers.remove(postId);
+
+      _showSnackBar('Post message updated successfully!');
+
     } catch (e) {
       _showSnackBar('Failed to update post: ${e.toString()}');
     }
@@ -93,7 +127,7 @@ class _ForumPageState extends State<ForumPage> {
 
     if (confirmed == true) {
       try {
-        await ForumService.deletePost(_forum!.id, postId);
+        await ForumService.deletePost(_forum!.id, postId, context);
         await _loadForumData(); // Refresh posts
         _showSnackBar('Post deleted successfully!');
       } catch (e) {
@@ -228,17 +262,9 @@ class _ForumPageState extends State<ForumPage> {
             ),
             child: Column(
               children: [
-                Text(
-                  '${_forum!.matchHome} vs ${_forum!.matchAway}',
-                  style: const TextStyle(
-                    fontSize: 16,
-                    fontWeight: FontWeight.bold,
-                    color: Colors.white,
-                  ),
-                ),
                 const SizedBox(height: 4),
                 Text(
-                  _forum!.nama,
+                  'Welcome to the Discussion Forum. Please keep conversations respectful and relevant. Start a new topic or explore existing discussions.',
                   style: const TextStyle(
                     fontSize: 14,
                     color: Colors.white70,
@@ -296,6 +322,7 @@ class _ForumPageState extends State<ForumPage> {
   }
 
   Widget _buildPostCard(PostEntry post, bool isEditing) {
+    print(_isAdmin);
     return Card(
       margin: const EdgeInsets.only(bottom: 12),
       elevation: 2,
@@ -311,7 +338,9 @@ class _ForumPageState extends State<ForumPage> {
                 CircleAvatar(
                   radius: 16,
                   backgroundImage: NetworkImage(
-                    post.authorPicture ?? 'https://via.placeholder.com/40',
+                    post.authorPicture != null
+                        ? '${Config.baseUrl}${post.authorPicture}'
+                        : 'https://via.placeholder.com/40',
                   ),
                   onBackgroundImageError: (_, __) {},
                 ),
@@ -337,8 +366,9 @@ class _ForumPageState extends State<ForumPage> {
                     ],
                   ),
                 ),
+
                 // Edit/Delete buttons (only for own posts)
-                if (post.authorId == 1) // Ganti dengan current user ID
+                if (post.authorId == _currentUserId) // Ganti dengan current user ID
                   PopupMenuButton<String>(
                     icon: Icon(Icons.more_vert, color: Colors.grey[600]),
                     onSelected: (value) {
@@ -359,6 +389,28 @@ class _ForumPageState extends State<ForumPage> {
                           ],
                         ),
                       ),
+                      const PopupMenuItem(
+                        value: 'delete',
+                        child: Row(
+                          children: [
+                            Icon(Icons.delete, size: 18, color: Colors.red),
+                            SizedBox(width: 8),
+                            Text('Delete', style: TextStyle(color: Colors.red)),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
+
+                if (_isAdmin == true)
+                  PopupMenuButton<String>(
+                    icon: Icon(Icons.more_vert, color: Colors.grey[600]),
+                    onSelected: (value) {
+                      if (value == 'delete') {
+                        _deletePost(post.id);
+                      }
+                    },
+                    itemBuilder: (context) => [
                       const PopupMenuItem(
                         value: 'delete',
                         child: Row(
@@ -409,6 +461,13 @@ class _ForumPageState extends State<ForumPage> {
                       ElevatedButton(
                         onPressed: () {
                           final newMessage = _editControllers[post.id]!.text.trim();
+
+                          if (newMessage == post.message){
+                            _showSnackBar('Message cannot be the same!');
+                            _cancelEdit(post.id);
+                            return;
+                          }
+
                           if (newMessage.isNotEmpty) {
                             _editPost(post.id, newMessage);
                           }
