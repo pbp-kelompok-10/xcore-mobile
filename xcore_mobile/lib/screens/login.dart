@@ -1,8 +1,9 @@
 import 'package:xcore_mobile/screens/menu.dart';
 import 'package:flutter/material.dart';
-import 'package:pbp_django_auth/pbp_django_auth.dart';
-import 'package:provider/provider.dart';
+import 'package:http/http.dart' as http;
+import 'dart:convert';
 import 'package:xcore_mobile/screens/register.dart';
+import 'package:xcore_mobile/services/auth_service.dart'; // IMPORT BARU
 
 class LoginPage extends StatefulWidget {
   const LoginPage({super.key});
@@ -14,11 +15,86 @@ class LoginPage extends StatefulWidget {
 class _LoginPageState extends State<LoginPage> {
   final TextEditingController _usernameController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
+  bool _isLoading = false;
+
+  Future<void> _login() async {
+    if (_usernameController.text.isEmpty || _passwordController.text.isEmpty) {
+      _showErrorDialog('Username dan password harus diisi');
+      return;
+    }
+
+    setState(() => _isLoading = true);
+
+    try {
+      final response = await http.post(
+        Uri.parse('http://localhost:8000/auth/login-token/'),
+        body: {
+          'username': _usernameController.text.trim(),
+          'password': _passwordController.text.trim(),
+        },
+      );
+
+      final data = json.decode(response.body);
+
+      if (response.statusCode == 200 && data['status'] == true) {
+        // Save token and user info
+        await AuthService.saveUserData(data['token'], data['user_info']);
+        
+        final isAdmin = data['user_info']['is_admin'] ?? false;
+        final username = data['user_info']['username'];
+        final message = data['message'];
+
+        if (context.mounted) {
+          Navigator.pushReplacement(
+            context,
+            MaterialPageRoute(builder: (context) => MyHomePage()),
+          );
+
+          ScaffoldMessenger.of(context)
+            ..hideCurrentSnackBar()
+            ..showSnackBar(
+              SnackBar(
+                content: Text("$message Selamat datang, $username!"),
+                backgroundColor: isAdmin ? Colors.orange[600] : Colors.green[600],
+                duration: const Duration(seconds: 3),
+                behavior: SnackBarBehavior.floating,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(10),
+                ),
+              ),
+            );
+        }
+      } else {
+        final errorMessage = data['message'] ?? "Login gagal";
+        _showErrorDialog(errorMessage);
+      }
+    } catch (e) {
+      _showErrorDialog('Error: $e');
+    } finally {
+      setState(() => _isLoading = false);
+    }
+  }
+
+  void _showErrorDialog(String message) {
+    if (context.mounted) {
+      showDialog(
+        context: context,
+        builder: (context) => AlertDialog(
+          title: const Text('Login Gagal'),
+          content: Text(message),
+          actions: [
+            TextButton(
+              child: const Text('OK'),
+              onPressed: () => Navigator.pop(context),
+            ),
+          ],
+        ),
+      );
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
-    final request = context.watch<CookieRequest>();
-
     return Scaffold(
       appBar: AppBar(
         title: const Text(
@@ -98,84 +174,31 @@ class _LoginPageState extends State<LoginPage> {
                     const SizedBox(height: 24.0),
 
                     // LOGIN BUTTON
-                    ElevatedButton(
-                      onPressed: () async {
-                        String username = _usernameController.text.trim();
-                        String password = _passwordController.text.trim();
-                        final response = await request.login(
-                          "http://localhost:8000/auth/login/",
-                          {
-                            'username': username,
-                            'password': password,
-                          },
-                        );
-                        if (request.loggedIn && response["status"] == true) {
-                          String message = response["message"];
-                          String uname = response["username"];
-
-                          if (context.mounted) {
-                            Navigator.pushReplacement(
-                              context,
-                              MaterialPageRoute(
-                                  builder: (context) => MyHomePage()),
-                            );
-
-                            ScaffoldMessenger.of(context)
-                              ..hideCurrentSnackBar()
-                              ..showSnackBar(
-                                SnackBar(
-                                  content: Text("$message Selamat datang, $uname!"),
-                                  backgroundColor: Colors.green[600],
-                                  duration: const Duration(seconds: 3),
-                                  behavior: SnackBarBehavior.floating,
-                                  shape: RoundedRectangleBorder(
-                                    borderRadius: BorderRadius.circular(10),
-                                  ),
-                                ),
-                              );
-                          }
-                        } else {
-                          String errorMessage =
-                              response["message"] ?? "Login gagal.";
-
-                          if (context.mounted) {
-                            showDialog(
-                              context: context,
-                              builder: (context) => AlertDialog(
-                                title: const Text('Login Gagal'),
-                                content: Text(errorMessage),
-                                actions: [
-                                  TextButton(
-                                    child: const Text('OK'),
-                                    onPressed: () => Navigator.pop(context),
-                                  ),
-                                ],
+                    _isLoading
+                        ? const CircularProgressIndicator()
+                        : ElevatedButton(
+                            onPressed: _login,
+                            style: ElevatedButton.styleFrom(
+                              foregroundColor: Colors.white,
+                              backgroundColor: Colors.green[700],
+                              minimumSize: const Size(double.infinity, 50),
+                              padding: const EdgeInsets.symmetric(vertical: 16.0),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(12.0),
                               ),
-                            );
-                          }
-                        }
-                      },
-                      style: ElevatedButton.styleFrom(
-                        foregroundColor: Colors.white,
-                        backgroundColor: Colors.green[700],
-                        minimumSize: const Size(double.infinity, 50),
-                        padding: const EdgeInsets.symmetric(vertical: 16.0),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(12.0),
-                        ),
-                      ),
-                      child: const Text(
-                        'Login',
-                        style: TextStyle(
-                          fontSize: 16.0,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                    ),
+                            ),
+                            child: const Text(
+                              'Login',
+                              style: TextStyle(
+                                fontSize: 16.0,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                          ),
 
                     const SizedBox(height: 36.0),
 
-                    // REGISTER PLACEHOLDER
+                    // REGISTER LINK
                     GestureDetector(
                       onTap: () {
                         Navigator.push(

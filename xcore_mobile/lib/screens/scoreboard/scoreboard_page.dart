@@ -9,6 +9,9 @@ import 'package:xcore_mobile/screens/prediction/prediction_page.dart';
 import 'package:xcore_mobile/screens/scoreboard/scoreboard_card.dart';
 import 'package:xcore_mobile/screens/scoreboard/admin/add_match_page.dart';
 import 'package:xcore_mobile/screens/forum/forum_page.dart';
+import 'package:xcore_mobile/screens/login.dart';
+import 'package:pbp_django_auth/pbp_django_auth.dart';
+import 'package:provider/provider.dart';
 
 class ScoreboardPage extends StatefulWidget {
   const ScoreboardPage({super.key});
@@ -20,9 +23,6 @@ class ScoreboardPage extends StatefulWidget {
 class _ScoreboardPageState extends State<ScoreboardPage> {
   late Future<List<ScoreboardEntry>> futureScoreboard;
 
-  /// sementara (nanti sambung dari auth / backend)
-  bool isAdmin = true;
-
   @override
   void initState() {
     super.initState();
@@ -30,7 +30,7 @@ class _ScoreboardPageState extends State<ScoreboardPage> {
   }
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context) {    
     return Scaffold(
       backgroundColor: const Color(0xFFF7F8FA),
 
