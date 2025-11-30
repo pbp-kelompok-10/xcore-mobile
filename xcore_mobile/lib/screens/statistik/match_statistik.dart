@@ -264,6 +264,7 @@ class _MatchStatisticsPageState extends State<MatchStatisticsPage> {
             onHighlightTap: _navigateToHighlight,
             onPredictionTap: _navigateToPrediction,
             onLineupTap: _navigateToLineup,
+            matchId: widget.matchId,
           ),
           
           SizedBox(height: 24),
