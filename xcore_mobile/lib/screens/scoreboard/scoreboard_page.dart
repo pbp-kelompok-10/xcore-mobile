@@ -7,11 +7,7 @@ import 'package:xcore_mobile/screens/scoreboard/scoreboard_service.dart';
 import 'package:xcore_mobile/screens/statistik/match_statistik.dart';
 import 'package:xcore_mobile/screens/prediction/prediction_page.dart';
 import 'package:xcore_mobile/screens/scoreboard/scoreboard_card.dart';
-import 'package:xcore_mobile/screens/scoreboard/admin/add_match_page.dart';
-import 'package:xcore_mobile/screens/forum/forum_page.dart';
-import 'package:xcore_mobile/screens/login.dart';
-import 'package:pbp_django_auth/pbp_django_auth.dart';
-import 'package:provider/provider.dart';
+import 'package:xcore_mobile/services/auth_service.dart';
 
 class ScoreboardPage extends StatefulWidget {
   const ScoreboardPage({super.key});
@@ -22,21 +18,27 @@ class ScoreboardPage extends StatefulWidget {
 
 class _ScoreboardPageState extends State<ScoreboardPage> {
   late Future<List<ScoreboardEntry>> futureScoreboard;
+  bool isAdmin = false;
 
   @override
   void initState() {
     super.initState();
     futureScoreboard = ScoreboardService.fetchScoreboard();
+    _checkAdminStatus();
+  }
+
+  Future<void> _checkAdminStatus() async {
+    final adminStatus = await AuthService.isAdmin();
+    setState(() {
+      isAdmin = adminStatus;
+    });
   }
 
   @override
-  Widget build(BuildContext context) {    
+  Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: const Color(0xFFF7F8FA),
 
-      // ------------------------------
-      // APPBAR
-      // ------------------------------
       appBar: AppBar(
         title: const Text(
           "⚽ Xcore",
@@ -46,6 +48,7 @@ class _ScoreboardPageState extends State<ScoreboardPage> {
         backgroundColor: Colors.white,
         elevation: 0,
         actions: [
+          // ADD MATCH (UNTUK ADMIN SAJA)
           if (isAdmin)
             IconButton(
               icon: const Icon(Icons.add, color: Colors.teal),
@@ -61,13 +64,9 @@ class _ScoreboardPageState extends State<ScoreboardPage> {
         ],
       ),
 
-      // ------------------------------
-      // BODY
-      // ------------------------------
       body: FutureBuilder(
         future: futureScoreboard,
         builder: (context, snapshot) {
-
           if (snapshot.connectionState == ConnectionState.waiting) {
             return const Center(child: CircularProgressIndicator());
           }
@@ -101,13 +100,17 @@ class _ScoreboardPageState extends State<ScoreboardPage> {
                         Navigator.push(
                           context,
                           MaterialPageRoute(
-                            builder: (_) => MatchStatisticsPage(matchId: item.id, homeTeam: item.homeTeam, awayTeam:item.awayTeam, homeTeamCode: item.homeTeamCode, awayTeamCode: item.awayTeamCode),
+                            builder: (_) => MatchStatisticsPage(
+                              matchId: item.id,
+                              homeTeam: item.homeTeam,
+                              awayTeam: item.awayTeam,
+                              homeTeamCode: item.homeTeamCode,
+                              awayTeamCode: item.awayTeamCode,
+                            ),
                           ),
                         );
                       }
                     },
-
-                    // UI CARD
                     child: ScoreboardMatchCard(
                       homeTeam: item.homeTeam,
                       awayTeam: item.awayTeam,
@@ -123,32 +126,36 @@ class _ScoreboardPageState extends State<ScoreboardPage> {
 
                   const SizedBox(height: 8),
 
-                  SizedBox(
-                    width: double.infinity,
-                    child: ElevatedButton.icon(
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: Colors.teal,
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(12),
-                        ),
-                      ),
-                      icon: const Icon(Icons.forum, color: Colors.white),
-                      label: const Text("Edit Match", style: TextStyle(color: Colors.white)),
-                      onPressed: () {
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder: (_) => EditMatchPage(matchId: item.id),
+                  // ------------------------------
+                  // SHOW EDIT BUTTON ONLY FOR ADMIN
+                  // ------------------------------
+                  if (isAdmin)
+                    SizedBox(
+                      width: double.infinity,
+                      child: ElevatedButton.icon(
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: Colors.teal,
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(12),
                           ),
-                        );
-                      },
+                        ),
+                        icon: const Icon(Icons.edit, color: Colors.white),
+                        label: const Text("Edit Match", style: TextStyle(color: Colors.white)),
+                        onPressed: () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (_) => EditMatchPage(matchId: item.id),
+                            ),
+                          );
+                        },
+                      ),
                     ),
-                  ),
 
-                  const SizedBox(height: 8),
+                  if (isAdmin) const SizedBox(height: 8),
 
                   // ------------------------------
-                  // FORUM BUTTON
+                  // FORUM BUTTON (ALL USERS)
                   // ------------------------------
                   SizedBox(
                     width: double.infinity,

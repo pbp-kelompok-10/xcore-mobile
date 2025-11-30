@@ -36,6 +36,13 @@ class _LoginPageState extends State<LoginPage> {
 
       final data = json.decode(response.body);
 
+      print("============= DEBUG LOGIN RESPONSE =============");
+      print("RAW RESPONSE : ${response.body}");
+      print("USER INFO    : ${data['user_info']}");
+      print("IS ADMIN?    : ${data['user_info']['is_admin']}");
+      print("================================================");
+
+
       if (response.statusCode == 200 && data['status'] == true) {
         // Save token and user info
         await AuthService.saveUserData(data['token'], data['user_info']);
