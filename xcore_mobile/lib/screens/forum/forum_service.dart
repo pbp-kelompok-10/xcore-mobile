@@ -7,8 +7,19 @@ import 'package:xcore_mobile/models/post_entry.dart';
 import 'package:pbp_django_auth/pbp_django_auth.dart';
 import 'package:provider/provider.dart';
 
+import '../../services/auth_service.dart';
+
 class ForumService {
   static const String baseUrl = 'http://localhost:8000'; // Ganti URL Django
+
+  // Helper method untuk menambahkan token ke headers
+  static Future<Map<String, String>> _getHeaders() async {
+    final token = await AuthService.getToken();
+    return {
+      'Content-Type': 'application/json',
+      if (token != null) 'Authorization': 'Token $token',
+    };
+  }
 
   // Get forum by match ID
   static Future<ForumEntry> fetchForumByMatch(String matchId) async {
@@ -28,14 +39,38 @@ class ForumService {
   }
 
   // Get posts for a forum
-  static Future<List<PostEntry>> fetchPosts(String forumId) async {
-    final response = await http.get(Uri.parse('$baseUrl/forum/flutter/$forumId/get_posts/'));
+  // Get posts for a forum dengan informasi user
+  static Future<Map<String, dynamic>> fetchPosts(String forumId, BuildContext context) async {
+    final request = Provider.of<CookieRequest>(context, listen: false);
 
-    if (response.statusCode == 200) {
-      final data = json.decode(response.body);
-      return List<PostEntry>.from(data['posts'].map((x) => PostEntry.fromJson(x)));
-    } else {
-      throw Exception('Failed to load posts');
+    try {
+      final response = await request.get(
+        '$baseUrl/forum/flutter/$forumId/get_posts/',
+      );
+
+      if (response is Map<String, dynamic>) {
+        if (response.containsKey('error')) {
+          throw Exception(response['error']);
+        }
+
+        final List<dynamic> postsJson = response['posts'];
+
+        // Convert ke List<PostEntry>
+        final posts = postsJson.map((json) => PostEntry.fromJson(json)).toList();
+
+        // Kembalikan posts DAN informasi user
+        return {
+          'posts': posts,
+          'user_id': response['user_id'],
+          'user_is_authenticated': response['user_is_authenticated'] ?? false,
+          'user_is_admin': response['user_is_admin'] ?? false,
+        };
+      } else {
+        throw Exception('Invalid response format');
+      }
+    } catch (e) {
+      print('Error fetching posts: $e');
+      rethrow;
     }
   }
 

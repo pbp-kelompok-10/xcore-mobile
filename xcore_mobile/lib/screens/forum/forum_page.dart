@@ -31,19 +31,26 @@ class _ForumPageState extends State<ForumPage> {
   void initState() {
     super.initState();
     _loadForumData();
-    _getCurrentUserInfo();
   }
 
   Future<void> _loadForumData() async {
     try {
       final forum = await ForumService.fetchForumByMatch(widget.matchId);
-      final posts = await ForumService.fetchPosts(forum.id);
+
+      // fetchPosts sekarang mengembalikan Map dengan posts dan user info
+      final response = await ForumService.fetchPosts(forum.id, context);
 
       setState(() {
         _forum = forum;
-        _posts = posts;
+        _posts = response['posts']; // Ambil posts dari response
+        _currentUserId = response['user_id']; // Simpan user ID
+        _isAdmin = response['user_is_admin']; // Simpan status admin
         _isLoading = false;
       });
+
+      // Debug
+      print('Current User ID: $_currentUserId');
+      print('Is Admin: $_isAdmin');
 
     } catch (e) {
       setState(() {
@@ -53,20 +60,6 @@ class _ForumPageState extends State<ForumPage> {
     }
   }
 
-  void _getCurrentUserInfo() {
-    // Cara 1: Jika Django mengembalikan user info di response login
-    final request = context.read<CookieRequest>();
-
-    // Cek apakah user sudah login
-    if (request.loggedIn) {
-      // Jika Django menyimpan user info di session, kita perlu endpoint khusus
-      // Untuk sementara, kita akan cek dari posts yang ada
-      setState(() {
-        _currentUserId = request.jsonData['user_id'];
-        _isAdmin = request.jsonData['user_is_admin'];
-      });
-    }
-  }
 
   Future<void> _addPost() async {
     final message = _postController.text.trim();
@@ -322,7 +315,6 @@ class _ForumPageState extends State<ForumPage> {
   }
 
   Widget _buildPostCard(PostEntry post, bool isEditing) {
-    print(_isAdmin);
     return Card(
       margin: const EdgeInsets.only(bottom: 12),
       elevation: 2,
@@ -367,61 +359,52 @@ class _ForumPageState extends State<ForumPage> {
                   ),
                 ),
 
-                // Edit/Delete buttons (only for own posts)
-                if (post.authorId == _currentUserId) // Ganti dengan current user ID
+                // Popup menu button
+                if (post.authorId == _currentUserId || _isAdmin == true)
                   PopupMenuButton<String>(
                     icon: Icon(Icons.more_vert, color: Colors.grey[600]),
                     onSelected: (value) {
-                      if (value == 'edit') {
+                      if (value == 'edit' && post.authorId == _currentUserId) {
                         _startEditPost(post);
                       } else if (value == 'delete') {
                         _deletePost(post.id);
                       }
                     },
-                    itemBuilder: (context) => [
-                      const PopupMenuItem(
-                        value: 'edit',
-                        child: Row(
-                          children: [
-                            Icon(Icons.edit, size: 18),
-                            SizedBox(width: 8),
-                            Text('Edit'),
-                          ],
-                        ),
-                      ),
-                      const PopupMenuItem(
-                        value: 'delete',
-                        child: Row(
-                          children: [
-                            Icon(Icons.delete, size: 18, color: Colors.red),
-                            SizedBox(width: 8),
-                            Text('Delete', style: TextStyle(color: Colors.red)),
-                          ],
-                        ),
-                      ),
-                    ],
-                  ),
+                    itemBuilder: (context) {
+                      final menuItems = <PopupMenuEntry<String>>[];
 
-                if (_isAdmin == true)
-                  PopupMenuButton<String>(
-                    icon: Icon(Icons.more_vert, color: Colors.grey[600]),
-                    onSelected: (value) {
-                      if (value == 'delete') {
-                        _deletePost(post.id);
+                      // Hanya tampilkan edit untuk pemilik post
+                      if (post.authorId == _currentUserId) {
+                        menuItems.add(
+                          const PopupMenuItem(
+                            value: 'edit',
+                            child: Row(
+                              children: [
+                                Icon(Icons.edit, size: 18),
+                                SizedBox(width: 8),
+                                Text('Edit'),
+                              ],
+                            ),
+                          ),
+                        );
                       }
-                    },
-                    itemBuilder: (context) => [
-                      const PopupMenuItem(
-                        value: 'delete',
-                        child: Row(
-                          children: [
-                            Icon(Icons.delete, size: 18, color: Colors.red),
-                            SizedBox(width: 8),
-                            Text('Delete', style: TextStyle(color: Colors.red)),
-                          ],
+
+                      // Tampilkan delete untuk pemilik post dan admin
+                      menuItems.add(
+                        const PopupMenuItem(
+                          value: 'delete',
+                          child: Row(
+                            children: [
+                              Icon(Icons.delete, size: 18, color: Colors.red),
+                              SizedBox(width: 8),
+                              Text('Delete', style: TextStyle(color: Colors.red)),
+                            ],
+                          ),
                         ),
-                      ),
-                    ],
+                      );
+
+                      return menuItems;
+                    },
                   ),
               ],
             ),
