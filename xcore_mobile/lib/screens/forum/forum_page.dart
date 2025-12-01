@@ -79,6 +79,8 @@ class _ForumPageState extends State<ForumPage> {
   }
 
   Future<void> _editPost(String postId, String newMessage) async {
+    final request = context.watch<CookieRequest>();
+
     if (newMessage.isEmpty || _forum == null) {
       _showSnackBar('Message cannot be empty!');
       return;

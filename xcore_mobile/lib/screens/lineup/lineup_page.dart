@@ -1,5 +1,7 @@
 // lineup/lineup_page.dart
 import 'package:flutter/material.dart';
+import 'package:pbp_django_auth/pbp_django_auth.dart';
+import 'package:provider/provider.dart';
 import 'package:xcore_mobile/screens/lineup/lineup_service.dart';
 import 'package:xcore_mobile/models/lineup_entry.dart';
 import 'package:xcore_mobile/models/scoreboard_entry.dart';
@@ -25,15 +27,26 @@ class _LineupPageState extends State<LineupPage> {
   void initState() {
     super.initState();
     _loadLineup();
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
     _checkAdminStatus();
   }
 
   Future<void> _checkAdminStatus() async {
-    // Implement your admin check logic here
-    // final isAdmin = await AuthService.isAdmin();
-    // setState(() {
-    //   _isAdmin = isAdmin;
-    // });
+    try {
+      final admin_status = await LineupService.fetchAdminStatus(context);
+      setState(() {
+        _isAdmin = admin_status;
+      });
+    } catch (e) {
+      setState(() {
+        _error = e.toString();
+        _isLoading = false;
+      });
+    }
   }
 
   Future<void> _loadLineup() async {

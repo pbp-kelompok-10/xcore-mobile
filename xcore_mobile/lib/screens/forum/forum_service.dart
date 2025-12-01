@@ -12,15 +12,6 @@ import '../../services/auth_service.dart';
 class ForumService {
   static const String baseUrl = 'http://localhost:8000'; // Ganti URL Django
 
-  // Helper method untuk menambahkan token ke headers
-  static Future<Map<String, String>> _getHeaders() async {
-    final token = await AuthService.getToken();
-    return {
-      'Content-Type': 'application/json',
-      if (token != null) 'Authorization': 'Token $token',
-    };
-  }
-
   // Get forum by match ID
   static Future<ForumEntry> fetchForumByMatch(String matchId) async {
     final response = await http.get(Uri.parse('$baseUrl/forum/$matchId/json/'));
@@ -38,7 +29,6 @@ class ForumService {
     }
   }
 
-  // Get posts for a forum
   // Get posts for a forum dengan informasi user
   static Future<Map<String, dynamic>> fetchPosts(String forumId, BuildContext context) async {
     final request = Provider.of<CookieRequest>(context, listen: false);
