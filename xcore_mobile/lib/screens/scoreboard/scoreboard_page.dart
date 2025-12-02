@@ -24,7 +24,7 @@ class _ScoreboardPageState extends State<ScoreboardPage> {
   @override
   void initState() {
     super.initState();
-    futureScoreboard = ScoreboardService.fetchScoreboard();
+    _refreshScoreboard(); 
   }
 
   @override
@@ -48,6 +48,13 @@ class _ScoreboardPageState extends State<ScoreboardPage> {
     }
   }
 
+  Future<void> _refreshScoreboard() async {
+    setState(() {
+      futureScoreboard = ScoreboardService.fetchScoreboard();
+      _error = ''; 
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
     if (_isLoading) {
@@ -58,7 +65,7 @@ class _ScoreboardPageState extends State<ScoreboardPage> {
 
     return Scaffold(
       backgroundColor: const Color(0xFFF7F8FA),
-
+      
       appBar: AppBar(
         title: const Text(
           "⚽ Xcore",
@@ -68,16 +75,26 @@ class _ScoreboardPageState extends State<ScoreboardPage> {
         backgroundColor: Colors.white,
         elevation: 0,
         actions: [
+          // TOMBOL REFRESH
+          IconButton(
+            icon: const Icon(Icons.refresh, color: Colors.blue),
+            onPressed: _refreshScoreboard,
+          ),
+
           if (_isAdmin)
             IconButton(
               icon: const Icon(Icons.add, color: Colors.teal),
-              onPressed: () {
-                Navigator.push(
+              onPressed: () async {
+                final result = await Navigator.push(
                   context,
                   MaterialPageRoute(
                     builder: (_) => const AddMatchPage(),
                   ),
                 );
+                // Jika Add/Edit Match berhasil (mengembalikan true), refresh data
+                if (result == true) {
+                  _refreshScoreboard();
+                }
               },
             ),
         ],
@@ -91,7 +108,11 @@ class _ScoreboardPageState extends State<ScoreboardPage> {
           }
 
           if (_error.isNotEmpty) {
-            return Center(child: Text(_error));
+            return Center(child: Text('Error: $_error'));
+          }
+          
+          if (snapshot.hasError) {
+             return Center(child: Text('Error loading data: ${snapshot.error.toString()}'));
           }
 
           if (!snapshot.hasData || snapshot.data!.isEmpty) {
@@ -100,55 +121,85 @@ class _ScoreboardPageState extends State<ScoreboardPage> {
 
           final matches = snapshot.data!;
 
-          return ListView.builder(
-            padding: const EdgeInsets.all(16),
-            itemCount: matches.length,
-            itemBuilder: (context, index) {
-              final item = matches[index];
+          return RefreshIndicator( 
+            onRefresh: _refreshScoreboard,
+            child: ListView.builder(
+              padding: const EdgeInsets.all(16),
+              itemCount: matches.length,
+              itemBuilder: (context, index) {
+                final item = matches[index];
 
-              return Column(
-                children: [
-                  GestureDetector(
-                    onTap: () {
-                      final status = item.status.toLowerCase();
+                return Column(
+                  children: [
+                    GestureDetector(
+                      onTap: () {
+                        final status = item.status.toLowerCase();
 
-                      if (status == "upcoming") {
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder: (_) => PredictionPage(matchId: item.id),
-                          ),
-                        );
-                      } else {
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder: (_) => MatchStatisticsPage(
-                              matchId: item.id,
-                              homeTeam: item.homeTeam,
-                              awayTeam: item.awayTeam,
-                              homeTeamCode: item.homeTeamCode,
-                              awayTeamCode: item.awayTeamCode,
+                        if (status == "upcoming") {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (_) => PredictionPage(matchId: item.id),
+                            ),
+                          );
+                        } else {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (_) => MatchStatisticsPage(
+                                matchId: item.id,
+                                homeTeam: item.homeTeam,
+                                awayTeam: item.awayTeam,
+                                homeTeamCode: item.homeTeamCode,
+                                awayTeamCode: item.awayTeamCode,
+                              ),
+                            ),
+                          );
+                        }
+                      },
+                      child: ScoreboardMatchCard(
+                        homeTeam: item.homeTeam,
+                        awayTeam: item.awayTeam,
+                        homeCode: item.homeTeamCode,
+                        awayCode: item.awayTeamCode,
+                        status: item.status,
+                        homeScore: item.homeScore,
+                        awayScore: item.awayScore,
+                        stadium: item.stadium,
+                        group: item.group,
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+
+                    if (_isAdmin)
+                      SizedBox(
+                        width: double.infinity,
+                        child: ElevatedButton.icon(
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: Colors.teal,
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(12),
                             ),
                           ),
-                        );
-                      }
-                    },
-                    child: ScoreboardMatchCard(
-                      homeTeam: item.homeTeam,
-                      awayTeam: item.awayTeam,
-                      homeCode: item.homeTeamCode,
-                      awayCode: item.awayTeamCode,
-                      status: item.status,
-                      homeScore: item.homeScore,
-                      awayScore: item.awayScore,
-                      stadium: item.stadium,
-                      group: item.group,
-                    ),
-                  ),
-                  const SizedBox(height: 8),
+                          icon: const Icon(Icons.edit, color: Colors.white),
+                          label: const Text("Edit Match", style: TextStyle(color: Colors.white)),
+                          onPressed: () async {
+                            final result = await Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (_) => EditMatchPage(matchEntry: item),
+                              ),
+                            );
+                            // Jika Edit Match berhasil (mengembalikan true), refresh data
+                            if (result == true) {
+                              _refreshScoreboard();
+                            }
+                          },
+                        ),
+                      ),
 
-                  if (_isAdmin)
+                    if (_isAdmin) const SizedBox(height: 8),
+
                     SizedBox(
                       width: double.infinity,
                       child: ElevatedButton.icon(
@@ -158,47 +209,24 @@ class _ScoreboardPageState extends State<ScoreboardPage> {
                             borderRadius: BorderRadius.circular(12),
                           ),
                         ),
-                        icon: const Icon(Icons.edit, color: Colors.white),
-                        label: const Text("Edit Match", style: TextStyle(color: Colors.white)),
+                        icon: const Icon(Icons.forum, color: Colors.white),
+                        label: const Text("Open Match Forum", style: TextStyle(color: Colors.white)),
                         onPressed: () {
                           Navigator.push(
                             context,
                             MaterialPageRoute(
-                              builder: (_) => EditMatchPage(matchId: item.id),
+                              builder: (_) => ForumPage(matchId: item.id),
                             ),
                           );
                         },
                       ),
                     ),
 
-                  if (_isAdmin) const SizedBox(height: 8),
-
-                  SizedBox(
-                    width: double.infinity,
-                    child: ElevatedButton.icon(
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: Colors.teal,
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(12),
-                        ),
-                      ),
-                      icon: const Icon(Icons.forum, color: Colors.white),
-                      label: const Text("Open Match Forum", style: TextStyle(color: Colors.white)),
-                      onPressed: () {
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder: (_) => ForumPage(matchId: item.id),
-                          ),
-                        );
-                      },
-                    ),
-                  ),
-
-                  const SizedBox(height: 20),
-                ],
-              );
-            },
+                    const SizedBox(height: 20),
+                  ],
+                );
+              },
+            ),
           );
         },
       ),
