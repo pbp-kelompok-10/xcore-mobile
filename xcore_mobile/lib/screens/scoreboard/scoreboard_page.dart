@@ -7,7 +7,6 @@ import 'package:xcore_mobile/screens/scoreboard/scoreboard_service.dart';
 import 'package:xcore_mobile/screens/statistik/match_statistik.dart';
 import 'package:xcore_mobile/screens/prediction/prediction_page.dart';
 import 'package:xcore_mobile/screens/scoreboard/scoreboard_card.dart';
-import 'package:xcore_mobile/services/auth_service.dart';
 
 class ScoreboardPage extends StatefulWidget {
   const ScoreboardPage({super.key});
@@ -18,24 +17,45 @@ class ScoreboardPage extends StatefulWidget {
 
 class _ScoreboardPageState extends State<ScoreboardPage> {
   late Future<List<ScoreboardEntry>> futureScoreboard;
-  bool isAdmin = false;
+  bool _isAdmin = false;
+  bool _isLoading = true;
+  String _error = '';
 
   @override
   void initState() {
     super.initState();
     futureScoreboard = ScoreboardService.fetchScoreboard();
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
     _checkAdminStatus();
   }
 
   Future<void> _checkAdminStatus() async {
-    final adminStatus = await AuthService.isAdmin();
-    setState(() {
-      isAdmin = adminStatus;
-    });
+    try {
+      final adminStatus = await ScoreboardService.fetchAdminStatus(context);
+      setState(() {
+        _isAdmin = adminStatus;
+        _isLoading = false;
+      });
+    } catch (e) {
+      setState(() {
+        _error = e.toString();
+        _isLoading = false;
+      });
+    }
   }
 
   @override
   Widget build(BuildContext context) {
+    if (_isLoading) {
+      return const Scaffold(
+        body: Center(child: CircularProgressIndicator()),
+      );
+    }
+
     return Scaffold(
       backgroundColor: const Color(0xFFF7F8FA),
 
@@ -48,8 +68,7 @@ class _ScoreboardPageState extends State<ScoreboardPage> {
         backgroundColor: Colors.white,
         elevation: 0,
         actions: [
-          // ADD MATCH (UNTUK ADMIN SAJA)
-          if (isAdmin)
+          if (_isAdmin)
             IconButton(
               icon: const Icon(Icons.add, color: Colors.teal),
               onPressed: () {
@@ -69,6 +88,10 @@ class _ScoreboardPageState extends State<ScoreboardPage> {
         builder: (context, snapshot) {
           if (snapshot.connectionState == ConnectionState.waiting) {
             return const Center(child: CircularProgressIndicator());
+          }
+
+          if (_error.isNotEmpty) {
+            return Center(child: Text(_error));
           }
 
           if (!snapshot.hasData || snapshot.data!.isEmpty) {
@@ -123,14 +146,9 @@ class _ScoreboardPageState extends State<ScoreboardPage> {
                       group: item.group,
                     ),
                   ),
-
-
                   const SizedBox(height: 8),
 
-                  // ------------------------------
-                  // SHOW EDIT BUTTON ONLY FOR ADMIN
-                  // ------------------------------
-                  if (isAdmin)
+                  if (_isAdmin)
                     SizedBox(
                       width: double.infinity,
                       child: ElevatedButton.icon(
@@ -153,11 +171,8 @@ class _ScoreboardPageState extends State<ScoreboardPage> {
                       ),
                     ),
 
-                  if (isAdmin) const SizedBox(height: 8),
+                  if (_isAdmin) const SizedBox(height: 8),
 
-                  // ------------------------------
-                  // FORUM BUTTON (ALL USERS)
-                  // ------------------------------
                   SizedBox(
                     width: double.infinity,
                     child: ElevatedButton.icon(
