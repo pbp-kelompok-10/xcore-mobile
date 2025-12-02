@@ -55,6 +55,7 @@ jobs:
         run: echo "${{ secrets.KEY_JKS }}" | base64 -d > release-keystore.jks
 
       - name: Sign APKs
+        working-directory: xcore_mobile
         run: |
           for apk in build/app/outputs/flutter-apk/*.apk; do
             echo "Signing $apk..."
@@ -68,6 +69,7 @@ jobs:
       - name: Cleanup Keystore
         if: always()
         run: rm -f release-keystore.jks
+        working-directory: xcore_mobile
 
       - name: Get current date
         id: date
