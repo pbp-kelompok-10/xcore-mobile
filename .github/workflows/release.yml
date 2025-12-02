@@ -52,6 +52,7 @@ jobs:
         working-directory: xcore_mobile
 
       - name: Decode Keystore
+        working-directory: xcore_mobile
         run: echo "${{ secrets.KEY_JKS }}" | base64 -d > release-keystore.jks
 
       - name: Sign APKs
