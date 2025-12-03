@@ -9,6 +9,9 @@ import '../lineup/lineup_page.dart';
 import 'widgets/header_section.dart';
 import 'widgets/navigation_cards.dart';
 import 'widgets/statistik_row.dart';
+import 'package:xcore_mobile/services/auth_service.dart';
+import 'admin/add_statistik_page.dart';
+import 'admin/edit_statistik_page.dart';
 
 class MatchStatisticsPage extends StatefulWidget {
   final String matchId;
@@ -34,11 +37,20 @@ class _MatchStatisticsPageState extends State<MatchStatisticsPage> {
   StatistikEntry? _statistik;
   bool _isLoading = true;
   String _error = '';
+  bool _isAdmin = false;
 
   @override
   void initState() {
     super.initState();
     _loadStatistik();
+    _checkAdminStatus();
+  }
+
+  Future<void> _checkAdminStatus() async {
+    final isAdmin = await AuthService.isAdmin();
+    setState(() {
+      _isAdmin = isAdmin;
+    });
   }
 
   Future<void> _loadStatistik() async {
@@ -56,7 +68,7 @@ class _MatchStatisticsPageState extends State<MatchStatisticsPage> {
     }
   }
 
-  // Fungsi navigation yang konsisten
+  // Navigation functions
   void _navigateToScoreboard() {
     _showSnackBar("Kembali ke Scoreboard");
     Navigator.pop(context);
@@ -94,6 +106,69 @@ class _MatchStatisticsPageState extends State<MatchStatisticsPage> {
     );
   }
 
+  // Admin functions
+  void _addStatistik() {
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => AddStatistikPage(
+          matchId: widget.matchId,
+          homeTeam: widget.homeTeam,
+          awayTeam: widget.awayTeam,
+          onStatistikAdded: _loadStatistik,
+        ),
+      ),
+    );
+  }
+
+  void _editStatistik() {
+    if (_statistik != null) {
+      Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (context) => EditStatistikPage(
+            statistik: _statistik!,
+            onStatistikUpdated: _loadStatistik,
+          ),
+        ),
+      );
+    }
+  }
+
+  void _deleteStatistik() async {
+    final confirmed = await showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Text('Hapus Statistik'),
+        content: Text('Yakin ingin menghapus statistik pertandingan ini?'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: Text('Batal'),
+          ),
+          TextButton(
+            onPressed: () => Navigator.pop(context, true),
+            child: Text('Hapus', style: TextStyle(color: Colors.red)),
+          ),
+        ],
+      ),
+    );
+
+    if (confirmed == true) {
+      try {
+        final success = await StatistikService.deleteStatistik(widget.matchId);
+        if (success) {
+          _showSnackBar('Statistik berhasil dihapus');
+          _loadStatistik(); // Auto refresh setelah delete
+        } else {
+          _showSnackBar('Gagal menghapus statistik');
+        }
+      } catch (e) {
+        _showSnackBar('Error: $e');
+      }
+    }
+  }
+
   void _showSnackBar(String message) {
     ScaffoldMessenger.of(context)
       ..hideCurrentSnackBar()
@@ -110,6 +185,54 @@ class _MatchStatisticsPageState extends State<MatchStatisticsPage> {
       );
   }
 
+  // Build admin FAB
+  Widget _buildAdminFab() {
+    if (!_isAdmin) return SizedBox();
+
+    return FloatingActionButton(
+      onPressed: _statistik == null ? _addStatistik : _editStatistik,
+      child: Icon(_statistik == null ? Icons.add : Icons.edit),
+      backgroundColor: Colors.orange,
+    );
+  }
+
+  // Build admin actions
+  Widget _buildAdminActions() {
+    if (!_isAdmin || _statistik == null) return SizedBox();
+
+    return Padding(
+      padding: EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+      child: Row(
+        children: [
+          Expanded(
+            child: ElevatedButton.icon(
+              icon: Icon(Icons.edit, size: 18),
+              label: Text('Edit Statistik'),
+              onPressed: _editStatistik,
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.blue,
+                foregroundColor: Colors.white,
+              ),
+            ),
+          ),
+          SizedBox(width: 8),
+          Expanded(
+            child: ElevatedButton.icon(
+              icon: Icon(Icons.delete, size: 18),
+              label: Text('Hapus'),
+              onPressed: _deleteStatistik,
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.red,
+                foregroundColor: Colors.white,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  // Loading state - TANPA TOMBOL REFRESH
   Widget _buildLoadingState() {
     return Center(
       child: Column(
@@ -128,11 +251,25 @@ class _MatchStatisticsPageState extends State<MatchStatisticsPage> {
               color: Colors.grey[600],
             ),
           ),
+          // HANYA TAMPILKAN TAMBAH STATISTIK JIKA ADMIN DAN BELUM ADA STATISTIK
+          if (_isAdmin && _statistik == null) ...[
+            SizedBox(height: 20),
+            ElevatedButton.icon(
+              icon: Icon(Icons.add),
+              label: Text('Tambah Statistik'),
+              onPressed: _addStatistik,
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.orange,
+                foregroundColor: Colors.white,
+              ),
+            ),
+          ],
         ],
       ),
     );
   }
 
+  // Error state - TANPA TOMBOL REFRESH
   Widget _buildErrorState() {
     return Center(
       child: Padding(
@@ -167,25 +304,28 @@ class _MatchStatisticsPageState extends State<MatchStatisticsPage> {
               ),
             ),
             SizedBox(height: 24),
-            ElevatedButton.icon(
-              icon: Icon(Icons.refresh_rounded, size: 18),
-              label: Text('Try Again'),
-              onPressed: _loadStatistik,
-              style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.green[700],
-                foregroundColor: Colors.white,
-                padding: EdgeInsets.symmetric(horizontal: 20, vertical: 12),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(8),
+            // HANYA TAMPILKAN TAMBAH STATISTIK UNTUK ADMIN (TANPA TOMBOL REFRESH)
+            if (_isAdmin) 
+              ElevatedButton.icon(
+                icon: Icon(Icons.add, size: 18),
+                label: Text('Tambah Statistik'),
+                onPressed: _addStatistik,
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Colors.orange,
+                  foregroundColor: Colors.white,
+                  padding: EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(8),
+                  ),
                 ),
               ),
-            ),
           ],
         ),
       ),
     );
   }
 
+  // Empty state - TANPA TOMBOL REFRESH
   Widget _buildEmptyState() {
     return Center(
       child: Padding(
@@ -220,19 +360,21 @@ class _MatchStatisticsPageState extends State<MatchStatisticsPage> {
               ),
             ),
             SizedBox(height: 24),
-            ElevatedButton.icon(
-              icon: Icon(Icons.refresh_rounded, size: 18),
-              label: Text('Refresh'),
-              onPressed: _loadStatistik,
-              style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.green[700],
-                foregroundColor: Colors.white,
-                padding: EdgeInsets.symmetric(horizontal: 20, vertical: 12),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(8),
+            // HANYA TAMPILKAN TAMBAH STATISTIK UNTUK ADMIN (TANPA TOMBOL REFRESH)
+            if (_isAdmin) 
+              ElevatedButton.icon(
+                icon: Icon(Icons.add, size: 18),
+                label: Text('Tambah Statistik'),
+                onPressed: _addStatistik,
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Colors.orange,
+                  foregroundColor: Colors.white,
+                  padding: EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(8),
+                  ),
                 ),
               ),
-            ),
           ],
         ),
       ),
@@ -244,7 +386,7 @@ class _MatchStatisticsPageState extends State<MatchStatisticsPage> {
       physics: BouncingScrollPhysics(),
       child: Column(
         children: [
-          // Header Section menggunakan widget terpisah
+          // Header Section
           HeaderSection(
             stadium: _statistik!.stadium,
             matchDate: _statistik!.matchDate,
@@ -258,7 +400,10 @@ class _MatchStatisticsPageState extends State<MatchStatisticsPage> {
           
           SizedBox(height: 20),
           
-          // Navigation Cards menggunakan widget terpisah
+          // Admin Actions
+          _buildAdminActions(),
+          
+          // Navigation Cards
           NavigationCards(
             onForumTap: _navigateToForum,
             onHighlightTap: _navigateToHighlight,
@@ -292,7 +437,6 @@ class _MatchStatisticsPageState extends State<MatchStatisticsPage> {
                         ),
                       ),
                       child: Row(
-                        // diubah
                         children: [
                           Expanded(
                             child: Text(
@@ -331,12 +475,10 @@ class _MatchStatisticsPageState extends State<MatchStatisticsPage> {
                             ),
                           ),
                         ],
-                        // end diubah
                       ),
-
                     ),
                     
-                    // Statistics Rows menggunakan widget terpisah
+                    // Statistics Rows
                     StatistikRow(
                       title: 'Passes',
                       homeValue: _statistik!.homePasses,
@@ -418,6 +560,51 @@ class _MatchStatisticsPageState extends State<MatchStatisticsPage> {
           onPressed: _navigateToScoreboard,
         ),
         centerTitle: true,
+        actions: _isAdmin ? [
+          IconButton(
+            icon: Icon(Icons.settings, color: Colors.white),
+            onPressed: () {
+              // Show admin options
+              showDialog(
+                context: context,
+                builder: (context) => AlertDialog(
+                  title: Text('Admin Options'),
+                  content: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      ListTile(
+                        leading: Icon(Icons.add),
+                        title: Text('Tambah Statistik'),
+                        onTap: () {
+                          Navigator.pop(context);
+                          _addStatistik();
+                        },
+                      ),
+                      if (_statistik != null) ...[
+                        ListTile(
+                          leading: Icon(Icons.edit),
+                          title: Text('Edit Statistik'),
+                          onTap: () {
+                            Navigator.pop(context);
+                            _editStatistik();
+                          },
+                        ),
+                        ListTile(
+                          leading: Icon(Icons.delete, color: Colors.red),
+                          title: Text('Hapus Statistik', style: TextStyle(color: Colors.red)),
+                          onTap: () {
+                            Navigator.pop(context);
+                            _deleteStatistik();
+                          },
+                        ),
+                      ],
+                    ],
+                  ),
+                ),
+              );
+            },
+          ),
+        ] : null,
       ),
       body: _isLoading
           ? _buildLoadingState()
@@ -426,6 +613,7 @@ class _MatchStatisticsPageState extends State<MatchStatisticsPage> {
               : _statistik == null
                   ? _buildEmptyState()
                   : _buildContent(),
+      floatingActionButton: _buildAdminFab(),
     );
   }
 }

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:pbp_django_auth/pbp_django_auth.dart';
 import 'package:provider/provider.dart';
 import 'package:intl/intl.dart';
+import 'package:xcore_mobile/models/scoreboard_entry.dart';
 import 'package:xcore_mobile/screens/scoreboard/scoreboard_service.dart';
 
 const List<Map<String, String>> _countryChoices = [
@@ -54,26 +55,52 @@ const List<Map<String, String>> _countryChoices = [
 ];
 
 
-class AddMatchPage extends StatefulWidget {
-  const AddMatchPage({super.key});
+class EditMatchPage extends StatefulWidget {
+  final ScoreboardEntry matchEntry; 
+
+  const EditMatchPage({super.key, required this.matchEntry});
 
   @override
-  State<AddMatchPage> createState() => _AddMatchPageState();
+  State<EditMatchPage> createState() => _EditMatchPageState();
 }
 
-class _AddMatchPageState extends State<AddMatchPage> {
+class _EditMatchPageState extends State<EditMatchPage> {
   final _formKey = GlobalKey<FormState>();
-  String _homeTeamCode = _countryChoices.first['code']!; 
-  String _awayTeamCode = _countryChoices.first['code']!; 
-  int _homeScore = 0;
-  int _awayScore = 0;
-  DateTime? _matchDate;
-  String _stadium = "";
-  int _round = 1;
-  String _group = "";
-  String _status = "upcoming";
+  
+  late String _homeTeamCode;
+  late String _awayTeamCode;
+  late int _homeScore;
+  late int _awayScore;
+  late DateTime _matchDate;
+  late String _stadium;
+  late int _round;
+  late String _group;
+  late String _status;
 
   final TextEditingController _dateController = TextEditingController();
+
+  @override
+  void initState() {
+    super.initState();
+    _homeTeamCode = widget.matchEntry.homeTeamCode.toLowerCase();
+    _awayTeamCode = widget.matchEntry.awayTeamCode.toLowerCase();
+    _homeScore = widget.matchEntry.homeScore;
+    _awayScore = widget.matchEntry.awayScore;
+    _matchDate = widget.matchEntry.matchDate;
+    _stadium = widget.matchEntry.stadium;
+    _round = widget.matchEntry.round;
+    _group = widget.matchEntry.group;
+    _status = widget.matchEntry.status;
+
+    _dateController.text = DateFormat('yyyy-MM-dd').format(_matchDate);
+
+    if (!_countryChoices.any((c) => c['code'] == _homeTeamCode)) {
+        _homeTeamCode = _countryChoices.first['code']!;
+    }
+    if (!_countryChoices.any((c) => c['code'] == _awayTeamCode)) {
+        _awayTeamCode = _countryChoices.first['code']!;
+    }
+  }
 
   @override
   void dispose() {
@@ -84,7 +111,7 @@ class _AddMatchPageState extends State<AddMatchPage> {
   Future<void> _selectDate(BuildContext context) async {
     final DateTime? picked = await showDatePicker(
       context: context,
-      initialDate: _matchDate ?? DateTime.now(),
+      initialDate: _matchDate,
       firstDate: DateTime(2000),
       lastDate: DateTime(2101),
     );
@@ -100,21 +127,14 @@ class _AddMatchPageState extends State<AddMatchPage> {
     if (_formKey.currentState!.validate()) {
       _formKey.currentState!.save();
 
-      if (_matchDate == null) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Tolong pilih tanggal pertandingan!')),
-        );
-        return;
-      }
-
       final request = context.read<CookieRequest>();
       
       final Map<String, dynamic> data = {
-        "home_team_code": _homeTeamCode.toLowerCase(), 
+        "home_team_code": _homeTeamCode.toLowerCase(),
         "away_team_code": _awayTeamCode.toLowerCase(),
         "home_score": _homeScore,
         "away_score": _awayScore,
-        "match_date": DateFormat('yyyy-MM-dd').format(_matchDate!),
+        "match_date": DateFormat('yyyy-MM-dd').format(_matchDate),
         "stadium": _stadium,
         "round": _round,
         "group": _group,
@@ -122,19 +142,19 @@ class _AddMatchPageState extends State<AddMatchPage> {
       };
 
       try {
-        bool success = await ScoreboardService.addMatch(request, data);
+        bool success = await ScoreboardService.editMatch(request, widget.matchEntry.id, data);
 
         if (success) {
           if (!mounted) return;
           ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('Match berhasil ditambahkan!')),
+            const SnackBar(content: Text('Match berhasil diubah!')),
           );
           Navigator.pop(context, true); 
         }
       } catch (e) {
         if (!mounted) return;
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Gagal menambahkan match: ${e.toString()}')),
+          SnackBar(content: Text('Gagal mengubah match: ${e.toString()}')),
         );
       }
     }
@@ -144,7 +164,7 @@ class _AddMatchPageState extends State<AddMatchPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Tambah Match Baru'),
+        title: Text('Edit Match: ${widget.matchEntry.homeTeam} vs ${widget.matchEntry.awayTeam}'), 
       ),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(16.0),
@@ -195,10 +215,11 @@ class _AddMatchPageState extends State<AddMatchPage> {
               ),
               const SizedBox(height: 12),
 
-              // Kolom Skor
+              // Kolom Skor 
               Row(
                 children: [
                   Expanded(child: TextFormField(
+                    initialValue: _homeScore.toString(),
                     decoration: const InputDecoration(labelText: 'Home Score'),
                     keyboardType: TextInputType.number,
                     onSaved: (value) => _homeScore = int.tryParse(value!) ?? 0,
@@ -206,6 +227,7 @@ class _AddMatchPageState extends State<AddMatchPage> {
                   )),
                   const SizedBox(width: 8),
                   Expanded(child: TextFormField(
+                    initialValue: _awayScore.toString(),
                     decoration: const InputDecoration(labelText: 'Away Score'),
                     keyboardType: TextInputType.number,
                     onSaved: (value) => _awayScore = int.tryParse(value!) ?? 0,
@@ -213,9 +235,9 @@ class _AddMatchPageState extends State<AddMatchPage> {
                   )),
                 ],
               ),
-              
+
               const SizedBox(height: 12),
-              // Match Date
+              // Match Date 
               TextFormField(
                 controller: _dateController,
                 readOnly: true,
@@ -228,15 +250,16 @@ class _AddMatchPageState extends State<AddMatchPage> {
                 ),
                 validator: (value) => _matchDate == null ? 'Tanggal wajib diisi' : null,
               ),
-              
-              // Stadium
+
+              // Stadium 
               TextFormField(
+                initialValue: _stadium,
                 decoration: const InputDecoration(labelText: 'Stadium'),
                 onSaved: (value) => _stadium = value!,
                 validator: (value) => value!.isEmpty ? 'Wajib diisi' : null,
               ),
 
-              // Round dan Group
+              // Round dan Group 
               Row(
                 children: [
                   Expanded(child: TextFormField(
@@ -248,6 +271,7 @@ class _AddMatchPageState extends State<AddMatchPage> {
                   )),
                   const SizedBox(width: 8),
                   Expanded(child: TextFormField(
+                    initialValue: _group,
                     decoration: const InputDecoration(labelText: 'Group (e.g. Group A)'),
                     onSaved: (value) => _group = value!,
                     validator: (value) => value!.isEmpty ? 'Wajib diisi' : null,
@@ -261,10 +285,10 @@ class _AddMatchPageState extends State<AddMatchPage> {
                 value: _status,
                 items: <String>['upcoming', 'live', 'finished']
                     .map<DropdownMenuItem<String>>((String value) {
-                  String displayText = value[0].toUpperCase() + value.substring(1); 
+                  String displayText = value[0].toUpperCase() + value.substring(1);
                   return DropdownMenuItem<String>(
-                    value: value, 
-                    child: Text(displayText), 
+                    value: value,
+                    child: Text(displayText),
                   );
                 }).toList(),
                 onChanged: (String? newValue) {
@@ -275,11 +299,11 @@ class _AddMatchPageState extends State<AddMatchPage> {
                 onSaved: (value) => _status = value!,
               ),
               const SizedBox(height: 20),
-              
-              // Submit Button
+
+              // Submit Button 
               ElevatedButton(
                 onPressed: _submitForm,
-                child: const Text('Tambah Match'),
+                child: const Text('Simpan Perubahan'),
               ),
             ],
           ),

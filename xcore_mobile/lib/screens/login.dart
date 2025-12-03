@@ -76,7 +76,7 @@ class _LoginPageState extends State<LoginPage> {
                           borderRadius: BorderRadius.all(Radius.circular(12.0)),
                         ),
                         contentPadding:
-                            EdgeInsets.symmetric(horizontal: 12.0, vertical: 8.0),
+                        EdgeInsets.symmetric(horizontal: 12.0, vertical: 8.0),
                       ),
                     ),
                     const SizedBox(height: 12.0),
@@ -91,7 +91,7 @@ class _LoginPageState extends State<LoginPage> {
                           borderRadius: BorderRadius.all(Radius.circular(12.0)),
                         ),
                         contentPadding:
-                            EdgeInsets.symmetric(horizontal: 12.0, vertical: 8.0),
+                        EdgeInsets.symmetric(horizontal: 12.0, vertical: 8.0),
                       ),
                       obscureText: true,
                     ),
