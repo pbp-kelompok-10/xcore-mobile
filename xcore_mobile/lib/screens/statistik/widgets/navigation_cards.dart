@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 
 class NavigationCards extends StatelessWidget {
+  final String matchId;
+
   final Function() onForumTap;
   final Function() onHighlightTap;
   final Function() onPredictionTap;
@@ -8,6 +10,7 @@ class NavigationCards extends StatelessWidget {
 
   const NavigationCards({
     super.key,
+    required this.matchId,
     required this.onForumTap,
     required this.onHighlightTap,
     required this.onPredictionTap,
@@ -65,7 +68,11 @@ class NavigationCards extends StatelessWidget {
         children: [
           _buildNavigationCard('Forum', Icons.forum, onForumTap),
           SizedBox(width: 8),
-          _buildNavigationCard('Highlight', Icons.video_library, onHighlightTap),
+          _buildNavigationCard(
+            'Highlight',
+            Icons.video_library,
+            () => onHighlightTap(),
+          ),
           SizedBox(width: 8),
           _buildNavigationCard('Prediction', Icons.analytics, onPredictionTap),
           SizedBox(width: 8),
