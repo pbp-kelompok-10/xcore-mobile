@@ -19,6 +19,8 @@ class HighlightPage extends StatefulWidget {
 class _HighlightPageState extends State<HighlightPage> {
   Highlight? highlight;
   ScoreboardEntry? matchData;
+  bool _isAdmin = false;
+  String _error = '';
 
   YoutubePlayerController? _controller;
 
@@ -30,36 +32,93 @@ class _HighlightPageState extends State<HighlightPage> {
     fetchHighlight();
   }
 
-  Future<void> fetchHighlight() async {
-    final data = await HighlightService.getHighlight(widget.matchId);
-
-    if (data != null) {
-      setState(() {
-        highlight = data;
-        matchData = data.match;
-      });
-
-      if (highlight!.video != null && highlight!.video!.contains("youtube")) {
-
-        final id = YoutubePlayerController.convertUrlToId(highlight!.video!);
-
-        if (id != null) {
-          _controller = YoutubePlayerController.fromVideoId(
-            videoId: id,
-            autoPlay: false,
-            params: const YoutubePlayerParams(
-              showControls: true,
-              showFullscreenButton: true,
-            ),
-          );
-        }
-      }
-    }
-
-    setState(() => loading = false);
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    _checkAdminStatus();
   }
 
-  String flagUrl(String code) => "https://flagcdn.com/w80/${code.toLowerCase()}.png";
+  Future<void> _checkAdminStatus() async {
+    try {
+      final admin_status = await HighlightService.fetchAdminStatus(context);
+      setState(() {
+        _isAdmin = admin_status;
+      });
+    } catch (e) {
+      setState(() {
+        _error = e.toString();
+        loading = false;
+      });
+    }
+  }
+
+  Future<void> fetchHighlight() async {
+    debugPrint('fetchHighlight: Starting with matchId = ${widget.matchId}');
+    try {
+      final data = await HighlightService.getHighlight(widget.matchId);
+      debugPrint(
+        'fetchHighlight: getHighlight returned ${data != null ? "data" : "null"}',
+      );
+
+      if (data != null) {
+        // Update local models first
+        setState(() {
+          highlight = data;
+          matchData = data.match;
+        });
+
+        // Rebuild YouTube controller if video exists; otherwise clear it
+        if (highlight!.video != null && highlight!.video!.contains("youtube")) {
+          final id = YoutubePlayerController.convertUrlToId(highlight!.video!);
+
+          if (id != null) {
+            // Dispose any previous controller before creating new one
+            await _controller?.close();
+
+            setState(() {
+              _controller = YoutubePlayerController.fromVideoId(
+                videoId: id,
+                autoPlay: false,
+                params: const YoutubePlayerParams(
+                  showControls: true,
+                  showFullscreenButton: true,
+                ),
+              );
+            });
+          }
+        } else {
+          // No valid youtube video — dispose existing controller
+          await _controller?.close();
+          setState(() {
+            _controller = null;
+          });
+        }
+      } else {
+        // No highlight exists, but we still need match data
+        debugPrint('fetchHighlight: Calling getMatchData');
+        final match = await HighlightService.getMatchData(widget.matchId);
+        debugPrint(
+          'fetchHighlight: getMatchData returned ${match != null ? "data" : "null"}',
+        );
+        if (match != null) {
+          setState(() {
+            matchData = match;
+          });
+        }
+      }
+
+      setState(() => loading = false);
+    } catch (e) {
+      debugPrint('fetchHighlight: ERROR - $e');
+      setState(() {
+        // NOTE: keep error handling minimal to avoid introducing new fields
+        loading = false;
+      });
+    }
+  }
+
+  String flagUrl(String code) =>
+      "https://flagcdn.com/w80/${code.toLowerCase()}.png";
 
   @override
   void dispose() {
@@ -70,15 +129,11 @@ class _HighlightPageState extends State<HighlightPage> {
   @override
   Widget build(BuildContext context) {
     if (loading) {
-      return const Scaffold(
-        body: Center(child: CircularProgressIndicator()),
-      );
+      return const Scaffold(body: Center(child: CircularProgressIndicator()));
     }
 
     if (matchData == null) {
-      return const Scaffold(
-        body: Center(child: Text("Match not found")),
-      );
+      return const Scaffold(body: Center(child: Text("Match not found")));
     }
 
     final match = matchData!;
@@ -89,40 +144,56 @@ class _HighlightPageState extends State<HighlightPage> {
         backgroundColor: const Color(0xFF1e423b),
         title: Text("${match.homeTeam} vs ${match.awayTeam}"),
       ),
-      floatingActionButton: FloatingActionButton.extended(
-        backgroundColor: const Color(0xFF1e423b),
-        icon: Icon(highlight == null ? Icons.add : Icons.edit, color: Colors.white),
-        label: Text(
-          highlight == null ? "Create Highlight" : "Edit Highlight",
-          style: const TextStyle(color: Colors.white),
-        ),
-        onPressed: () async {
-          bool? updated;
-
-          if (highlight == null) {
-            updated = await Navigator.push(
-              context,
-              MaterialPageRoute(
-                builder: (_) => HighlightCreatePage(matchId: widget.matchId),
+      floatingActionButton: _isAdmin
+          ? FloatingActionButton.extended(
+              backgroundColor: const Color(0xFF1e423b),
+              icon: Icon(
+                highlight == null ? Icons.add : Icons.edit,
+                color: Colors.white,
               ),
-            );
-          } else {
-            updated = await Navigator.push(
-              context,
-              MaterialPageRoute(
-                builder: (_) => HighlightEditPage(
-                  matchId: widget.matchId,
-                  currentVideo: highlight!.video!,
-                ),
+              label: Text(
+                highlight == null ? "Create Highlight" : "Edit Highlight",
+                style: const TextStyle(color: Colors.white),
               ),
-            );
-          }
+              onPressed: () async {
+                bool? updated;
 
-          if (updated == true) {
-            fetchHighlight();
-          }
-        },
-      ),
+                if (highlight == null) {
+                  updated = await Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (_) =>
+                          HighlightCreatePage(matchId: widget.matchId),
+                    ),
+                  );
+                } else {
+                  updated = await Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (_) => HighlightEditPage(
+                        matchId: widget.matchId,
+                        currentVideo: highlight!.video!,
+                      ),
+                    ),
+                  );
+                }
+
+                if (updated == true) {
+                  // show a brief loading state while we re-fetch the updated highlight
+                  setState(() => loading = true);
+
+                  await fetchHighlight();
+
+                  // optionally show a confirmation to the user
+                  if (mounted) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(content: Text('Highlight updated')),
+                    );
+                  }
+                }
+              },
+            )
+          : null,
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(18),
         child: Column(
@@ -151,7 +222,7 @@ class _HighlightPageState extends State<HighlightPage> {
                     blurRadius: 20,
                     color: Colors.black12,
                     offset: Offset(0, 5),
-                  )
+                  ),
                 ],
               ),
               child: Row(
@@ -162,14 +233,24 @@ class _HighlightPageState extends State<HighlightPage> {
                       Image.network(flagUrl(match.homeTeamCode), width: 65),
                       const SizedBox(height: 8),
                       Text(match.homeTeam),
-                      Text(match.homeScore.toString(),
-                          style: const TextStyle(
-                              fontSize: 22, fontWeight: FontWeight.bold)),
+                      Text(
+                        match.homeScore.toString(),
+                        style: const TextStyle(
+                          fontSize: 22,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
                     ],
                   ),
                   Column(
                     children: const [
-                      Text("VS", style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+                      Text(
+                        "VS",
+                        style: TextStyle(
+                          fontSize: 18,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
                       SizedBox(height: 5),
                       Text("FT", style: TextStyle(color: Colors.grey)),
                     ],
@@ -179,9 +260,13 @@ class _HighlightPageState extends State<HighlightPage> {
                       Image.network(flagUrl(match.awayTeamCode), width: 65),
                       const SizedBox(height: 8),
                       Text(match.awayTeam),
-                      Text(match.awayScore.toString(),
-                          style: const TextStyle(
-                              fontSize: 22, fontWeight: FontWeight.bold)),
+                      Text(
+                        match.awayScore.toString(),
+                        style: const TextStyle(
+                          fontSize: 22,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
                     ],
                   ),
                 ],
@@ -191,11 +276,10 @@ class _HighlightPageState extends State<HighlightPage> {
             const SizedBox(height: 25),
 
             // VIDEO PLAYER OR PLACEHOLDER
-            if (highlight != null && highlight!.video != null && _controller != null)
-              YoutubePlayer(
-                controller: _controller!,
-                aspectRatio: 16 / 9,
-              )
+            if (highlight != null &&
+                highlight!.video != null &&
+                _controller != null)
+              YoutubePlayer(controller: _controller!, aspectRatio: 16 / 9)
             else
               Container(
                 height: 200,
