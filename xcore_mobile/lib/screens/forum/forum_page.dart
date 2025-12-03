@@ -1,4 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:pbp_django_auth/pbp_django_auth.dart';
+import 'package:provider/provider.dart';
+import 'package:xcore_mobile/config.dart';
 import 'package:xcore_mobile/models/forum_entry.dart';
 import 'package:xcore_mobile/models/post_entry.dart';
 import 'forum_service.dart';
@@ -20,6 +23,10 @@ class _ForumPageState extends State<ForumPage> {
   final TextEditingController _postController = TextEditingController();
   final Map<String, TextEditingController> _editControllers = {};
 
+  // Variabel untuk current user yang sedang login
+  int? _currentUserId;
+  bool? _isAdmin;
+
   @override
   void initState() {
     super.initState();
@@ -29,13 +36,22 @@ class _ForumPageState extends State<ForumPage> {
   Future<void> _loadForumData() async {
     try {
       final forum = await ForumService.fetchForumByMatch(widget.matchId);
-      final posts = await ForumService.fetchPosts(forum.id);
+
+      // fetchPosts sekarang mengembalikan Map dengan posts dan user info
+      final response = await ForumService.fetchPosts(forum.id, context);
 
       setState(() {
         _forum = forum;
-        _posts = posts;
+        _posts = response['posts']; // Ambil posts dari response
+        _currentUserId = response['user_id']; // Simpan user ID
+        _isAdmin = response['user_is_admin']; // Simpan status admin
         _isLoading = false;
       });
+
+      // Debug
+      print('Current User ID: $_currentUserId');
+      print('Is Admin: $_isAdmin');
+
     } catch (e) {
       setState(() {
         _error = e.toString();
@@ -44,12 +60,16 @@ class _ForumPageState extends State<ForumPage> {
     }
   }
 
+
   Future<void> _addPost() async {
     final message = _postController.text.trim();
-    if (message.isEmpty || _forum == null) return;
+    if (message.isEmpty || _forum == null) {
+      _showSnackBar('Message cannot be empty!');
+      return;
+    };
 
     try {
-      await ForumService.addPost(_forum!.id, message);
+      await ForumService.addPost(_forum!.id, message, context);
       _postController.clear();
       await _loadForumData(); // Refresh posts
       _showSnackBar('Post added successfully!');
@@ -59,12 +79,21 @@ class _ForumPageState extends State<ForumPage> {
   }
 
   Future<void> _editPost(String postId, String newMessage) async {
-    if (newMessage.isEmpty || _forum == null) return;
+    final request = context.watch<CookieRequest>();
+
+    if (newMessage.isEmpty || _forum == null) {
+      _showSnackBar('Message cannot be empty!');
+      return;
+    }
 
     try {
-      await ForumService.editPost(_forum!.id, postId, newMessage);
+      await ForumService.editPost(_forum!.id, postId, newMessage, context);
       await _loadForumData(); // Refresh posts
-      _showSnackBar('Post updated successfully!');
+
+      _editControllers.remove(postId);
+
+      _showSnackBar('Post message updated successfully!');
+
     } catch (e) {
       _showSnackBar('Failed to update post: ${e.toString()}');
     }
@@ -93,7 +122,7 @@ class _ForumPageState extends State<ForumPage> {
 
     if (confirmed == true) {
       try {
-        await ForumService.deletePost(_forum!.id, postId);
+        await ForumService.deletePost(_forum!.id, postId, context);
         await _loadForumData(); // Refresh posts
         _showSnackBar('Post deleted successfully!');
       } catch (e) {
@@ -228,17 +257,9 @@ class _ForumPageState extends State<ForumPage> {
             ),
             child: Column(
               children: [
-                Text(
-                  '${_forum!.matchHome} vs ${_forum!.matchAway}',
-                  style: const TextStyle(
-                    fontSize: 16,
-                    fontWeight: FontWeight.bold,
-                    color: Colors.white,
-                  ),
-                ),
                 const SizedBox(height: 4),
                 Text(
-                  _forum!.nama,
+                  'Welcome to the Discussion Forum. Please keep conversations respectful and relevant. Start a new topic or explore existing discussions.',
                   style: const TextStyle(
                     fontSize: 14,
                     color: Colors.white70,
@@ -311,7 +332,9 @@ class _ForumPageState extends State<ForumPage> {
                 CircleAvatar(
                   radius: 16,
                   backgroundImage: NetworkImage(
-                    post.authorPicture ?? 'https://via.placeholder.com/40',
+                    post.authorPicture != null
+                        ? '${Config.baseUrl}${post.authorPicture}'
+                        : 'https://via.placeholder.com/40',
                   ),
                   onBackgroundImageError: (_, __) {},
                 ),
@@ -337,39 +360,53 @@ class _ForumPageState extends State<ForumPage> {
                     ],
                   ),
                 ),
-                // Edit/Delete buttons (only for own posts)
-                if (post.authorId == 1) // Ganti dengan current user ID
+
+                // Popup menu button
+                if (post.authorId == _currentUserId || _isAdmin == true)
                   PopupMenuButton<String>(
                     icon: Icon(Icons.more_vert, color: Colors.grey[600]),
                     onSelected: (value) {
-                      if (value == 'edit') {
+                      if (value == 'edit' && post.authorId == _currentUserId) {
                         _startEditPost(post);
                       } else if (value == 'delete') {
                         _deletePost(post.id);
                       }
                     },
-                    itemBuilder: (context) => [
-                      const PopupMenuItem(
-                        value: 'edit',
-                        child: Row(
-                          children: [
-                            Icon(Icons.edit, size: 18),
-                            SizedBox(width: 8),
-                            Text('Edit'),
-                          ],
+                    itemBuilder: (context) {
+                      final menuItems = <PopupMenuEntry<String>>[];
+
+                      // Hanya tampilkan edit untuk pemilik post
+                      if (post.authorId == _currentUserId) {
+                        menuItems.add(
+                          const PopupMenuItem(
+                            value: 'edit',
+                            child: Row(
+                              children: [
+                                Icon(Icons.edit, size: 18),
+                                SizedBox(width: 8),
+                                Text('Edit'),
+                              ],
+                            ),
+                          ),
+                        );
+                      }
+
+                      // Tampilkan delete untuk pemilik post dan admin
+                      menuItems.add(
+                        const PopupMenuItem(
+                          value: 'delete',
+                          child: Row(
+                            children: [
+                              Icon(Icons.delete, size: 18, color: Colors.red),
+                              SizedBox(width: 8),
+                              Text('Delete', style: TextStyle(color: Colors.red)),
+                            ],
+                          ),
                         ),
-                      ),
-                      const PopupMenuItem(
-                        value: 'delete',
-                        child: Row(
-                          children: [
-                            Icon(Icons.delete, size: 18, color: Colors.red),
-                            SizedBox(width: 8),
-                            Text('Delete', style: TextStyle(color: Colors.red)),
-                          ],
-                        ),
-                      ),
-                    ],
+                      );
+
+                      return menuItems;
+                    },
                   ),
               ],
             ),
@@ -409,6 +446,13 @@ class _ForumPageState extends State<ForumPage> {
                       ElevatedButton(
                         onPressed: () {
                           final newMessage = _editControllers[post.id]!.text.trim();
+
+                          if (newMessage == post.message){
+                            _showSnackBar('Message cannot be the same!');
+                            _cancelEdit(post.id);
+                            return;
+                          }
+
                           if (newMessage.isNotEmpty) {
                             _editPost(post.id, newMessage);
                           }

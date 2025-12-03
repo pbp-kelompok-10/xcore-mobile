@@ -30,7 +30,6 @@ class PostEntry {
 
   factory PostEntry.fromJson(Map<String, dynamic> json) => PostEntry(
     id: json["id"]?.toString() ?? '',
-    // Pastikan author_id di-parse sebagai int
     authorId: _parseInt(json["author_id"]),
     authorName: json["author_name"]?.toString() ?? 'Unknown',
     message: json["message"]?.toString() ?? '',

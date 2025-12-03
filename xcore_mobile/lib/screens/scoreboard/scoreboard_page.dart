@@ -7,7 +7,6 @@ import 'package:xcore_mobile/screens/scoreboard/scoreboard_service.dart';
 import 'package:xcore_mobile/screens/statistik/match_statistik.dart';
 import 'package:xcore_mobile/screens/prediction/prediction_page.dart';
 import 'package:xcore_mobile/screens/scoreboard/scoreboard_card.dart';
-import 'package:xcore_mobile/services/auth_service.dart';
 
 class ScoreboardPage extends StatefulWidget {
   const ScoreboardPage({super.key});
@@ -18,27 +17,55 @@ class ScoreboardPage extends StatefulWidget {
 
 class _ScoreboardPageState extends State<ScoreboardPage> {
   late Future<List<ScoreboardEntry>> futureScoreboard;
-  bool isAdmin = false;
+  bool _isAdmin = false;
+  bool _isLoading = true;
+  String _error = '';
 
   @override
   void initState() {
     super.initState();
-    futureScoreboard = ScoreboardService.fetchScoreboard();
+    _refreshScoreboard(); 
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
     _checkAdminStatus();
   }
 
   Future<void> _checkAdminStatus() async {
-    final adminStatus = await AuthService.isAdmin();
+    try {
+      final adminStatus = await ScoreboardService.fetchAdminStatus(context);
+      setState(() {
+        _isAdmin = adminStatus;
+        _isLoading = false;
+      });
+    } catch (e) {
+      setState(() {
+        _error = e.toString();
+        _isLoading = false;
+      });
+    }
+  }
+
+  Future<void> _refreshScoreboard() async {
     setState(() {
-      isAdmin = adminStatus;
+      futureScoreboard = ScoreboardService.fetchScoreboard();
+      _error = ''; 
     });
   }
 
   @override
   Widget build(BuildContext context) {
+    if (_isLoading) {
+      return const Scaffold(
+        body: Center(child: CircularProgressIndicator()),
+      );
+    }
+
     return Scaffold(
       backgroundColor: const Color(0xFFF7F8FA),
-
+      
       appBar: AppBar(
         title: const Text(
           "⚽ Xcore",
@@ -48,17 +75,26 @@ class _ScoreboardPageState extends State<ScoreboardPage> {
         backgroundColor: Colors.white,
         elevation: 0,
         actions: [
-          // ADD MATCH (UNTUK ADMIN SAJA)
-          if (isAdmin)
+          // TOMBOL REFRESH
+          IconButton(
+            icon: const Icon(Icons.refresh, color: Colors.blue),
+            onPressed: _refreshScoreboard,
+          ),
+
+          if (_isAdmin)
             IconButton(
               icon: const Icon(Icons.add, color: Colors.teal),
-              onPressed: () {
-                Navigator.push(
+              onPressed: () async {
+                final result = await Navigator.push(
                   context,
                   MaterialPageRoute(
                     builder: (_) => const AddMatchPage(),
                   ),
                 );
+                // Jika Add/Edit Match berhasil (mengembalikan true), refresh data
+                if (result == true) {
+                  _refreshScoreboard();
+                }
               },
             ),
         ],
@@ -71,65 +107,99 @@ class _ScoreboardPageState extends State<ScoreboardPage> {
             return const Center(child: CircularProgressIndicator());
           }
 
+          if (_error.isNotEmpty) {
+            return Center(child: Text('Error: $_error'));
+          }
+          
+          if (snapshot.hasError) {
+             return Center(child: Text('Error loading data: ${snapshot.error.toString()}'));
+          }
+
           if (!snapshot.hasData || snapshot.data!.isEmpty) {
             return const Center(child: Text("No scoreboard found"));
           }
 
           final matches = snapshot.data!;
 
-          return ListView.builder(
-            padding: const EdgeInsets.all(16),
-            itemCount: matches.length,
-            itemBuilder: (context, index) {
-              final item = matches[index];
+          return RefreshIndicator( 
+            onRefresh: _refreshScoreboard,
+            child: ListView.builder(
+              padding: const EdgeInsets.all(16),
+              itemCount: matches.length,
+              itemBuilder: (context, index) {
+                final item = matches[index];
 
-              return Column(
-                children: [
-                  GestureDetector(
-                    onTap: () {
-                      final status = item.status.toLowerCase();
+                return Column(
+                  children: [
+                    GestureDetector(
+                      onTap: () {
+                        final status = item.status.toLowerCase();
 
-                      if (status == "upcoming") {
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder: (_) => PredictionPage(matchId: item.id),
-                          ),
-                        );
-                      } else {
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder: (_) => MatchStatisticsPage(
-                              matchId: item.id,
-                              homeTeam: item.homeTeam,
-                              awayTeam: item.awayTeam,
-                              homeTeamCode: item.homeTeamCode,
-                              awayTeamCode: item.awayTeamCode,
+                        if (status == "upcoming") {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (_) => PredictionPage(matchId: item.id),
+                            ),
+                          );
+                        } else {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (_) => MatchStatisticsPage(
+                                matchId: item.id,
+                                homeTeam: item.homeTeam,
+                                awayTeam: item.awayTeam,
+                                homeTeamCode: item.homeTeamCode,
+                                awayTeamCode: item.awayTeamCode,
+                              ),
+                            ),
+                          );
+                        }
+                      },
+                      child: ScoreboardMatchCard(
+                        homeTeam: item.homeTeam,
+                        awayTeam: item.awayTeam,
+                        homeCode: item.homeTeamCode,
+                        awayCode: item.awayTeamCode,
+                        status: item.status,
+                        homeScore: item.homeScore,
+                        awayScore: item.awayScore,
+                        stadium: item.stadium,
+                        group: item.group,
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+
+                    if (_isAdmin)
+                      SizedBox(
+                        width: double.infinity,
+                        child: ElevatedButton.icon(
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: Colors.teal,
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(12),
                             ),
                           ),
-                        );
-                      }
-                    },
-                    child: ScoreboardMatchCard(
-                      homeTeam: item.homeTeam,
-                      awayTeam: item.awayTeam,
-                      homeCode: item.homeTeamCode,
-                      awayCode: item.awayTeamCode,
-                      status: item.status,
-                      homeScore: item.homeScore,
-                      awayScore: item.awayScore,
-                      stadium: item.stadium,
-                      group: item.group,
-                    ),
-                  ),
+                          icon: const Icon(Icons.edit, color: Colors.white),
+                          label: const Text("Edit Match", style: TextStyle(color: Colors.white)),
+                          onPressed: () async {
+                            final result = await Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (_) => EditMatchPage(matchEntry: item),
+                              ),
+                            );
+                            // Jika Edit Match berhasil (mengembalikan true), refresh data
+                            if (result == true) {
+                              _refreshScoreboard();
+                            }
+                          },
+                        ),
+                      ),
 
-                  const SizedBox(height: 8),
+                    if (_isAdmin) const SizedBox(height: 8),
 
-                  // ------------------------------
-                  // SHOW EDIT BUTTON ONLY FOR ADMIN
-                  // ------------------------------
-                  if (isAdmin)
                     SizedBox(
                       width: double.infinity,
                       child: ElevatedButton.icon(
@@ -139,50 +209,24 @@ class _ScoreboardPageState extends State<ScoreboardPage> {
                             borderRadius: BorderRadius.circular(12),
                           ),
                         ),
-                        icon: const Icon(Icons.edit, color: Colors.white),
-                        label: const Text("Edit Match", style: TextStyle(color: Colors.white)),
+                        icon: const Icon(Icons.forum, color: Colors.white),
+                        label: const Text("Open Match Forum", style: TextStyle(color: Colors.white)),
                         onPressed: () {
                           Navigator.push(
                             context,
                             MaterialPageRoute(
-                              builder: (_) => EditMatchPage(matchId: item.id),
+                              builder: (_) => ForumPage(matchId: item.id),
                             ),
                           );
                         },
                       ),
                     ),
 
-                  if (isAdmin) const SizedBox(height: 8),
-
-                  // ------------------------------
-                  // FORUM BUTTON (ALL USERS)
-                  // ------------------------------
-                  SizedBox(
-                    width: double.infinity,
-                    child: ElevatedButton.icon(
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: Colors.teal,
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(12),
-                        ),
-                      ),
-                      icon: const Icon(Icons.forum, color: Colors.white),
-                      label: const Text("Open Match Forum", style: TextStyle(color: Colors.white)),
-                      onPressed: () {
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder: (_) => ForumPage(matchId: item.id),
-                          ),
-                        );
-                      },
-                    ),
-                  ),
-
-                  const SizedBox(height: 20),
-                ],
-              );
-            },
+                    const SizedBox(height: 20),
+                  ],
+                );
+              },
+            ),
           );
         },
       ),
