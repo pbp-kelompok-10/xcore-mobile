@@ -54,21 +54,60 @@ Alur pengintegrasian dengan web service untuk terhubung dengan aplikasi web yang
 ## Design
 https://www.figma.com/design/sTyMbtyzsur2K5reeIWjxo/Untitled?node-id=0-1&t=gH3GWdAi5VQOSjXW-1
 
-## PLAN PER WEEK:
--17-23 November:
-Alvin : Buat library untuk register
+# PLAN PER WEEK
 
--24-30 November:
-Alvin : Membuat API Fitur Highlights
+## 17-23 November:
+- **Alvin**: Buat library untuk register
+- **Abhi**: Membuat API Fitur Scoreboard  
+- **Zita**: Membuat API Fitur Forum dan UI nya
+- **Kasa**: Membuat design aplikasi di Figma
+- **Garuga**: Membuat API Fitur Statistik
 
--01-07 Desember:
-Alvin : Membuat API Fitur Teams & Players (bagian dari lineup)
+## 24-30 November:
+- **Alvin**: Membuat API Fitur Highlights
+- **Abhi**: UI scoreboard
+- **Zita**: Membuat API Fitur Lineup dan UI nya
+- **Kasa**: Membuat fitur API Prediction
+- **Garuga**: UI statistik
 
--08-14 Desember:
-Alvin : Menggabungkan rounting antar fitur
+## 01-07 Desember:
+- **Alvin**: Membuat API Fitur Teams & Players (bagian dari lineup)
+- **Abhi**: Integrasi API
+- **Zita**: Styling dan merapihkan kode
+- **Kasa**: Integrasi API
+- **Garuga**: Integrasi API
 
--15-21 Desember:
-Alvin : Recheck kode
+## 08-14 Desember:
+- **Alvin**: Menggabungkan rounting antar fitur
+- **Abhi**: Finalisasi
+- **Zita**: Finishing
+- **Kasa**: Styling dan merapikan kode
+- **Garuga**: Finalisasi
 
+## 15-21 Desember:
+- **Alvin**: Recheck kode
+- **Abhi**: Bikin video
+- **Zita**: Recheck kode & bikin video
+- **Kasa**: Finishing
+- **Garuga**: Bikin video
 
+## 01-07 Desember:
+- **Alvin**: Membuat API Fitur Teams & Players (bagian dari lineup)
+- **Abhi**: Integrasi API
+- **Zita**: Styling dan merapihkan kode
+- **Kasa**: Integrasi API
+- **Garuga**: Integrasi API
 
+## 08-14 Desember:
+- **Alvin**: Menggabungkan rounting antar fitur
+- **Abhi**: Finalisasi
+- **Zita**: Finishing
+- **Kasa**: Styling dan merapikan kode
+- **Garuga**: Finalisasi
+
+## 15-21 Desember:
+- **Alvin**: Recheck kode
+- **Abhi**: Bikin video
+- **Zita**: Recheck kode & bikin video
+- **Kasa**: Finishing
+- **Garuga**: Bikin video
