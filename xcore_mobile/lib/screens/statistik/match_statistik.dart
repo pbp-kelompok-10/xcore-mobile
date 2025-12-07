@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:pbp_django_auth/pbp_django_auth.dart';
+import 'package:provider/provider.dart';
 import 'package:xcore_mobile/models/statistik_entry.dart'; 
 import 'statistik_service.dart';
 import '../scoreboard/scoreboard_page.dart';
@@ -9,7 +11,7 @@ import '../lineup/lineup_page.dart';
 import 'widgets/header_section.dart';
 import 'widgets/navigation_cards.dart';
 import 'widgets/statistik_row.dart';
-import 'package:xcore_mobile/services/auth_service.dart';
+import 'widgets/flag_widget.dart'; // Import FlagWidget
 import 'admin/add_statistik_page.dart';
 import 'admin/edit_statistik_page.dart';
 
@@ -43,18 +45,32 @@ class _MatchStatisticsPageState extends State<MatchStatisticsPage> {
   void initState() {
     super.initState();
     _loadStatistik();
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
     _checkAdminStatus();
   }
 
   Future<void> _checkAdminStatus() async {
-    final isAdmin = await AuthService.isAdmin();
-    setState(() {
-      _isAdmin = isAdmin;
-    });
+    try {
+      final admin_status = await StatistikService.fetchAdminStatus(context);
+      setState(() {
+        _isAdmin = admin_status;
+      });
+    } catch (e) {
+      print('Error checking admin status: $e');
+    }
   }
 
   Future<void> _loadStatistik() async {
     try {
+      setState(() {
+        _isLoading = true;
+        _error = '';
+      });
+      
       final statistik = await StatistikService.fetchStatistik(widget.matchId);
       setState(() {
         _statistik = statistik;
@@ -65,17 +81,16 @@ class _MatchStatisticsPageState extends State<MatchStatisticsPage> {
         _error = e.toString();
         _isLoading = false;
       });
+      print('Error loading statistik: $e');
     }
   }
 
   // Navigation functions
   void _navigateToScoreboard() {
-    _showSnackBar("Kembali ke Scoreboard");
     Navigator.pop(context);
   }
 
   void _navigateToForum() {
-    _showSnackBar("Membuka Forum");
     Navigator.push(
       context,
       MaterialPageRoute(builder: (context) => ForumPage(matchId: widget.matchId)),
@@ -83,7 +98,6 @@ class _MatchStatisticsPageState extends State<MatchStatisticsPage> {
   }
 
   void _navigateToHighlight() {
-    _showSnackBar("Membuka Highlight");
     Navigator.push(
       context,
       MaterialPageRoute(builder: (context) => HighlightPage(matchId: widget.matchId)),
@@ -91,7 +105,6 @@ class _MatchStatisticsPageState extends State<MatchStatisticsPage> {
   }
 
   void _navigateToPrediction() {
-    _showSnackBar("Membuka Prediction");
     Navigator.push(
       context,
       MaterialPageRoute(builder: (context) => PredictionPage(matchId: widget.matchId)),
@@ -99,7 +112,6 @@ class _MatchStatisticsPageState extends State<MatchStatisticsPage> {
   }
 
   void _navigateToLineup() {
-    _showSnackBar("Membuka Lineup");
     Navigator.push(
       context,
       MaterialPageRoute(builder: (context) => LineupPage(matchId: widget.matchId)),
@@ -156,15 +168,33 @@ class _MatchStatisticsPageState extends State<MatchStatisticsPage> {
 
     if (confirmed == true) {
       try {
-        final success = await StatistikService.deleteStatistik(widget.matchId);
+        final success = await StatistikService.deleteStatistik(context, widget.matchId);
         if (success) {
-          _showSnackBar('Statistik berhasil dihapus');
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text('✅ Statistik berhasil dihapus'),
+              backgroundColor: Colors.green[700],
+              duration: Duration(seconds: 2),
+            )
+          );
           _loadStatistik(); // Auto refresh setelah delete
         } else {
-          _showSnackBar('Gagal menghapus statistik');
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text('❌ Gagal menghapus statistik'),
+              backgroundColor: Colors.red[600],
+              duration: Duration(seconds: 2),
+            )
+          );
         }
       } catch (e) {
-        _showSnackBar('Error: $e');
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('❌ Error: $e'),
+            backgroundColor: Colors.red[600],
+            duration: Duration(seconds: 3),
+          )
+        );
       }
     }
   }
@@ -185,200 +215,339 @@ class _MatchStatisticsPageState extends State<MatchStatisticsPage> {
       );
   }
 
-  // Build admin FAB
-  Widget _buildAdminFab() {
-    if (!_isAdmin) return SizedBox();
-
-    return FloatingActionButton(
-      onPressed: _statistik == null ? _addStatistik : _editStatistik,
-      child: Icon(_statistik == null ? Icons.add : Icons.edit),
-      backgroundColor: Colors.orange,
+  // Navigation Cards yang selalu tampil
+  Widget _buildNavigationCards() {
+    return NavigationCards(
+      onForumTap: _navigateToForum,
+      onHighlightTap: _navigateToHighlight,
+      onPredictionTap: _navigateToPrediction,
+      onLineupTap: _navigateToLineup,
+      matchId: widget.matchId,
     );
   }
 
-  // Build admin actions
-  Widget _buildAdminActions() {
-    if (!_isAdmin || _statistik == null) return SizedBox();
-
-    return Padding(
-      padding: EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-      child: Row(
-        children: [
-          Expanded(
-            child: ElevatedButton.icon(
-              icon: Icon(Icons.edit, size: 18),
-              label: Text('Edit Statistik'),
-              onPressed: _editStatistik,
-              style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.blue,
-                foregroundColor: Colors.white,
-              ),
-            ),
-          ),
-          SizedBox(width: 8),
-          Expanded(
-            child: ElevatedButton.icon(
-              icon: Icon(Icons.delete, size: 18),
-              label: Text('Hapus'),
-              onPressed: _deleteStatistik,
-              style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.red,
-                foregroundColor: Colors.white,
-              ),
-            ),
-          ),
-        ],
+  // Widget untuk menampilkan header seperti di AddStatistikPage (tanpa skor) DENGAN FlagWidget
+  Widget _buildMatchHeaderWithoutScore() {
+    return Container(
+      padding: EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: Colors.green[50],
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: Colors.green[100]!),
       ),
-    );
-  }
-
-  // Loading state - TANPA TOMBOL REFRESH
-  Widget _buildLoadingState() {
-    return Center(
       child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          CircularProgressIndicator(
-            valueColor: AlwaysStoppedAnimation<Color>(Colors.green[700]!),
-            strokeWidth: 2,
+          // Header "MATCH" (opsional, bisa dihapus juga kalo mau)
+          Text(
+            'MATCH',
+            style: TextStyle(
+              fontSize: 12,
+              fontWeight: FontWeight.bold,
+              color: Colors.green[800],
+              letterSpacing: 1.0,
+            ),
           ),
           SizedBox(height: 16),
-          Text(
-            'Loading Statistics...',
-            style: TextStyle(
-              fontSize: 16,
-              fontWeight: FontWeight.w500,
-              color: Colors.grey[600],
-            ),
-          ),
-          // HANYA TAMPILKAN TAMBAH STATISTIK JIKA ADMIN DAN BELUM ADA STATISTIK
-          if (_isAdmin && _statistik == null) ...[
-            SizedBox(height: 20),
-            ElevatedButton.icon(
-              icon: Icon(Icons.add),
-              label: Text('Tambah Statistik'),
-              onPressed: _addStatistik,
-              style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.orange,
-                foregroundColor: Colors.white,
+          
+          // Team names dengan VS di tengah DAN BENDERA
+          Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              // Home team dengan bendera di atas nama
+              Expanded(
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    // Bendera menggunakan FlagWidget
+                    FlagWidget(
+                      teamCode: widget.homeTeamCode,
+                      isHome: true,
+                      width: 60,
+                      height: 40,
+                    ),
+                    SizedBox(height: 8),
+                    // Nama tim
+                    Text(
+                      widget.homeTeam,
+                      style: TextStyle(
+                        fontSize: 14,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.green[800],
+                      ),
+                      textAlign: TextAlign.center,
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ],
+                ),
               ),
-            ),
-          ],
+              
+              // VS di tengah TANPA SKOR
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 12.0),
+                child: Container(
+                  padding: EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                  decoration: BoxDecoration(
+                    color: Colors.grey[100],
+                    borderRadius: BorderRadius.circular(20),
+                  ),
+                  child: Text(
+                    'VS',
+                    style: TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.grey[700],
+                      fontStyle: FontStyle.italic,
+                    ),
+                  ),
+                ),
+              ),
+              
+              // Away team dengan bendera di atas nama
+              Expanded(
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    // Bendera menggunakan FlagWidget
+                    FlagWidget(
+                      teamCode: widget.awayTeamCode,
+                      isHome: false,
+                      width: 60,
+                      height: 40,
+                    ),
+                    SizedBox(height: 8),
+                    // Nama tim
+                    Text(
+                      widget.awayTeam,
+                      style: TextStyle(
+                        fontSize: 14,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.blue[800],
+                      ),
+                      textAlign: TextAlign.center,
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+          SizedBox(height: 12),
+          Divider(height: 1, color: Colors.green[200]),
+          SizedBox(height: 8),
+          // Hanya tampilkan Match ID saja
+          Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Text(
+                'Match ID: ${widget.matchId}',
+                style: TextStyle(
+                  fontSize: 12,
+                  color: Colors.grey[600],
+                ),
+              ),
+            ],
+          ),
         ],
       ),
     );
   }
 
-  // Error state - TANPA TOMBOL REFRESH
-  Widget _buildErrorState() {
-    return Center(
-      child: Padding(
-        padding: EdgeInsets.all(24),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Container(
-              padding: EdgeInsets.all(16),
-              decoration: BoxDecoration(
-                color: Colors.red[50],
-                shape: BoxShape.circle,
-              ),
-              child: Icon(Icons.error_outline, size: 48, color: Colors.red[400]),
-            ),
-            SizedBox(height: 20),
-            Text(
-              'Failed to Load',
-              style: TextStyle(
-                fontSize: 20,
-                fontWeight: FontWeight.bold,
-                color: Colors.grey[800],
-              ),
-            ),
-            SizedBox(height: 8),
-            Text(
-              _error,
-              textAlign: TextAlign.center,
-              style: TextStyle(
-                fontSize: 14,
-                color: Colors.grey[600],
-              ),
-            ),
-            SizedBox(height: 24),
-            // HANYA TAMPILKAN TAMBAH STATISTIK UNTUK ADMIN (TANPA TOMBOL REFRESH)
-            if (_isAdmin) 
-              ElevatedButton.icon(
-                icon: Icon(Icons.add, size: 18),
-                label: Text('Tambah Statistik'),
-                onPressed: _addStatistik,
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.orange,
-                  foregroundColor: Colors.white,
-                  padding: EdgeInsets.symmetric(horizontal: 20, vertical: 12),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(8),
+  // Loading state DENGAN Navigation Cards
+  Widget _buildLoadingState() {
+    return Column(
+      children: [
+        // Navigation Cards di atas loading indicator
+        Padding(
+          padding: EdgeInsets.all(16),
+          child: _buildNavigationCards(),
+        ),
+        Expanded(
+          child: Center(
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                CircularProgressIndicator(
+                  valueColor: AlwaysStoppedAnimation<Color>(Colors.green[700]!),
+                  strokeWidth: 2,
+                ),
+                SizedBox(height: 16),
+                Text(
+                  'Loading Statistics...',
+                  style: TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.w500,
+                    color: Colors.grey[600],
                   ),
                 ),
-              ),
-          ],
+              ],
+            ),
+          ),
         ),
+      ],
+    );
+  }
+
+  // Error state DENGAN Navigation Cards
+  Widget _buildErrorState() {
+    return SingleChildScrollView(
+      child: Column(
+        children: [
+          // Navigation Cards di atas
+          Padding(
+            padding: EdgeInsets.all(16),
+            child: _buildNavigationCards(),
+          ),
+          
+          // Match Header dengan bendera
+          Padding(
+            padding: EdgeInsets.symmetric(horizontal: 16),
+            child: _buildMatchHeaderWithoutScore(),
+          ),
+          
+          SizedBox(height: 24),
+          
+          // Error message
+          Padding(
+            padding: EdgeInsets.all(24),
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Container(
+                  padding: EdgeInsets.all(16),
+                  decoration: BoxDecoration(
+                    color: Colors.red[50],
+                    shape: BoxShape.circle,
+                  ),
+                  child: Icon(Icons.error_outline, size: 48, color: Colors.red[400]),
+                ),
+                SizedBox(height: 20),
+                Text(
+                  'Failed to Load Statistics',
+                  style: TextStyle(
+                    fontSize: 20,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.grey[800],
+                  ),
+                ),
+                SizedBox(height: 8),
+                Text(
+                  _error,
+                  textAlign: TextAlign.center,
+                  style: TextStyle(
+                    fontSize: 14,
+                    color: Colors.grey[600],
+                  ),
+                ),
+                SizedBox(height: 24),
+                ElevatedButton(
+                  onPressed: _loadStatistik,
+                  child: Text('Try Again'),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.green[700],
+                    foregroundColor: Colors.white,
+                  ),
+                ),
+                SizedBox(height: 12),
+                if (_isAdmin)
+                  ElevatedButton.icon(
+                    icon: Icon(Icons.add, size: 18),
+                    label: Text('Tambah Statistik'),
+                    onPressed: _addStatistik,
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.orange,
+                      foregroundColor: Colors.white,
+                      padding: EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                    ),
+                  ),
+              ],
+            ),
+          ),
+        ],
       ),
     );
   }
 
-  // Empty state - TANPA TOMBOL REFRESH
+  // Empty state (belum ada statistik) DENGAN Navigation Cards dan Match Header
   Widget _buildEmptyState() {
-    return Center(
-      child: Padding(
-        padding: EdgeInsets.all(24),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Container(
-              padding: EdgeInsets.all(16),
-              decoration: BoxDecoration(
-                color: Colors.green[50],
-                shape: BoxShape.circle,
-              ),
-              child: Icon(Icons.analytics_outlined, size: 48, color: Colors.green[400]),
-            ),
-            SizedBox(height: 20),
-            Text(
-              'No Statistics',
-              style: TextStyle(
-                fontSize: 20,
-                fontWeight: FontWeight.bold,
-                color: Colors.grey[800],
-              ),
-            ),
-            SizedBox(height: 8),
-            Text(
-              'Statistics will be available once\nthe match begins',
-              textAlign: TextAlign.center,
-              style: TextStyle(
-                fontSize: 14,
-                color: Colors.grey[600],
-              ),
-            ),
-            SizedBox(height: 24),
-            // HANYA TAMPILKAN TAMBAH STATISTIK UNTUK ADMIN (TANPA TOMBOL REFRESH)
-            if (_isAdmin) 
-              ElevatedButton.icon(
-                icon: Icon(Icons.add, size: 18),
-                label: Text('Tambah Statistik'),
-                onPressed: _addStatistik,
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.orange,
-                  foregroundColor: Colors.white,
-                  padding: EdgeInsets.symmetric(horizontal: 20, vertical: 12),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(8),
+    return SingleChildScrollView(
+      child: Column(
+        children: [
+          // Navigation Cards di atas
+          Padding(
+            padding: EdgeInsets.all(16),
+            child: _buildNavigationCards(),
+          ),
+          
+          // Match Header dengan bendera
+          Padding(
+            padding: EdgeInsets.symmetric(horizontal: 16),
+            child: _buildMatchHeaderWithoutScore(),
+          ),
+          
+          SizedBox(height: 24),
+          
+          // Empty message
+          Padding(
+            padding: EdgeInsets.all(24),
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Container(
+                  padding: EdgeInsets.all(16),
+                  decoration: BoxDecoration(
+                    color: Colors.green[50],
+                    shape: BoxShape.circle,
+                  ),
+                  child: Icon(Icons.analytics_outlined, size: 48, color: Colors.green[400]),
+                ),
+                SizedBox(height: 20),
+                Text(
+                  'No Statistics Available',
+                  style: TextStyle(
+                    fontSize: 20,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.grey[800],
                   ),
                 ),
-              ),
-          ],
-        ),
+                SizedBox(height: 8),
+                Text(
+                  'Statistics will be available once\nthe match begins',
+                  textAlign: TextAlign.center,
+                  style: TextStyle(
+                    fontSize: 14,
+                    color: Colors.grey[600],
+                  ),
+                ),
+                SizedBox(height: 24),
+                if (_isAdmin)
+                  ElevatedButton.icon(
+                    icon: Icon(Icons.add, size: 18),
+                    label: Text('Tambah Statistik'),
+                    onPressed: _addStatistik,
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.orange,
+                      foregroundColor: Colors.white,
+                      padding: EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                    ),
+                  ),
+              ],
+            ),
+          ),
+        ],
       ),
     );
+  }
+
+  bool get _hasStatistik {
+    return _statistik != null;
   }
 
   Widget _buildContent() {
@@ -386,7 +555,15 @@ class _MatchStatisticsPageState extends State<MatchStatisticsPage> {
       physics: BouncingScrollPhysics(),
       child: Column(
         children: [
-          // Header Section
+          // Navigation Cards di ATAS Header Section (setelah menambahkan statistik)
+          Padding(
+            padding: EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+            child: _buildNavigationCards(),
+          ),
+          
+          SizedBox(height: 8),
+          
+          // Header Section dengan skor (ketika sudah ada statistik)
           HeaderSection(
             stadium: _statistik!.stadium,
             matchDate: _statistik!.matchDate,
@@ -399,20 +576,6 @@ class _MatchStatisticsPageState extends State<MatchStatisticsPage> {
           ),
           
           SizedBox(height: 20),
-          
-          // Admin Actions
-          _buildAdminActions(),
-          
-          // Navigation Cards
-          NavigationCards(
-            onForumTap: _navigateToForum,
-            onHighlightTap: _navigateToHighlight,
-            onPredictionTap: _navigateToPrediction,
-            onLineupTap: _navigateToLineup,
-            matchId: widget.matchId,
-          ),
-          
-          SizedBox(height: 24),
           
           // Statistics Section
           Padding(
@@ -561,59 +724,35 @@ class _MatchStatisticsPageState extends State<MatchStatisticsPage> {
         ),
         centerTitle: true,
         actions: _isAdmin ? [
-          IconButton(
-            icon: Icon(Icons.settings, color: Colors.white),
-            onPressed: () {
-              // Show admin options
-              showDialog(
-                context: context,
-                builder: (context) => AlertDialog(
-                  title: Text('Admin Options'),
-                  content: Column(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      ListTile(
-                        leading: Icon(Icons.add),
-                        title: Text('Tambah Statistik'),
-                        onTap: () {
-                          Navigator.pop(context);
-                          _addStatistik();
-                        },
-                      ),
-                      if (_statistik != null) ...[
-                        ListTile(
-                          leading: Icon(Icons.edit),
-                          title: Text('Edit Statistik'),
-                          onTap: () {
-                            Navigator.pop(context);
-                            _editStatistik();
-                          },
-                        ),
-                        ListTile(
-                          leading: Icon(Icons.delete, color: Colors.red),
-                          title: Text('Hapus Statistik', style: TextStyle(color: Colors.red)),
-                          onTap: () {
-                            Navigator.pop(context);
-                            _deleteStatistik();
-                          },
-                        ),
-                      ],
-                    ],
-                  ),
-                ),
-              );
-            },
-          ),
+          if (_hasStatistik)
+            IconButton(
+              icon: Icon(Icons.edit, color: Colors.white),
+              onPressed: _editStatistik,
+              tooltip: 'Edit Statistik',
+            ),
+          if (_hasStatistik)
+            IconButton(
+              icon: Icon(Icons.delete, color: Colors.white),
+              onPressed: _deleteStatistik,
+              tooltip: 'Hapus Statistik',
+            ),
         ] : null,
       ),
       body: _isLoading
           ? _buildLoadingState()
           : _error.isNotEmpty
               ? _buildErrorState()
-              : _statistik == null
+              : !_hasStatistik
                   ? _buildEmptyState()
                   : _buildContent(),
-      floatingActionButton: _buildAdminFab(),
+      floatingActionButton: _isAdmin && !_hasStatistik
+          ? FloatingActionButton(
+              onPressed: _addStatistik,
+              child: Icon(Icons.add),
+              backgroundColor: Colors.orange,
+              tooltip: 'Tambah Statistik',
+            )
+          : null,
     );
   }
 }
