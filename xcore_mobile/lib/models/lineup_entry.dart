@@ -52,15 +52,43 @@ class Player {
     this.tim,
   });
 
-  factory Player.fromJson(Map<String, dynamic> json) => Player(
-    id: json["id"]?.toString() ?? '',
-    nama: json["nama"]?.toString() ?? 'Unknown Player',
-    asal: json["asal"]?.toString() ?? '',
-    umur: _parseInt(json["umur"]),
-    nomor: _parseInt(json["nomor"]),
-    timId: json["tim"]?.toString() ?? '',
-    tim: json["tim_object"] != null ? Team.fromJson(json["tim_object"]) : null,
-  );
+  // Di Player.fromJson(), handle data dari endpoint get-players
+  factory Player.fromJson(Map<String, dynamic> json) {
+    // Handle different response formats
+    if (json.containsKey('name')) {
+      // From get-players endpoint
+      final nameString = json['name'] as String;
+      final nameMatch = RegExp(r'^(.*?) \(#(\d+)\)$').firstMatch(nameString);
+
+      String playerName = nameString;
+      int playerNumber = 0;
+
+      if (nameMatch != null) {
+        playerName = nameMatch.group(1)!;
+        playerNumber = int.parse(nameMatch.group(2)!);
+      }
+
+      return Player(
+        id: json['id'].toString(),
+        nama: playerName,
+        asal: '',
+        umur: 0,
+        nomor: playerNumber,
+        timId: '', // Will be set separately
+      );
+    } else {
+      // From lineup detail endpoint
+      return Player(
+        id: json["id"]?.toString() ?? '',
+        nama: json["nama"]?.toString() ?? 'Unknown Player',
+        asal: json["asal"]?.toString() ?? '',
+        umur: _parseInt(json["umur"]),
+        nomor: _parseInt(json["nomor"]),
+        timId: json["tim"]?.toString() ?? '',
+        tim: json["team"] != null ? Team.fromJson(json["team"]) : null,
+      );
+    }
+  }
 
   static int _parseInt(dynamic value) {
     if (value == null) return 0;
