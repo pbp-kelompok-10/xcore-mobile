@@ -107,7 +107,7 @@ class _MatchStatisticsPageState extends State<MatchStatisticsPage> {
   void _navigateToPrediction() {
     Navigator.push(
       context,
-      MaterialPageRoute(builder: (context) => PredictionPage(matchId: widget.matchId)),
+      MaterialPageRoute(builder: (context) => PredictionPage()),
     );
   }
 

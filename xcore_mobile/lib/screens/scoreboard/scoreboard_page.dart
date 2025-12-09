@@ -139,7 +139,7 @@ class _ScoreboardPageState extends State<ScoreboardPage> {
                           Navigator.push(
                             context,
                             MaterialPageRoute(
-                              builder: (_) => PredictionPage(matchId: item.id),
+                              builder: (context) => const PredictionPage(),
                             ),
                           );
                         } else {
