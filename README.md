@@ -91,20 +91,6 @@ https://www.figma.com/design/sTyMbtyzsur2K5reeIWjxo/Untitled?node-id=0-1&t=gH3GW
 - **Kasa**: Finishing
 - **Garuga**: Bikin video
 
-## 01-07 Desember:
-- **Alvin**: Membuat API Fitur Teams & Players (bagian dari lineup)
-- **Abhi**: Integrasi API
-- **Zita**: Styling dan merapihkan kode
-- **Kasa**: Integrasi API
-- **Garuga**: Integrasi API
-
-## 08-14 Desember:
-- **Alvin**: Menggabungkan rounting antar fitur
-- **Abhi**: Finalisasi
-- **Zita**: Finishing
-- **Kasa**: Styling dan merapikan kode
-- **Garuga**: Finalisasi
-
 ## 15-21 Desember:
 - **Alvin**: Recheck kode
 - **Abhi**: Bikin video
