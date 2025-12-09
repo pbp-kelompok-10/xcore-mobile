@@ -94,7 +94,7 @@ class _MatchStatisticsPageState extends State<MatchStatisticsPage> {
     _showSnackBar("Membuka Prediction");
     Navigator.push(
       context,
-      MaterialPageRoute(builder: (context) => PredictionPage(matchId: widget.matchId)),
+      MaterialPageRoute(builder: (context) => PredictionPage()),
     );
   }
 
