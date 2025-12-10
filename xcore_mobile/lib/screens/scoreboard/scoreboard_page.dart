@@ -9,7 +9,9 @@ import 'package:xcore_mobile/screens/prediction/prediction_page.dart';
 import 'package:xcore_mobile/screens/scoreboard/scoreboard_card.dart';
 
 class ScoreboardPage extends StatefulWidget {
-  const ScoreboardPage({super.key});
+  final Function(int)? onSwitchTab; // Function untuk ganti tab
+
+  const ScoreboardPage({super.key, this.onSwitchTab});
 
   @override
   State<ScoreboardPage> createState() => _ScoreboardPageState();
@@ -24,7 +26,7 @@ class _ScoreboardPageState extends State<ScoreboardPage> {
   @override
   void initState() {
     super.initState();
-    _refreshScoreboard(); 
+    _refreshScoreboard();
   }
 
   @override
@@ -36,54 +38,70 @@ class _ScoreboardPageState extends State<ScoreboardPage> {
   Future<void> _checkAdminStatus() async {
     try {
       final adminStatus = await ScoreboardService.fetchAdminStatus(context);
-      setState(() {
-        _isAdmin = adminStatus;
-        _isLoading = false;
-      });
+      if (mounted) {
+        setState(() {
+          _isAdmin = adminStatus;
+          _isLoading = false;
+        });
+      }
     } catch (e) {
-      setState(() {
-        _error = e.toString();
-        _isLoading = false;
-      });
+      if (mounted) {
+        setState(() {
+          _error = e.toString();
+          _isLoading = false;
+        });
+      }
     }
   }
 
   Future<void> _refreshScoreboard() async {
     setState(() {
       futureScoreboard = ScoreboardService.fetchScoreboard();
-      _error = ''; 
+      _error = '';
     });
   }
 
   @override
   Widget build(BuildContext context) {
     if (_isLoading) {
-      return const Scaffold(
-        body: Center(child: CircularProgressIndicator()),
+      return Scaffold(
+        backgroundColor: const Color(0xFFE8F6F4),
+        body: const Center(
+          child: CircularProgressIndicator(
+            color: Color(0xFF4AA69B),
+          ),
+        ),
       );
     }
 
     return Scaffold(
-      backgroundColor: const Color(0xFFF7F8FA),
-      
+      backgroundColor: const Color(0xFFE8F6F4),
       appBar: AppBar(
         title: const Text(
-          "⚽ Xcore",
-          style: TextStyle(fontWeight: FontWeight.bold),
+          "Scoreboard",
+          style: TextStyle(
+            fontFamily: 'Nunito Sans',
+            fontWeight: FontWeight.w700,
+            fontSize: 20,
+          ),
         ),
         centerTitle: true,
-        backgroundColor: Colors.white,
-        elevation: 0,
+        elevation: 2,
+        backgroundColor: const Color(0xFF4AA69B),
+        foregroundColor: const Color(0xFFFFFFFF),
+        
+        // --- PERBAIKAN 1: PAKSA HILANGKAN TOMBOL BACK ---
+        automaticallyImplyLeading: false, 
+        // ------------------------------------------------
+        
         actions: [
-          // TOMBOL REFRESH
           IconButton(
-            icon: const Icon(Icons.refresh, color: Colors.blue),
+            icon: const Icon(Icons.refresh, color: Color(0xFFFFFFFF)),
             onPressed: _refreshScoreboard,
           ),
-
           if (_isAdmin)
             IconButton(
-              icon: const Icon(Icons.add, color: Colors.teal),
+              icon: const Icon(Icons.add, color: Color(0xFFFFFFFF)),
               onPressed: () async {
                 final result = await Navigator.push(
                   context,
@@ -91,7 +109,6 @@ class _ScoreboardPageState extends State<ScoreboardPage> {
                     builder: (_) => const AddMatchPage(),
                   ),
                 );
-                // Jika Add/Edit Match berhasil (mengembalikan true), refresh data
                 if (result == true) {
                   _refreshScoreboard();
                 }
@@ -99,131 +116,105 @@ class _ScoreboardPageState extends State<ScoreboardPage> {
             ),
         ],
       ),
-
-      body: FutureBuilder(
+      body: FutureBuilder<List<ScoreboardEntry>>(
         future: futureScoreboard,
         builder: (context, snapshot) {
           if (snapshot.connectionState == ConnectionState.waiting) {
-            return const Center(child: CircularProgressIndicator());
+            return const Center(
+              child: CircularProgressIndicator(color: Color(0xFF4AA69B)),
+            );
           }
 
-          if (_error.isNotEmpty) {
-            return Center(child: Text('Error: $_error'));
-          }
-          
           if (snapshot.hasError) {
-             return Center(child: Text('Error loading data: ${snapshot.error.toString()}'));
+            return Center(child: Text('Error: ${snapshot.error}'));
           }
 
           if (!snapshot.hasData || snapshot.data!.isEmpty) {
-            return const Center(child: Text("No scoreboard found"));
+            return const Center(child: Text("Belum ada pertandingan tersedia."));
           }
 
           final matches = snapshot.data!;
 
-          return RefreshIndicator( 
+          return RefreshIndicator(
+            color: const Color(0xFF4AA69B),
             onRefresh: _refreshScoreboard,
             child: ListView.builder(
-              padding: const EdgeInsets.all(16),
+              padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 16),
               itemCount: matches.length,
               itemBuilder: (context, index) {
                 final item = matches[index];
 
-                return Column(
-                  children: [
-                    GestureDetector(
-                      onTap: () {
-                        final status = item.status.toLowerCase();
+                return Padding(
+                  padding: const EdgeInsets.only(bottom: 16),
+                  child: GestureDetector(
+                    onTap: () {
+                      final status = item.status.toLowerCase();
 
-                        if (status == "upcoming") {
-                          Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                              builder: (context) => const PredictionPage(),
-                            ),
-                          );
-                        } else {
-                          Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                              builder: (_) => MatchStatisticsPage(
-                                matchId: item.id,
-                                homeTeam: item.homeTeam,
-                                awayTeam: item.awayTeam,
-                                homeTeamCode: item.homeTeamCode,
-                                awayTeamCode: item.awayTeamCode,
-                              ),
-                            ),
-                          );
-                        }
-                      },
-                      child: ScoreboardMatchCard(
-                        homeTeam: item.homeTeam,
-                        awayTeam: item.awayTeam,
-                        homeCode: item.homeTeamCode,
-                        awayCode: item.awayTeamCode,
-                        status: item.status,
-                        homeScore: item.homeScore,
-                        awayScore: item.awayScore,
-                        stadium: item.stadium,
-                        group: item.group,
-                      ),
-                    ),
-                    const SizedBox(height: 8),
-
-                    if (_isAdmin)
-                      SizedBox(
-                        width: double.infinity,
-                        child: ElevatedButton.icon(
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: Colors.teal,
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(12),
+                      if (status == "upcoming") {
+                      // CEK LOG DI CONSOLE (DEBUG CONSOLE)
+                      print("DEBUG: Checking onSwitchTab...");
+                      
+                      // Pastikan pakai 'widget.'
+                      if (widget.onSwitchTab != null) {
+                        print("DEBUG: onSwitchTab ADA. Pindah ke Index 1");
+                        widget.onSwitchTab!(1); 
+                      } else {
+                        print("DEBUG: onSwitchTab NULL (Gawat!). Paksa Push (Backup)");
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(builder: (context) => const PredictionPage()),
+                        );
+                      }
+                    } else {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (_) => MatchStatisticsPage(
+                              matchId: item.id,
+                              homeTeam: item.homeTeam,
+                              awayTeam: item.awayTeam,
+                              homeTeamCode: item.homeTeamCode,
+                              awayTeamCode: item.awayTeamCode,
                             ),
                           ),
-                          icon: const Icon(Icons.edit, color: Colors.white),
-                          label: const Text("Edit Match", style: TextStyle(color: Colors.white)),
-                          onPressed: () async {
-                            final result = await Navigator.push(
-                              context,
-                              MaterialPageRoute(
-                                builder: (_) => EditMatchPage(matchEntry: item),
-                              ),
-                            );
-                            // Jika Edit Match berhasil (mengembalikan true), refresh data
-                            if (result == true) {
-                              _refreshScoreboard();
+                        );
+                      }
+                    },
+                    child: ScoreboardMatchCard(
+                      homeTeam: item.homeTeam,
+                      awayTeam: item.awayTeam,
+                      homeCode: item.homeTeamCode,
+                      awayCode: item.awayTeamCode,
+                      status: item.status,
+                      homeScore: item.homeScore,
+                      awayScore: item.awayScore,
+                      stadium: item.stadium,
+                      group: item.group,
+                      isAdmin: _isAdmin,
+                      onEdit: _isAdmin
+                          ? () async {
+                              final result = await Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (_) =>
+                                      EditMatchPage(matchEntry: item),
+                                ),
+                              );
+                              if (result == true) {
+                                _refreshScoreboard();
+                              }
                             }
-                          },
-                        ),
-                      ),
-
-                    if (_isAdmin) const SizedBox(height: 8),
-
-                    SizedBox(
-                      width: double.infinity,
-                      child: ElevatedButton.icon(
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: Colors.teal,
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(12),
+                          : null,
+                      onForum: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (_) => ForumPage(matchId: item.id),
                           ),
-                        ),
-                        icon: const Icon(Icons.forum, color: Colors.white),
-                        label: const Text("Open Match Forum", style: TextStyle(color: Colors.white)),
-                        onPressed: () {
-                          Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                              builder: (_) => ForumPage(matchId: item.id),
-                            ),
-                          );
-                        },
-                      ),
+                        );
+                      },
                     ),
-
-                    const SizedBox(height: 20),
-                  ],
+                  ),
                 );
               },
             ),
