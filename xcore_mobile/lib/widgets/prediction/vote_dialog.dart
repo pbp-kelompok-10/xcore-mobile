@@ -20,36 +20,57 @@ class VoteDialog extends StatelessWidget {
 
     return Dialog(
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-      elevation: 5,
-      backgroundColor: Colors.white,
+      elevation: 8,
+      backgroundColor: const Color(0xFFFFFFFF),
       child: Container(
         padding: const EdgeInsets.all(24),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
+            // Header
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                Text(
-                  isUpdate ? "Change Vote" : "Who will win?",
-                  style: const TextStyle(
-                    fontSize: 20,
-                    fontWeight: FontWeight.bold,
-                    color: Color(0xFF2D6A66),
+                Expanded(
+                  child: Text(
+                    isUpdate ? "Change Vote" : "Who will win?",
+                    style: const TextStyle(
+                      fontFamily: 'Nunito Sans',
+                      fontSize: 20,
+                      fontWeight: FontWeight.w700,
+                      color: Color(0xFF2C5F5A),
+                    ),
                   ),
                 ),
                 GestureDetector(
-                  onTap: () => Navigator.pop(context), // Tutup tanpa aksi
-                  child: Icon(Icons.close, color: Colors.grey[400]),
+                  onTap: () => Navigator.pop(context),
+                  child: Container(
+                    padding: const EdgeInsets.all(4),
+                    decoration: BoxDecoration(
+                      color: const Color(0xFFE8F6F4),
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    child: const Icon(
+                      Icons.close,
+                      color: Color(0xFF4AA69B),
+                      size: 20,
+                    ),
+                  ),
                 ),
               ],
             ),
             const SizedBox(height: 8),
             Text(
               isUpdate ? "Select your new choice:" : "Cast your vote for the winner!",
-              style: TextStyle(color: Colors.grey[600]),
+              style: const TextStyle(
+                fontFamily: 'Nunito Sans',
+                fontSize: 14,
+                color: Color(0xFF6B8E8A),
+              ),
             ),
             const SizedBox(height: 30),
+            
+            // Vote Buttons
             Row(
               children: [
                 Expanded(
@@ -57,22 +78,30 @@ class VoteDialog extends StatelessWidget {
                     context,
                     request,
                     teamName: prediction.homeTeam,
-                    color: const Color(0xFF4DB6AC),
-                    icon: Icons.check_circle_outline,
+                    color: const Color(0xFF4AA69B),
+                    icon: Icons.sports_soccer,
                     choice: "home",
                   ),
                 ),
                 const Padding(
                   padding: EdgeInsets.symmetric(horizontal: 12),
-                  child: Text("VS", style: TextStyle(fontWeight: FontWeight.bold)),
+                  child: Text(
+                    "VS",
+                    style: TextStyle(
+                      fontFamily: 'Nunito Sans',
+                      fontWeight: FontWeight.w800,
+                      fontSize: 16,
+                      color: Color(0xFF2C5F5A),
+                    ),
+                  ),
                 ),
                 Expanded(
                   child: _buildVoteButton(
                     context,
                     request,
                     teamName: prediction.awayTeam,
-                    color: const Color(0xFF267365),
-                    icon: Icons.check_circle,
+                    color: const Color(0xFF56BDA9),
+                    icon: Icons.sports_soccer,
                     choice: "away",
                   ),
                 ),
@@ -95,13 +124,12 @@ class VoteDialog extends StatelessWidget {
     return Material(
       color: color,
       borderRadius: BorderRadius.circular(12),
+      elevation: 2,
       child: InkWell(
         onTap: () async {
-          // Kita tangkap hasilnya (String)
           String result = await _submitOrUpdateVote(context, request, prediction.id, choice);
           
           if (context.mounted) {
-            // Kembalikan hasil ke PredictionPage
             Navigator.pop(context, result); 
           }
         },
@@ -116,7 +144,14 @@ class VoteDialog extends StatelessWidget {
               Text(
                 teamName,
                 textAlign: TextAlign.center,
-                style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+                style: const TextStyle(
+                  fontFamily: 'Nunito Sans',
+                  color: Colors.white,
+                  fontWeight: FontWeight.w700,
+                  fontSize: 14,
+                ),
+                maxLines: 2,
+                overflow: TextOverflow.ellipsis,
               ),
             ],
           ),
@@ -125,14 +160,37 @@ class VoteDialog extends StatelessWidget {
     );
   }
 
-  Future<String> _submitOrUpdateVote(BuildContext context, CookieRequest request, String predictionId, String choice) async {
+  Future<String> _submitOrUpdateVote(
+    BuildContext context, 
+    CookieRequest request, 
+    String predictionId, 
+    String choice
+  ) async {
     if (!request.loggedIn) {
-      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("Silakan login terlebih dahulu.")));
-      Navigator.push(context, MaterialPageRoute(builder: (context) => const LoginPage()));
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text(
+              "Silakan login terlebih dahulu.",
+              style: TextStyle(
+                fontFamily: 'Nunito Sans',
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+            backgroundColor: Color(0xFFF59E0B),
+          ),
+        );
+        Navigator.push(
+          context, 
+          MaterialPageRoute(builder: (context) => const LoginPage()),
+        );
+      }
       return 'failed';
     }
 
-    final String endpoint = isUpdate ? 'prediction/update-vote-flutter/' : 'prediction/submit-vote-flutter/';
+    final String endpoint = isUpdate 
+        ? 'prediction/update-vote-flutter/' 
+        : 'prediction/submit-vote-flutter/';
     final url = 'http://localhost:8000/$endpoint';
 
     try {
@@ -141,29 +199,63 @@ class VoteDialog extends StatelessWidget {
         'choice': choice,
       });
 
+      if (!context.mounted) return 'failed';
+
       if (response['status'] == 'success') {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(response['message']), backgroundColor: Colors.green),
+          SnackBar(
+            content: Text(
+              response['message'],
+              style: const TextStyle(
+                fontFamily: 'Nunito Sans',
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+            backgroundColor: const Color(0xFF4AA69B),
+          ),
         );
         return 'success';
       } 
-      // TANGKAP ERROR 409 (Already Voted)
-      else if (response['message'].toString().contains("sudah voting") || response['status'] == 409) {
-        // Kita tidak tampilkan error merah, tapi kita return status khusus
+      // Handle error 409 (Already Voted)
+      else if (response['message'].toString().contains("sudah voting") || 
+               response['status'] == 409) {
         return 'already_voted';
       }
       else {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(response['message'] ?? "Gagal."), backgroundColor: Colors.red),
+          SnackBar(
+            content: Text(
+              response['message'] ?? "Gagal melakukan vote.",
+              style: const TextStyle(
+                fontFamily: 'Nunito Sans',
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+            backgroundColor: const Color(0xFFEF4444),
+          ),
         );
         return 'failed';
       }
     } catch (e) {
-      // Cek manual kalau message error mengandung kata kunci
+      if (!context.mounted) return 'failed';
+      
+      // Check if error message contains "sudah voting"
       if (e.toString().contains("sudah voting")) {
-         return 'already_voted';
+        return 'already_voted';
       }
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text("Error: $e")));
+      
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            "Error: $e",
+            style: const TextStyle(
+              fontFamily: 'Nunito Sans',
+              fontWeight: FontWeight.w600,
+            ),
+          ),
+          backgroundColor: const Color(0xFFEF4444),
+        ),
+      );
       return 'failed';
     }
   }
