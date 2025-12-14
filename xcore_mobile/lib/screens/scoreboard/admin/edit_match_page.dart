@@ -91,10 +91,9 @@ class _EditMatchPageState extends State<EditMatchPage> {
     _group = widget.matchEntry.group;
     _status = widget.matchEntry.status;
 
-    // Tampilkan format lengkap saat load awal
     _dateController.text = DateFormat('yyyy-MM-dd HH:mm').format(_matchDate);
 
-    // Fallback jika kode negara tidak ditemukan di list
+    // Fallback jika kode negara tidak ditemukan
     if (!_countryChoices.any((c) => c['code'] == _homeTeamCode)) {
         _homeTeamCode = _countryChoices.first['code']!;
     }
@@ -109,9 +108,7 @@ class _EditMatchPageState extends State<EditMatchPage> {
     super.dispose();
   }
 
-  // Fungsi: Pilih Tanggal & Jam
   Future<void> _selectDateTime(BuildContext context) async {
-    // 1. Pick Date
     final DateTime? pickedDate = await showDatePicker(
       context: context,
       initialDate: _matchDate,
@@ -129,7 +126,6 @@ class _EditMatchPageState extends State<EditMatchPage> {
 
     if (pickedDate == null) return;
 
-    // 2. Pick Time
     if (!mounted) return;
     final TimeOfDay? pickedTime = await showTimePicker(
       context: context,
@@ -146,7 +142,6 @@ class _EditMatchPageState extends State<EditMatchPage> {
 
     if (pickedTime == null) return;
 
-    // 3. Combine
     final DateTime finalDateTime = DateTime(
       pickedDate.year,
       pickedDate.month,
@@ -161,6 +156,52 @@ class _EditMatchPageState extends State<EditMatchPage> {
     });
   }
 
+  // [BARU] Fungsi Hapus Match dengan Dialog Konfirmasi
+  void _deleteMatch() async {
+    final confirm = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Hapus Pertandingan'),
+        content: const Text('Apakah Anda yakin ingin menghapus pertandingan ini? Data tidak dapat dikembalikan.'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: const Text('Batal'),
+          ),
+          TextButton(
+            onPressed: () => Navigator.pop(context, true),
+            child: const Text('Hapus', style: TextStyle(color: Colors.red)),
+          ),
+        ],
+      ),
+    );
+
+    if (confirm == true) {
+      final request = context.read<CookieRequest>();
+      try {
+        bool success = await ScoreboardService.deleteMatch(request, widget.matchEntry.id);
+        if (success) {
+          if (!mounted) return;
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('Match berhasil dihapus!'),
+              backgroundColor: Colors.green,
+            ),
+          );
+          Navigator.pop(context, true); // Kembali ke ScoreboardPage dan refresh
+        }
+      } catch (e) {
+        if (!mounted) return;
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Gagal menghapus: $e'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    }
+  }
+
   void _submitForm() async {
     if (_formKey.currentState!.validate()) {
       _formKey.currentState!.save();
@@ -172,7 +213,6 @@ class _EditMatchPageState extends State<EditMatchPage> {
         "away_team_code": _awayTeamCode.toLowerCase(),
         "home_score": _homeScore,
         "away_score": _awayScore,
-        // Format DateTime lengkap untuk backend
         "match_date": DateFormat('yyyy-MM-dd HH:mm').format(_matchDate),
         "stadium": _stadium,
         "round": _round,
@@ -227,7 +267,7 @@ class _EditMatchPageState extends State<EditMatchPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.green[50],
+      backgroundColor: const Color(0xFFF5F7FA),
       appBar: AppBar(
         title: const Text(
           'Edit Match',
@@ -395,25 +435,57 @@ class _EditMatchPageState extends State<EditMatchPage> {
                   ),
                 ),
               ),
-              const SizedBox(height: 24),
+              const SizedBox(height: 30),
 
-              // Save Button
-              ElevatedButton.icon(
-                onPressed: _submitForm,
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.green[700],
-                  foregroundColor: Colors.white,
-                  padding: const EdgeInsets.symmetric(vertical: 16),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(12),
+              // Action Buttons (Save & Delete)
+              Column(
+                children: [
+                  // Tombol Simpan
+                  SizedBox(
+                    width: double.infinity,
+                    child: ElevatedButton.icon(
+                      onPressed: _submitForm,
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: Colors.green[700],
+                        foregroundColor: Colors.white,
+                        padding: const EdgeInsets.symmetric(vertical: 16),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        elevation: 4,
+                      ),
+                      icon: const Icon(Icons.check_circle_outline),
+                      label: const Text(
+                        'SIMPAN PERUBAHAN',
+                        style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                      ),
+                    ),
                   ),
-                  elevation: 4,
-                ),
-                icon: const Icon(Icons.check_circle_outline),
-                label: const Text(
-                  'SIMPAN PERUBAHAN',
-                  style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
-                ),
+                  const SizedBox(height: 16),
+                  
+                  // [BARU] Tombol Hapus Match
+                  SizedBox(
+                    width: double.infinity,
+                    child: ElevatedButton.icon(
+                      onPressed: _deleteMatch,
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: Colors.red[50], // Background merah muda agar tidak terlalu mencolok tapi waspada
+                        foregroundColor: Colors.red[700], // Teks/Icon merah
+                        padding: const EdgeInsets.symmetric(vertical: 16),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12),
+                          side: BorderSide(color: Colors.red[200]!), // Border merah tipis
+                        ),
+                        elevation: 0,
+                      ),
+                      icon: const Icon(Icons.delete_outline_rounded),
+                      label: const Text(
+                        'HAPUS PERTANDINGAN',
+                        style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                      ),
+                    ),
+                  ),
+                ],
               ),
               const SizedBox(height: 30),
             ],

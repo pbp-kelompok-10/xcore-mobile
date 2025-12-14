@@ -79,7 +79,7 @@ class ScoreboardMatchCard extends StatelessWidget {
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
                 Text(
-                  group,
+                  "Group $group", 
                   style: TextStyle(
                     color: Colors.grey.shade600,
                     fontWeight: FontWeight.w600,
@@ -97,7 +97,7 @@ class ScoreboardMatchCard extends StatelessWidget {
             padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 20.0),
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              crossAxisAlignment: CrossAxisAlignment.start, // Align start agar teks tim panjang aman
+              crossAxisAlignment: CrossAxisAlignment.start, 
               children: [
                 // Home Team
                 Expanded(

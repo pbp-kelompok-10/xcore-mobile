@@ -67,4 +67,21 @@ class ScoreboardService {
       throw Exception(response['message'] ?? 'Gagal mengedit match');
     }
   }
+
+  static Future<bool> deleteMatch(CookieRequest request, String matchId) async {
+    try {
+      final response = await request.post(
+        '${Config.baseUrl}/scoreboard/delete-flutter/$matchId/', 
+        {},
+      );
+
+      if (response['status'] == 'success') {
+        return true;
+      } else {
+        throw Exception(response['message'] ?? 'Gagal menghapus match');
+      }
+    } catch (e) {
+      throw Exception('Error deleting match: $e');
+    }
+  }
 }
