@@ -23,7 +23,6 @@ class _RegisterPageState extends State<RegisterPage> {
   File? _selectedImage;
   final ImagePicker _picker = ImagePicker();
 
-  // Store errors from Django
   Map<String, dynamic> _errors = {};
 
   Future<void> _pickImage() async {
@@ -35,7 +34,6 @@ class _RegisterPageState extends State<RegisterPage> {
     }
   }
 
-  // Show ALL error messages for a field
   Widget _buildErrorText(String field) {
     if (_errors.containsKey(field)) {
       return Column(
@@ -46,8 +44,10 @@ class _RegisterPageState extends State<RegisterPage> {
             child: Text(
               _errors[field][index]["message"],
               style: const TextStyle(
-                color: Colors.red,
+                fontFamily: 'Nunito Sans',
+                color: Color(0xFFEF4444),
                 fontSize: 13,
+                fontWeight: FontWeight.w500,
               ),
             ),
           );
@@ -62,151 +62,266 @@ class _RegisterPageState extends State<RegisterPage> {
     final cookieRequest = context.watch<CookieRequest>();
 
     return Scaffold(
+      backgroundColor: const Color(0xFFE8F6F4),
       appBar: AppBar(
-        title: const Text(
-          'Daftar Akun',
-          style: TextStyle(
-            color: Colors.white,
-            fontWeight: FontWeight.bold,
-          ),
-        ),
-        backgroundColor: Colors.green[700],
+        backgroundColor: Colors.transparent,
         elevation: 0,
-        iconTheme: const IconThemeData(color: Colors.white),
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back),
+          icon: const Icon(
+            Icons.arrow_back_ios_new,
+            color: Color(0xFF2C5F5A),
+            size: 20,
+          ),
           onPressed: () => Navigator.pop(context),
         ),
       ),
-      body: Container(
-        decoration: BoxDecoration(
-          gradient: LinearGradient(
-            begin: Alignment.topCenter,
-            end: Alignment.bottomCenter,
-            colors: [
-              Colors.green[50]!,
-              Colors.white,
-            ],
-          ),
-        ),
-        child: Center(
-          child: SingleChildScrollView(
-            padding: const EdgeInsets.all(16),
-            child: Card(
-              elevation: 8,
-              shape:
-                  RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-              child: Padding(
-                padding: const EdgeInsets.all(20),
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    const Text(
-                      "Daftar Akun Baru",
-                      style: TextStyle(
-                        fontSize: 24,
-                        fontWeight: FontWeight.bold,
-                        color: Colors.green,
+      body: Center(
+        child: SingleChildScrollView(
+          padding: const EdgeInsets.all(24),
+          child: Card(
+            elevation: 8,
+            shadowColor: Colors.black.withOpacity(0.1),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(24),
+            ),
+            child: Container(
+              constraints: const BoxConstraints(maxWidth: 400),
+              padding: const EdgeInsets.all(40),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  const Text(
+                    "Register",
+                    style: TextStyle(
+                      fontFamily: 'Nunito Sans',
+                      fontSize: 32,
+                      fontWeight: FontWeight.w800,
+                      color: Color(0xFF2C5F5A),
+                      letterSpacing: -0.5,
+                    ),
+                  ),
+
+                  const SizedBox(height: 40),
+
+                  // Username Field
+                  TextField(
+                    controller: _usernameController,
+                    style: const TextStyle(
+                      fontFamily: 'Nunito Sans',
+                    ),
+                    decoration: InputDecoration(
+                      labelText: "Username",
+                      hintText: "Enter your username",
+                      labelStyle: const TextStyle(
+                        fontFamily: 'Nunito Sans',
+                      ),
+                      prefixIcon: const Icon(
+                        Icons.person_outline,
+                        color: Color(0xFF4AA69B),
+                      ),
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(12.0),
+                      ),
+                      enabledBorder: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(12.0),
+                        borderSide: const BorderSide(
+                          color: Color(0xFFD1D5DB),
+                          width: 1.5,
+                        ),
+                      ),
+                      focusedBorder: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(12.0),
+                        borderSide: const BorderSide(
+                          color: Color(0xFF4AA69B),
+                          width: 2,
+                        ),
+                      ),
+                      contentPadding: const EdgeInsets.symmetric(
+                        horizontal: 16.0,
+                        vertical: 14.0,
                       ),
                     ),
+                  ),
+                  _buildErrorText("username"),
+                  const SizedBox(height: 16),
 
-                    const SizedBox(height: 20),
-
-                    // Username
-                    TextField(
-                      controller: _usernameController,
-                      decoration: const InputDecoration(
-                        labelText: "Username",
-                        hintText: "Masukkan username",
-                        border: OutlineInputBorder(
-                          borderRadius: BorderRadius.all(Radius.circular(12.0)),
+                  // Email Field
+                  TextField(
+                    controller: _emailController,
+                    style: const TextStyle(
+                      fontFamily: 'Nunito Sans',
+                    ),
+                    decoration: InputDecoration(
+                      labelText: "Email",
+                      hintText: "Enter your email",
+                      labelStyle: const TextStyle(
+                        fontFamily: 'Nunito Sans',
+                      ),
+                      prefixIcon: const Icon(
+                        Icons.email_outlined,
+                        color: Color(0xFF4AA69B),
+                      ),
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(12.0),
+                      ),
+                      enabledBorder: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(12.0),
+                        borderSide: const BorderSide(
+                          color: Color(0xFFD1D5DB),
+                          width: 1.5,
                         ),
-                        contentPadding: EdgeInsets.symmetric(horizontal: 12.0, vertical: 8.0),
+                      ),
+                      focusedBorder: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(12.0),
+                        borderSide: const BorderSide(
+                          color: Color(0xFF4AA69B),
+                          width: 2,
+                        ),
+                      ),
+                      contentPadding: const EdgeInsets.symmetric(
+                        horizontal: 16.0,
+                        vertical: 14.0,
                       ),
                     ),
-                    _buildErrorText("username"),
-                    const SizedBox(height: 12),
+                  ),
+                  _buildErrorText("email"),
+                  const SizedBox(height: 16),
 
-                    // Email
-                    TextField(
-                      controller: _emailController,
-                      decoration: const InputDecoration(
-                        labelText: "Email",
-                        hintText: "Masukkan email",
-                        border: OutlineInputBorder(
-                          borderRadius: BorderRadius.all(Radius.circular(12.0)),
+                  // Password Field
+                  TextField(
+                    controller: _passwordController,
+                    obscureText: true,
+                    style: const TextStyle(
+                      fontFamily: 'Nunito Sans',
+                    ),
+                    decoration: InputDecoration(
+                      labelText: "Password",
+                      hintText: "Enter your password",
+                      labelStyle: const TextStyle(
+                        fontFamily: 'Nunito Sans',
+                      ),
+                      prefixIcon: const Icon(
+                        Icons.lock_outline,
+                        color: Color(0xFF4AA69B),
+                      ),
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(12.0),
+                      ),
+                      enabledBorder: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(12.0),
+                        borderSide: const BorderSide(
+                          color: Color(0xFFD1D5DB),
+                          width: 1.5,
                         ),
-                        contentPadding: EdgeInsets.symmetric(horizontal: 12.0, vertical: 8.0),
+                      ),
+                      focusedBorder: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(12.0),
+                        borderSide: const BorderSide(
+                          color: Color(0xFF4AA69B),
+                          width: 2,
+                        ),
+                      ),
+                      contentPadding: const EdgeInsets.symmetric(
+                        horizontal: 16.0,
+                        vertical: 14.0,
                       ),
                     ),
-                    _buildErrorText("email"),
-                    const SizedBox(height: 12),
+                  ),
+                  _buildErrorText("password1"),
+                  const SizedBox(height: 16),
 
-                    // Password
-                    TextField(
-                      controller: _passwordController,
-                      decoration: const InputDecoration(
-                        labelText: "Password",
-                        hintText: "Masukkan password",
-                        border: OutlineInputBorder(
-                          borderRadius: BorderRadius.all(Radius.circular(12.0)),
-                        ),
-                        contentPadding: EdgeInsets.symmetric(horizontal: 12.0, vertical: 8.0),
-                      ),
-                      obscureText: true,
+                  // Confirm Password Field
+                  TextField(
+                    controller: _confirmPasswordController,
+                    obscureText: true,
+                    style: const TextStyle(
+                      fontFamily: 'Nunito Sans',
                     ),
-                    _buildErrorText("password1"),
-                    const SizedBox(height: 12),
-
-                    // Confirm Password
-                    TextField(
-                      controller: _confirmPasswordController,
-                      decoration: const InputDecoration(
-                        labelText: "Konfirmasi Password",
-                        hintText: "Masukkan password kembali",
-                        border: OutlineInputBorder(
-                          borderRadius: BorderRadius.all(Radius.circular(12.0)),
-                        ),
-                        contentPadding: EdgeInsets.symmetric(horizontal: 12.0, vertical: 8.0),
+                    decoration: InputDecoration(
+                      labelText: "Confirm Password",
+                      hintText: "Re-enter your password",
+                      labelStyle: const TextStyle(
+                        fontFamily: 'Nunito Sans',
                       ),
-                      obscureText: true,
-                    ),
-                    _buildErrorText("password2"),
-                    const SizedBox(height: 20),
-
-                    // Image Picker
-                    GestureDetector(
-                      onTap: _pickImage,
-                      child: Container(
-                        padding: const EdgeInsets.all(12),
-                        decoration: BoxDecoration(
-                          border: Border.all(color: Colors.green),
-                          borderRadius: BorderRadius.circular(12),
+                      prefixIcon: const Icon(
+                        Icons.lock_outline,
+                        color: Color(0xFF4AA69B),
+                      ),
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(12.0),
+                      ),
+                      enabledBorder: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(12.0),
+                        borderSide: const BorderSide(
+                          color: Color(0xFFD1D5DB),
+                          width: 1.5,
                         ),
-                        child: Row(
-                          children: [
-                            Icon(Icons.image, color: Colors.green[700]),
-                            const SizedBox(width: 10),
-                            Expanded(
-                              child: Text(
-                                _selectedImage == null
-                                    ? "Pilih Foto Profil (opsional)"
-                                    : "Terpilih: ${_selectedImage!.path.split('/').last}",
-                                overflow: TextOverflow.ellipsis,
+                      ),
+                      focusedBorder: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(12.0),
+                        borderSide: const BorderSide(
+                          color: Color(0xFF4AA69B),
+                          width: 2,
+                        ),
+                      ),
+                      contentPadding: const EdgeInsets.symmetric(
+                        horizontal: 16.0,
+                        vertical: 14.0,
+                      ),
+                    ),
+                  ),
+                  _buildErrorText("password2"),
+                  const SizedBox(height: 20),
+
+                  // Profile Picture Picker
+                  GestureDetector(
+                    onTap: _pickImage,
+                    child: Container(
+                      padding: const EdgeInsets.all(14),
+                      decoration: BoxDecoration(
+                        border: Border.all(
+                          color: const Color(0xFF4AA69B),
+                          width: 1.5,
+                        ),
+                        borderRadius: BorderRadius.circular(12),
+                        color: Colors.white,
+                      ),
+                      child: Row(
+                        children: [
+                          const Icon(
+                            Icons.image_outlined,
+                            color: Color(0xFF4AA69B),
+                            size: 24,
+                          ),
+                          const SizedBox(width: 12),
+                          Expanded(
+                            child: Text(
+                              _selectedImage == null
+                                  ? "Select Profile Picture (optional)"
+                                  : "Selected: ${_selectedImage!.path.split('/').last}",
+                              overflow: TextOverflow.ellipsis,
+                              style: const TextStyle(
+                                fontFamily: 'Nunito Sans',
+                                fontSize: 14,
+                                fontWeight: FontWeight.w500,
+                                color: Color(0xFF374151),
                               ),
-                            )
-                          ],
-                        ),
+                            ),
+                          )
+                        ],
                       ),
                     ),
-                    _buildErrorText("profile_picture"),
+                  ),
+                  _buildErrorText("profile_picture"),
 
-                    const SizedBox(height: 24),
+                  const SizedBox(height: 32),
 
-                    // REGISTER BUTTON
-                    ElevatedButton(
+                  // Register Button
+                  SizedBox(
+                    width: double.infinity,
+                    height: 54,
+                    child: ElevatedButton(
                       onPressed: () async {
-                        // Clear old errors before new request
                         setState(() {
                           _errors = {};
                         });
@@ -216,7 +331,6 @@ class _RegisterPageState extends State<RegisterPage> {
                         String password1 = _passwordController.text;
                         String password2 = _confirmPasswordController.text;
 
-                        // Local validation
                         if (password1 != password2) {
                           setState(() {
                             _errors["password2"] = [
@@ -238,7 +352,6 @@ class _RegisterPageState extends State<RegisterPage> {
                         requestMultipart.fields['password2'] = password2;
 
                         if (_selectedImage != null) {
-                          print("Adding image file: ${_selectedImage!.path}");
                           requestMultipart.files.add(
                             await http.MultipartFile.fromPath(
                               'profile_picture',
@@ -247,7 +360,6 @@ class _RegisterPageState extends State<RegisterPage> {
                           );
                         }
 
-                        // Add cookies for Django session
                         requestMultipart.headers['cookie'] =
                             cookieRequest.headers['cookie'] ?? "";
 
@@ -266,12 +378,16 @@ class _RegisterPageState extends State<RegisterPage> {
                                   SnackBar(
                                     content: Text(
                                       "Pendaftaran berhasil! Selamat datang ${jsonResponse['username']}",
+                                      style: const TextStyle(
+                                        fontFamily: 'Nunito Sans',
+                                        fontWeight: FontWeight.w600,
+                                      ),
                                     ),
-                                    backgroundColor: Colors.green[600],
+                                    backgroundColor: const Color(0xFF4AA69B),
                                     duration: const Duration(seconds: 3),
                                     behavior: SnackBarBehavior.floating,
                                     shape: RoundedRectangleBorder(
-                                      borderRadius: BorderRadius.circular(10),
+                                      borderRadius: BorderRadius.circular(12),
                                     ),
                                   ),
                                 );
@@ -284,7 +400,6 @@ class _RegisterPageState extends State<RegisterPage> {
                               );
                             }
                           } else {
-                            // Show field errors
                             setState(() {
                               _errors = jsonResponse["errors"] ?? {};
                             });
@@ -294,24 +409,42 @@ class _RegisterPageState extends State<RegisterPage> {
                                 ..hideCurrentSnackBar()
                                 ..showSnackBar(
                                   SnackBar(
-                                    content: Text(jsonResponse["message"] ??
-                                        "Pendaftaran gagal"),
-                                    backgroundColor: Colors.red,
+                                    content: Text(
+                                      jsonResponse["message"] ?? "Pendaftaran gagal",
+                                      style: const TextStyle(
+                                        fontFamily: 'Nunito Sans',
+                                        fontWeight: FontWeight.w600,
+                                      ),
+                                    ),
+                                    backgroundColor: const Color(0xFFEF4444),
                                     duration: const Duration(seconds: 3),
+                                    behavior: SnackBarBehavior.floating,
+                                    shape: RoundedRectangleBorder(
+                                      borderRadius: BorderRadius.circular(12),
+                                    ),
                                   ),
                                 );
                             }
                           }
                         } catch (e) {
-                          print("Error during registration: $e");
                           if (context.mounted) {
                             ScaffoldMessenger.of(context)
                               ..hideCurrentSnackBar()
                               ..showSnackBar(
                                 SnackBar(
-                                  content: Text("Error: $e"),
-                                  backgroundColor: Colors.red,
+                                  content: Text(
+                                    "Error: $e",
+                                    style: const TextStyle(
+                                      fontFamily: 'Nunito Sans',
+                                      fontWeight: FontWeight.w600,
+                                    ),
+                                  ),
+                                  backgroundColor: const Color(0xFFEF4444),
                                   duration: const Duration(seconds: 3),
+                                  behavior: SnackBarBehavior.floating,
+                                  shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(12),
+                                  ),
                                 ),
                               );
                           }
@@ -319,51 +452,77 @@ class _RegisterPageState extends State<RegisterPage> {
                       },
 
                       style: ElevatedButton.styleFrom(
+                        backgroundColor: const Color(0xFF2C5F5A),
                         foregroundColor: Colors.white,
-                        backgroundColor: Colors.green[700],
-                        minimumSize: const Size(double.infinity, 50),
-                        padding: const EdgeInsets.symmetric(vertical: 16.0),
+                        elevation: 0,
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(12.0),
                         ),
                       ),
                       child: const Text(
-                        "Daftar",
+                        "Register",
                         style: TextStyle(
+                          fontFamily: 'Nunito Sans',
                           fontSize: 16.0,
-                          fontWeight: FontWeight.bold,
+                          fontWeight: FontWeight.w700,
+                          letterSpacing: 0.5,
                         ),
                       ),
                     ),
+                  ),
 
-                    const SizedBox(height: 20),
+                  const SizedBox(height: 24),
 
-                    // LOGIN PLACEHOLDER
-                    GestureDetector(
-                      onTap: () {
-                        Navigator.pushReplacement(
-                          context,
-                          MaterialPageRoute(
-                            builder: (context) => const LoginPage(),
+                  // Login Link
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      const Text(
+                        "Already have an account? ",
+                        style: TextStyle(
+                          fontFamily: 'Nunito Sans',
+                          color: Color(0xFF6B7280),
+                          fontSize: 14.0,
+                          fontWeight: FontWeight.w500,
+                        ),
+                      ),
+                      GestureDetector(
+                        onTap: () {
+                          Navigator.pushReplacement(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) => const LoginPage(),
+                            ),
+                          );
+                        },
+                        child: const Text(
+                          "Login",
+                          style: TextStyle(
+                            fontFamily: 'Nunito Sans',
+                            color: Color(0xFF4AA69B),
+                            fontSize: 14.0,
+                            fontWeight: FontWeight.w700,
+                            decoration: TextDecoration.underline,
                           ),
-                        );
-                      },
-                      child: Text(
-                        "Sudah punya akun? Login",
-                        style: TextStyle(
-                          color: Colors.green[700],
-                          fontSize: 16.0,
-                          fontWeight: FontWeight.w600,
                         ),
                       ),
-                    ),
-                  ],
-                ),
+                    ],
+                  ),
+                ],
               ),
             ),
           ),
         ),
       ),
     );
+  }
+
+  @override
+  void dispose() {
+    _usernameController.dispose();
+    _emailController.dispose();
+    _passwordController.dispose();
+    _confirmPasswordController.dispose();
+    super.dispose();
   }
 }

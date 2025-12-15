@@ -9,7 +9,9 @@ import 'package:xcore_mobile/screens/prediction/prediction_page.dart';
 import 'package:xcore_mobile/screens/scoreboard/scoreboard_card.dart';
 
 class ScoreboardPage extends StatefulWidget {
-  const ScoreboardPage({super.key});
+  final Function(int)? onSwitchTab; 
+
+  const ScoreboardPage({super.key, this.onSwitchTab});
 
   @override
   State<ScoreboardPage> createState() => _ScoreboardPageState();
@@ -85,34 +87,41 @@ class _ScoreboardPageState extends State<ScoreboardPage> {
 
   @override
   Widget build(BuildContext context) {
+    // Definisi Warna dari PROD
+    const Color primaryColor = Color(0xFF4AA69B);
+    const Color scaffoldBgColor = Color(0xFFE8F6F4);
+    const Color darkTextColor = Color(0xFF2C5F5A);
+    const Color mutedTextColor = Color(0xFF6B8E8A);
+
     if (_isLoading) {
-      return Scaffold(
-        backgroundColor: const Color.fromARGB(255, 121, 220, 172),
+      return const Scaffold(
+        backgroundColor: scaffoldBgColor,
         body: Center(
           child: CircularProgressIndicator(
-            valueColor: AlwaysStoppedAnimation<Color>(
-                const Color.fromARGB(255, 50, 92, 52)),
+            valueColor: AlwaysStoppedAnimation<Color>(primaryColor),
           ),
         ),
       );
     }
 
     return Scaffold(
-      backgroundColor: Colors.green[50], 
+      backgroundColor: scaffoldBgColor, 
       
       appBar: AppBar(
         title: const Text(
-          "Match Center",
+          "Scoreboard",
           style: TextStyle(
-            fontWeight: FontWeight.bold,
-            color: Colors.white,
+            fontFamily: 'Nunito Sans',
+            fontWeight: FontWeight.w700,
             fontSize: 20,
+            color: Colors.white,
           ),
         ),
         centerTitle: true,
-        backgroundColor: Colors.green[700],
-        elevation: 0,
+        backgroundColor: primaryColor,
+        elevation: 2,
         iconTheme: const IconThemeData(color: Colors.white),
+        automaticallyImplyLeading: false, // Hilangkan tombol back default
         actions: [
           IconButton(
             icon: const Icon(Icons.refresh_rounded, color: Colors.white),
@@ -146,8 +155,11 @@ class _ScoreboardPageState extends State<ScoreboardPage> {
               },
               decoration: InputDecoration(
                 hintText: "Cari negara...",
-                hintStyle: TextStyle(color: Colors.grey[500]),
-                prefixIcon: Icon(Icons.search, color: Colors.green[700]),
+                hintStyle: const TextStyle(
+                  fontFamily: 'Nunito Sans',
+                  color: mutedTextColor,
+                ),
+                prefixIcon: const Icon(Icons.search, color: primaryColor),
                 filled: true,
                 fillColor: Colors.white,
                 contentPadding: const EdgeInsets.symmetric(vertical: 0, horizontal: 20),
@@ -157,11 +169,11 @@ class _ScoreboardPageState extends State<ScoreboardPage> {
                 ),
                 enabledBorder: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(30),
-                  borderSide: BorderSide(color: Colors.green.withOpacity(0.1), width: 1),
+                  borderSide: BorderSide(color: primaryColor.withOpacity(0.1), width: 1),
                 ),
                 focusedBorder: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(30),
-                  borderSide: BorderSide(color: Colors.green[700]!, width: 1.5),
+                  borderSide: const BorderSide(color: primaryColor, width: 1.5),
                 ),
               ),
             ),
@@ -173,27 +185,27 @@ class _ScoreboardPageState extends State<ScoreboardPage> {
               future: futureScoreboard,
               builder: (context, snapshot) {
                 if (snapshot.connectionState == ConnectionState.waiting) {
-                  return Center(
+                  return const Center(
                     child: CircularProgressIndicator(
-                      valueColor: AlwaysStoppedAnimation<Color>(Colors.green[700]!),
+                      valueColor: AlwaysStoppedAnimation<Color>(primaryColor),
                     ),
                   );
                 }
                 if (_error.isNotEmpty) {
-                  return _buildErrorState();
+                  return _buildErrorState(mutedTextColor);
                 }
                 if (snapshot.hasError) {
                   return Center(child: Text('Error: ${snapshot.error}'));
                 }
                 if (!snapshot.hasData || snapshot.data!.isEmpty) {
-                  return _buildEmptyState();
+                  return _buildEmptyState(primaryColor, mutedTextColor);
                 }
 
                 // Logika Filtering
                 final allMatches = snapshot.data!;
                 final filteredMatches = allMatches.where((match) {
                   return match.homeTeam.toLowerCase().contains(_searchQuery) ||
-                         match.awayTeam.toLowerCase().contains(_searchQuery);
+                          match.awayTeam.toLowerCase().contains(_searchQuery);
                 }).toList();
 
                 if (filteredMatches.isEmpty) {
@@ -201,11 +213,14 @@ class _ScoreboardPageState extends State<ScoreboardPage> {
                     child: Column(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
-                        Icon(Icons.search_off_rounded, size: 64, color: Colors.grey[400]),
+                        const Icon(Icons.search_off_rounded, size: 64, color: mutedTextColor),
                         const SizedBox(height: 16),
                         Text(
                           "Tidak ditemukan match untuk \"$_searchQuery\"",
-                          style: TextStyle(color: Colors.grey[600]),
+                          style: const TextStyle(
+                            fontFamily: 'Nunito Sans',
+                            color: mutedTextColor,
+                          ),
                         ),
                       ],
                     ),
@@ -217,7 +232,7 @@ class _ScoreboardPageState extends State<ScoreboardPage> {
 
                 return RefreshIndicator(
                   onRefresh: _refreshScoreboard,
-                  color: Colors.green[700],
+                  color: primaryColor,
                   child: ListView.builder(
                     padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
                     itemCount: filteredMatches.length,
@@ -236,17 +251,22 @@ class _ScoreboardPageState extends State<ScoreboardPage> {
 
                       return Column(
                         children: [
-                          if (showDateHeader) _buildDateHeader(item.matchDate),
+                          if (showDateHeader) 
+                            _buildDateHeader(item.matchDate, primaryColor, darkTextColor),
                           
                           GestureDetector(
                             onTap: () {
                               final status = item.status.toLowerCase();
                               if (status == "upcoming") {
-                                Navigator.push(
-                                  context,
-                                  MaterialPageRoute(
+                                if (widget.onSwitchTab != null) {
+                                  widget.onSwitchTab!(1); // Pindah ke Prediction
+                                } else {
+                                  Navigator.push(
+                                    context,
+                                    MaterialPageRoute(
                                       builder: (_) => PredictionPage(matchId: item.id)),
-                                );
+                                  );
+                                }
                               } else {
                                 Navigator.push(
                                   context,
@@ -272,19 +292,19 @@ class _ScoreboardPageState extends State<ScoreboardPage> {
                               awayScore: item.awayScore,
                               stadium: item.stadium,
                               group: item.group,
-                              matchDate: item.matchDate,
+                              matchDate: item.matchDate, 
                             ),
                           ),
                           const SizedBox(height: 12),
 
-                          // [UPDATE] Action Buttons (Forum visible for everyone, Edit for Admin)
+                          // [UPDATE] Action Buttons 
                           Row(
                             children: [
-                              // Forum Button (Visible to ALL users)
+                              // Forum Button (Visible to ALL users) -> Warna Primary
                               Expanded(
                                 child: ElevatedButton.icon(
                                   style: ElevatedButton.styleFrom(
-                                    backgroundColor: Colors.green[600],
+                                    backgroundColor: primaryColor,
                                     foregroundColor: Colors.white,
                                     shape: RoundedRectangleBorder(
                                       borderRadius: BorderRadius.circular(8),
@@ -293,7 +313,13 @@ class _ScoreboardPageState extends State<ScoreboardPage> {
                                     padding: const EdgeInsets.symmetric(vertical: 10),
                                   ),
                                   icon: const Icon(Icons.forum, size: 16),
-                                  label: const Text("Forum"),
+                                  label: const Text(
+                                    "Forum",
+                                    style: TextStyle(
+                                      fontFamily: 'Nunito Sans',
+                                      fontWeight: FontWeight.w600
+                                    ),
+                                  ),
                                   onPressed: () {
                                     Navigator.push(
                                       context,
@@ -304,13 +330,13 @@ class _ScoreboardPageState extends State<ScoreboardPage> {
                                 ),
                               ),
 
-                              // Edit Button (Visible to ADMIN only)
+                              // Edit Button (Visible to ADMIN only) -> Warna Dark Teal
                               if (_isAdmin) ...[
                                 const SizedBox(width: 8),
                                 Expanded(
                                   child: ElevatedButton.icon(
                                     style: ElevatedButton.styleFrom(
-                                      backgroundColor: Colors.blue[600],
+                                      backgroundColor: darkTextColor, // Beda warna biar distinct
                                       foregroundColor: Colors.white,
                                       shape: RoundedRectangleBorder(
                                         borderRadius: BorderRadius.circular(8),
@@ -319,7 +345,13 @@ class _ScoreboardPageState extends State<ScoreboardPage> {
                                       padding: const EdgeInsets.symmetric(vertical: 10),
                                     ),
                                     icon: const Icon(Icons.edit, size: 16),
-                                    label: const Text("Edit Match"),
+                                    label: const Text(
+                                      "Edit Match",
+                                      style: TextStyle(
+                                        fontFamily: 'Nunito Sans',
+                                        fontWeight: FontWeight.w600
+                                      ),
+                                    ),
                                     onPressed: () async {
                                       final result = await Navigator.push(
                                         context,
@@ -347,14 +379,14 @@ class _ScoreboardPageState extends State<ScoreboardPage> {
     );
   }
 
-  Widget _buildDateHeader(DateTime date) {
+  Widget _buildDateHeader(DateTime date, Color primaryColor, Color textColor) {
     return Padding(
       padding: const EdgeInsets.only(top: 12.0, bottom: 16.0),
       child: Row(
         children: [
           Expanded(
             child: Divider(
-              color: Colors.green.withOpacity(0.4),
+              color: primaryColor.withOpacity(0.4),
               thickness: 1,
               endIndent: 12,
             ),
@@ -364,10 +396,10 @@ class _ScoreboardPageState extends State<ScoreboardPage> {
             decoration: BoxDecoration(
               color: Colors.white,
               borderRadius: BorderRadius.circular(20),
-              border: Border.all(color: Colors.green.shade300),
+              border: Border.all(color: primaryColor.withOpacity(0.3)),
               boxShadow: [
                 BoxShadow(
-                  color: Colors.green.withOpacity(0.1),
+                  color: primaryColor.withOpacity(0.1),
                   blurRadius: 8,
                   offset: const Offset(0, 2),
                 ),
@@ -378,13 +410,14 @@ class _ScoreboardPageState extends State<ScoreboardPage> {
               children: [
                 Icon(Icons.calendar_today_rounded, 
                      size: 14, 
-                     color: Colors.green.shade700),
+                     color: primaryColor),
                 const SizedBox(width: 8),
                 Text(
                   "${date.day} ${_getMonthName(date.month)} ${date.year}",
                   style: TextStyle(
-                    fontWeight: FontWeight.bold,
-                    color: Colors.green.shade800,
+                    fontFamily: 'Nunito Sans',
+                    fontWeight: FontWeight.w700,
+                    color: textColor,
                     fontSize: 13,
                   ),
                 ),
@@ -393,7 +426,7 @@ class _ScoreboardPageState extends State<ScoreboardPage> {
           ),
           Expanded(
             child: Divider(
-              color: Colors.green.withOpacity(0.4),
+              color: primaryColor.withOpacity(0.4),
               thickness: 1,
               indent: 12,
             ),
@@ -403,7 +436,7 @@ class _ScoreboardPageState extends State<ScoreboardPage> {
     );
   }
 
-  Widget _buildEmptyState() {
+  Widget _buildEmptyState(Color primaryColor, Color mutedColor) {
     return Center(
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
@@ -411,18 +444,19 @@ class _ScoreboardPageState extends State<ScoreboardPage> {
           Container(
             padding: const EdgeInsets.all(16),
             decoration: BoxDecoration(
-              color: Colors.green[100],
+              color: primaryColor.withOpacity(0.1),
               shape: BoxShape.circle,
             ),
-            child: Icon(Icons.sports_soccer_rounded, size: 64, color: Colors.green[700]),
+            child: Icon(Icons.sports_soccer_rounded, size: 64, color: primaryColor),
           ),
           const SizedBox(height: 16),
           Text(
             "Belum ada pertandingan",
             style: TextStyle(
+              fontFamily: 'Nunito Sans',
               fontSize: 16, 
-              fontWeight: FontWeight.w500,
-              color: Colors.grey[600]
+              fontWeight: FontWeight.w600,
+              color: mutedColor
             ),
           ),
         ],
@@ -430,14 +464,20 @@ class _ScoreboardPageState extends State<ScoreboardPage> {
     );
   }
 
-  Widget _buildErrorState() {
+  Widget _buildErrorState(Color errorColor) {
     return Center(
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Icon(Icons.error_outline, size: 48, color: Colors.red[300]),
+          const Icon(Icons.error_outline, size: 48, color: Color(0xFFEF4444)),
           const SizedBox(height: 16),
-          Text('Error loading data: $_error', style: TextStyle(color: Colors.grey[600])),
+          Text(
+            'Error loading data: $_error', 
+            style: TextStyle(
+              fontFamily: 'Nunito Sans',
+              color: errorColor
+            )
+          ),
         ],
       ),
     );

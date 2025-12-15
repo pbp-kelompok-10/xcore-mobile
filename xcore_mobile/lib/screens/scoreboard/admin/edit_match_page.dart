@@ -66,6 +66,11 @@ class EditMatchPage extends StatefulWidget {
 class _EditMatchPageState extends State<EditMatchPage> {
   final _formKey = GlobalKey<FormState>();
   
+  // Warna Tema
+  final Color primaryColor = const Color(0xFF4AA69B);
+  final Color scaffoldBgColor = const Color(0xFFE8F6F4);
+  final Color errorColor = const Color(0xFFEF4444);
+  
   late String _homeTeamCode;
   late String _awayTeamCode;
   late int _homeScore;
@@ -117,7 +122,11 @@ class _EditMatchPageState extends State<EditMatchPage> {
       builder: (context, child) {
         return Theme(
           data: Theme.of(context).copyWith(
-            colorScheme: ColorScheme.light(primary: Colors.green[700]!),
+            colorScheme: ColorScheme.light(
+              primary: primaryColor, // Custom Color
+              onPrimary: Colors.white,
+              onSurface: const Color(0xFF2C5F5A),
+            ),
           ),
           child: child!,
         );
@@ -133,7 +142,11 @@ class _EditMatchPageState extends State<EditMatchPage> {
       builder: (context, child) {
         return Theme(
           data: Theme.of(context).copyWith(
-            colorScheme: ColorScheme.light(primary: Colors.green[700]!),
+            colorScheme: ColorScheme.light(
+              primary: primaryColor, // Custom Color
+              onPrimary: Colors.white,
+              onSurface: const Color(0xFF2C5F5A),
+            ),
           ),
           child: child!,
         );
@@ -156,21 +169,28 @@ class _EditMatchPageState extends State<EditMatchPage> {
     });
   }
 
-  // [BARU] Fungsi Hapus Match dengan Dialog Konfirmasi
   void _deleteMatch() async {
     final confirm = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('Hapus Pertandingan'),
-        content: const Text('Apakah Anda yakin ingin menghapus pertandingan ini? Data tidak dapat dikembalikan.'),
+        backgroundColor: Colors.white,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        title: const Text(
+          'Hapus Pertandingan',
+          style: TextStyle(fontFamily: 'Nunito Sans', fontWeight: FontWeight.bold),
+        ),
+        content: const Text(
+          'Apakah Anda yakin ingin menghapus pertandingan ini? Data tidak dapat dikembalikan.',
+          style: TextStyle(fontFamily: 'Nunito Sans'),
+        ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context, false),
-            child: const Text('Batal'),
+            child: const Text('Batal', style: TextStyle(fontFamily: 'Nunito Sans', color: Colors.grey)),
           ),
           TextButton(
             onPressed: () => Navigator.pop(context, true),
-            child: const Text('Hapus', style: TextStyle(color: Colors.red)),
+            child: Text('Hapus', style: TextStyle(fontFamily: 'Nunito Sans', color: errorColor, fontWeight: FontWeight.bold)),
           ),
         ],
       ),
@@ -183,9 +203,9 @@ class _EditMatchPageState extends State<EditMatchPage> {
         if (success) {
           if (!mounted) return;
           ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-              content: Text('Match berhasil dihapus!'),
-              backgroundColor: Colors.green,
+            SnackBar(
+              content: const Text('Match berhasil dihapus!', style: TextStyle(fontFamily: 'Nunito Sans')),
+              backgroundColor: primaryColor,
             ),
           );
           Navigator.pop(context, true); // Kembali ke ScoreboardPage dan refresh
@@ -194,8 +214,8 @@ class _EditMatchPageState extends State<EditMatchPage> {
         if (!mounted) return;
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Gagal menghapus: $e'),
-            backgroundColor: Colors.red,
+            content: Text('Gagal menghapus: $e', style: const TextStyle(fontFamily: 'Nunito Sans')),
+            backgroundColor: errorColor,
           ),
         );
       }
@@ -227,8 +247,8 @@ class _EditMatchPageState extends State<EditMatchPage> {
           if (!mounted) return;
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
-              content: const Text('Match berhasil diubah!'),
-              backgroundColor: Colors.green[600],
+              content: const Text('Match berhasil diubah!', style: TextStyle(fontFamily: 'Nunito Sans')),
+              backgroundColor: primaryColor,
             ),
           );
           Navigator.pop(context, true); 
@@ -237,8 +257,8 @@ class _EditMatchPageState extends State<EditMatchPage> {
         if (!mounted) return;
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Gagal mengubah match: ${e.toString()}'),
-            backgroundColor: Colors.red[600],
+            content: Text('Gagal mengubah match: ${e.toString()}', style: const TextStyle(fontFamily: 'Nunito Sans')),
+            backgroundColor: errorColor,
           ),
         );
       }
@@ -248,15 +268,16 @@ class _EditMatchPageState extends State<EditMatchPage> {
   InputDecoration _buildInputDecoration(String label, {IconData? icon}) {
     return InputDecoration(
       labelText: label,
-      prefixIcon: icon != null ? Icon(icon, color: Colors.green[700]) : null,
+      labelStyle: const TextStyle(fontFamily: 'Nunito Sans', color: Color(0xFF6B8E8A)),
+      prefixIcon: icon != null ? Icon(icon, color: primaryColor) : null,
       border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
       enabledBorder: OutlineInputBorder(
         borderRadius: BorderRadius.circular(12),
-        borderSide: BorderSide(color: Colors.grey.shade400),
+        borderSide: BorderSide(color: primaryColor.withOpacity(0.3)),
       ),
       focusedBorder: OutlineInputBorder(
         borderRadius: BorderRadius.circular(12),
-        borderSide: BorderSide(color: Colors.green[700]!, width: 2),
+        borderSide: BorderSide(color: primaryColor, width: 2),
       ),
       filled: true,
       fillColor: Colors.white,
@@ -267,15 +288,19 @@ class _EditMatchPageState extends State<EditMatchPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFFF5F7FA),
+      backgroundColor: scaffoldBgColor,
       appBar: AppBar(
         title: const Text(
           'Edit Match',
-          style: TextStyle(fontWeight: FontWeight.bold, color: Colors.white),
+          style: TextStyle(
+            fontFamily: 'Nunito Sans',
+            fontWeight: FontWeight.w700,
+            color: Colors.white
+          ),
         ),
-        backgroundColor: Colors.green[700],
+        backgroundColor: primaryColor,
         iconTheme: const IconThemeData(color: Colors.white),
-        elevation: 0,
+        elevation: 2,
         centerTitle: true,
       ),
       body: SingleChildScrollView(
@@ -294,7 +319,15 @@ class _EditMatchPageState extends State<EditMatchPage> {
                   padding: const EdgeInsets.all(16),
                   child: Column(
                     children: [
-                      const Text("Tim Bertanding", style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
+                      const Text(
+                        "Tim Bertanding", 
+                        style: TextStyle(
+                          fontFamily: 'Nunito Sans', 
+                          fontWeight: FontWeight.w700, 
+                          fontSize: 16,
+                          color: Color(0xFF2C5F5A)
+                        )
+                      ),
                       const SizedBox(height: 16),
                       DropdownButtonFormField<String>(
                         decoration: _buildInputDecoration('Home Team', icon: Icons.flag),
@@ -302,7 +335,7 @@ class _EditMatchPageState extends State<EditMatchPage> {
                         items: _countryChoices.map<DropdownMenuItem<String>>((Map<String, String> item) {
                           return DropdownMenuItem<String>(
                             value: item['code'], 
-                            child: Text(item['name']!), 
+                            child: Text(item['name']!, style: const TextStyle(fontFamily: 'Nunito Sans')), 
                           );
                         }).toList(),
                         onChanged: (newValue) => setState(() => _homeTeamCode = newValue!),
@@ -316,7 +349,7 @@ class _EditMatchPageState extends State<EditMatchPage> {
                         items: _countryChoices.map<DropdownMenuItem<String>>((Map<String, String> item) {
                           return DropdownMenuItem<String>(
                             value: item['code'],
-                            child: Text(item['name']!),
+                            child: Text(item['name']!, style: const TextStyle(fontFamily: 'Nunito Sans')),
                           );
                         }).toList(),
                         onChanged: (newValue) => setState(() => _awayTeamCode = newValue!),
@@ -338,7 +371,15 @@ class _EditMatchPageState extends State<EditMatchPage> {
                   padding: const EdgeInsets.all(16),
                   child: Column(
                     children: [
-                      const Text("Update Skor", style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
+                      const Text(
+                        "Update Skor", 
+                        style: TextStyle(
+                          fontFamily: 'Nunito Sans', 
+                          fontWeight: FontWeight.w700, 
+                          fontSize: 16,
+                          color: Color(0xFF2C5F5A)
+                        )
+                      ),
                       const SizedBox(height: 16),
                       Row(
                         children: [
@@ -368,7 +409,7 @@ class _EditMatchPageState extends State<EditMatchPage> {
                         items: <String>['upcoming', 'live', 'finished'].map((String value) {
                           return DropdownMenuItem<String>(
                             value: value,
-                            child: Text(value.toUpperCase()),
+                            child: Text(value.toUpperCase(), style: const TextStyle(fontFamily: 'Nunito Sans')),
                           );
                         }).toList(),
                         onChanged: (newValue) => setState(() => _status = newValue!),
@@ -389,14 +430,22 @@ class _EditMatchPageState extends State<EditMatchPage> {
                   padding: const EdgeInsets.all(16),
                   child: Column(
                     children: [
-                      const Text("Info Lainnya", style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
+                      const Text(
+                        "Info Lainnya", 
+                        style: TextStyle(
+                          fontFamily: 'Nunito Sans', 
+                          fontWeight: FontWeight.w700, 
+                          fontSize: 16,
+                          color: Color(0xFF2C5F5A)
+                        )
+                      ),
                       const SizedBox(height: 16),
                       TextFormField(
                         controller: _dateController,
                         readOnly: true,
                         decoration: _buildInputDecoration('Waktu Kick-off', icon: Icons.calendar_month).copyWith(
                           suffixIcon: IconButton(
-                            icon: const Icon(Icons.access_time_filled, color: Colors.blueAccent),
+                            icon: const Icon(Icons.access_time_filled, color: Color(0xFF2C5F5A)),
                             onPressed: () => _selectDateTime(context),
                           ),
                         ),
@@ -446,7 +495,7 @@ class _EditMatchPageState extends State<EditMatchPage> {
                     child: ElevatedButton.icon(
                       onPressed: _submitForm,
                       style: ElevatedButton.styleFrom(
-                        backgroundColor: Colors.green[700],
+                        backgroundColor: primaryColor,
                         foregroundColor: Colors.white,
                         padding: const EdgeInsets.symmetric(vertical: 16),
                         shape: RoundedRectangleBorder(
@@ -457,31 +506,39 @@ class _EditMatchPageState extends State<EditMatchPage> {
                       icon: const Icon(Icons.check_circle_outline),
                       label: const Text(
                         'SIMPAN PERUBAHAN',
-                        style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                        style: TextStyle(
+                          fontFamily: 'Nunito Sans',
+                          fontSize: 16, 
+                          fontWeight: FontWeight.w700
+                        ),
                       ),
                     ),
                   ),
                   const SizedBox(height: 16),
                   
-                  // [BARU] Tombol Hapus Match
+                  // Tombol Hapus Match
                   SizedBox(
                     width: double.infinity,
                     child: ElevatedButton.icon(
                       onPressed: _deleteMatch,
                       style: ElevatedButton.styleFrom(
-                        backgroundColor: Colors.red[50], // Background merah muda agar tidak terlalu mencolok tapi waspada
-                        foregroundColor: Colors.red[700], // Teks/Icon merah
+                        backgroundColor: const Color(0xFFFEF2F2), // Background merah sangat muda
+                        foregroundColor: errorColor, 
                         padding: const EdgeInsets.symmetric(vertical: 16),
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(12),
-                          side: BorderSide(color: Colors.red[200]!), // Border merah tipis
+                          side: BorderSide(color: errorColor.withOpacity(0.3)), 
                         ),
                         elevation: 0,
                       ),
                       icon: const Icon(Icons.delete_outline_rounded),
                       label: const Text(
                         'HAPUS PERTANDINGAN',
-                        style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                        style: TextStyle(
+                          fontFamily: 'Nunito Sans',
+                          fontSize: 16, 
+                          fontWeight: FontWeight.w700
+                        ),
                       ),
                     ),
                   ),

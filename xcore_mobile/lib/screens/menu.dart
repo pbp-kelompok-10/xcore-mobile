@@ -12,10 +12,10 @@ class MyHomePage extends StatelessWidget {
   MyHomePage({super.key});
 
   final List<ItemHomepage> items = [
-    ItemHomepage("Scoreboard", Icons.scoreboard, Colors.orange[400]!),
-    ItemHomepage("Prediction", Icons.analytics, Colors.blue[400]!),
-    ItemHomepage("Teams", Icons.people, Colors.purple[400]!),
-    ItemHomepage("Players", Icons.person, Colors.teal[400]!),
+    ItemHomepage("Scoreboard", Icons.scoreboard, const Color(0xFF56BDA9)),
+    ItemHomepage("Prediction", Icons.analytics, const Color(0xFF4AA69B)),
+    ItemHomepage("Teams", Icons.people, const Color(0xFF3D9B8E)),
+    ItemHomepage("Players", Icons.person, const Color(0xFF28574E)),
   ];
 
   @override
@@ -30,43 +30,39 @@ class MyHomePage extends StatelessWidget {
             fontSize: 20,
           ),
         ),
-        backgroundColor: Colors.green[700],
+        backgroundColor: const Color(0xFF4AA69B),
         elevation: 0,
-        iconTheme: IconThemeData(color: Colors.white),
+        automaticallyImplyLeading: false,
         actions: [
-          // Logout Button di AppBar
           IconButton(
-            icon: Icon(Icons.logout),
+            icon: const Icon(Icons.logout),
+            color: Colors.white,
             onPressed: () {
               _showLogoutDialog(context);
             },
           ),
-          
         ],
       ),
-      drawer: LeftDrawer(),
-      backgroundColor: Colors.grey[50],
+      backgroundColor: const Color(0xFFE8F6F4),
       body: SingleChildScrollView(
         child: Column(
           children: [
-            // Header dengan gradien hijau
             Container(
               width: double.infinity,
-              padding: EdgeInsets.all(24),
-              decoration: BoxDecoration(
+              padding: const EdgeInsets.all(24),
+              decoration: const BoxDecoration(
                 gradient: LinearGradient(
                   begin: Alignment.topLeft,
                   end: Alignment.bottomRight,
-                  colors: [Colors.green[700]!, Colors.green[500]!],
+                  colors: [Color(0xFF4AA69B), Color(0xFF56BDA9)],
                 ),
                 borderRadius: BorderRadius.only(
                   bottomLeft: Radius.circular(20),
                   bottomRight: Radius.circular(20),
                 ),
               ),
-              child: Column(
+              child: const Column(
                 children: [
-                  // Welcome text
                   Text(
                     'Selamat Datang di',
                     style: TextStyle(
@@ -96,11 +92,10 @@ class MyHomePage extends StatelessWidget {
               ),
             ),
 
-            SizedBox(height: 20),
+            const SizedBox(height: 20),
 
-            // Tombol Horizontal
             Padding(
-              padding: EdgeInsets.symmetric(horizontal: 16),
+              padding: const EdgeInsets.symmetric(horizontal: 16),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
@@ -112,13 +107,13 @@ class MyHomePage extends StatelessWidget {
                       color: Colors.grey[800],
                     ),
                   ),
-                  SizedBox(height: 12),
+                  const SizedBox(height: 12),
                   SingleChildScrollView(
                     scrollDirection: Axis.horizontal,
                     child: Row(
                       children: items.map((item) {
                         return Padding(
-                          padding: EdgeInsets.only(right: 12),
+                          padding: const EdgeInsets.only(right: 12),
                           child: _buildHorizontalButton(item),
                         );
                       }).toList(),
@@ -147,9 +142,9 @@ class MyHomePage extends StatelessWidget {
               _handleTap(context, item);
             },
             child: Container(
-              width: 80, // Ukuran lebih kecil
-              height: 80, // Ukuran lebih kecil
-              padding: EdgeInsets.all(8),
+              width: 80,
+              height: 80,
+              padding: const EdgeInsets.all(8),
               decoration: BoxDecoration(
                 borderRadius: BorderRadius.circular(12),
                 gradient: LinearGradient(
@@ -164,16 +159,16 @@ class MyHomePage extends StatelessWidget {
                   Icon(
                     item.icon,
                     color: Colors.white,
-                    size: 24, // Icon lebih kecil
+                    size: 24,
                   ),
-                  SizedBox(height: 6),
+                  const SizedBox(height: 6),
                   Text(
                     item.name,
                     textAlign: TextAlign.center,
-                    style: TextStyle(
+                    style: const TextStyle(
                       color: Colors.white,
                       fontWeight: FontWeight.w600,
-                      fontSize: 10, // Font lebih kecil
+                      fontSize: 10,
                     ),
                     maxLines: 2,
                   ),
@@ -187,7 +182,6 @@ class MyHomePage extends StatelessWidget {
   }
 
   void _handleTap(BuildContext context, ItemHomepage item) {
-    // Tampilkan snackbar pemberitahuan
     _showSnackBar(context, "Membuka ${item.name}");
 
     switch (item.name) {
@@ -201,7 +195,7 @@ class MyHomePage extends StatelessWidget {
         Navigator.push(
           context,
           MaterialPageRoute(
-            builder: (context) => PredictionPage.selectMatch(),
+            builder: (context) => const PredictionPage(),
           ),
         );
         break;
@@ -226,8 +220,8 @@ class MyHomePage extends StatelessWidget {
       ..showSnackBar(
         SnackBar(
           content: Text(message),
-          backgroundColor: Colors.green[600],
-          duration: Duration(seconds: 2),
+          backgroundColor: const Color(0xFF4AA69B),
+          duration: const Duration(seconds: 2),
           behavior: SnackBarBehavior.floating,
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(10),
@@ -241,21 +235,21 @@ class MyHomePage extends StatelessWidget {
       context: context,
       builder: (BuildContext context) {
         return AlertDialog(
-          title: Text("Logout"),
-          content: Text("Apakah Anda yakin ingin logout?"),
+          title: const Text("Logout"),
+          content: const Text("Apakah Anda yakin ingin logout?"),
           actions: [
             TextButton(
               onPressed: () {
                 Navigator.of(context).pop();
               },
-              child: Text("Batal"),
+              child: const Text("Batal"),
             ),
             TextButton(
               onPressed: () {
                 Navigator.of(context).pop();
                 _performLogout(context);
               },
-              child: Text(
+              child: const Text(
                 "Logout",
                 style: TextStyle(color: Colors.red),
               ),
@@ -266,31 +260,27 @@ class MyHomePage extends StatelessWidget {
     );
   }
   
-void _performLogout(BuildContext context) async {
-  final request = context.read<CookieRequest>();
-  
-  // Tentukan pesan default
-  String snackbarMessage = "Logout berhasil!";
-  
-  try {
-    // Coba logout ke Django
-    final response = await request.logout(
-      "http://localhost:8000/auth/logout/",
-    );
-
-  } catch (e) {
-    print("Logout network error: $e");
-    snackbarMessage = "Logout berhasil secara lokal, tetapi gagal menghubungi server.";
+  void _performLogout(BuildContext context) async {
+    final request = context.read<CookieRequest>();
+    
+    String snackbarMessage = "Logout berhasil!";
+    
+    try {
+      final response = await request.logout(
+        "http://localhost:8000/auth/logout/",
+      );
+    } catch (e) {
+      print("Logout network error: $e");
+      snackbarMessage = "Logout berhasil secara lokal, tetapi gagal menghubungi server.";
+    }
+    
+    _navigateToLogin(context, snackbarMessage);
   }
-  
-  // Navigasi ke login page setelah upaya logout, berhasil atau gagal.
-  _navigateToLogin(context, snackbarMessage);
-}
 
   void _navigateToLogin(BuildContext context, String message) {
     Navigator.pushReplacement(
       context,
-      MaterialPageRoute(builder: (context) => LoginPage()),
+      MaterialPageRoute(builder: (context) => const LoginPage()),
     );
     
     ScaffoldMessenger.of(context)
@@ -298,8 +288,8 @@ void _performLogout(BuildContext context) async {
       ..showSnackBar(
         SnackBar(
           content: Text(message),
-          backgroundColor: Colors.green[600],
-          duration: Duration(seconds: 2),
+          backgroundColor: const Color(0xFF4AA69B),
+          duration: const Duration(seconds: 2),
         ),
       );
   }

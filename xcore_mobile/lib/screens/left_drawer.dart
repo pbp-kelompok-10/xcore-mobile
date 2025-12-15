@@ -12,6 +12,9 @@ class LeftDrawer extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    // 1. Pantau status login user
+    final request = context.watch<CookieRequest>();
+
     return Drawer(
       child: ListView(
         padding: EdgeInsets.zero,
@@ -30,19 +33,19 @@ class LeftDrawer extends StatelessWidget {
               mainAxisAlignment: MainAxisAlignment.end,
               children: [
                 Container(
-                  padding: EdgeInsets.all(8),
+                  padding: const EdgeInsets.all(8),
                   decoration: BoxDecoration(
                     color: Colors.white.withOpacity(0.2),
                     shape: BoxShape.circle,
                   ),
-                  child: Icon(
+                  child: const Icon(
                     Icons.sports_soccer,
                     color: Colors.white,
                     size: 32,
                   ),
                 ),
-                SizedBox(height: 12),
-                Text(
+                const SizedBox(height: 12),
+                const Text(
                   'Xcore Football',
                   style: TextStyle(
                     color: Colors.white,
@@ -50,10 +53,11 @@ class LeftDrawer extends StatelessWidget {
                     fontWeight: FontWeight.bold,
                   ),
                 ),
-                SizedBox(height: 4),
+                const SizedBox(height: 4),
+                // Tampilkan info status user di header (Opsional, biar keren)
                 Text(
-                  'Complete Football Stats',
-                  style: TextStyle(
+                  request.loggedIn ? 'Welcome, User!' : 'Guest Mode',
+                  style: const TextStyle(
                     color: Colors.white70,
                     fontSize: 12,
                   ),
@@ -68,8 +72,9 @@ class LeftDrawer extends StatelessWidget {
             icon: Icons.home,
             title: 'Home',
             onTap: () {
-              _showSnackBar(context, "Kembali ke Home");
-              Navigator.pop(context);
+              // _showSnackBar(context, "Kembali ke Home"); // Opsional
+              Navigator.pop(context); // Tutup drawer
+              // Logika navigasi ke Home (biasanya Home adalah root, jadi cukup pop drawer atau pushReplacement)
             },
           ),
 
@@ -78,11 +83,10 @@ class LeftDrawer extends StatelessWidget {
             icon: Icons.scoreboard,
             title: 'Scoreboard',
             onTap: () {
-              _showSnackBar(context, "Membuka Scoreboard");
               Navigator.pop(context);
               Navigator.push(
                 context,
-                MaterialPageRoute(builder: (context) => ScoreboardPage()),
+                MaterialPageRoute(builder: (context) => const ScoreboardPage()),
               );
             },
           ),
@@ -92,12 +96,11 @@ class LeftDrawer extends StatelessWidget {
             icon: Icons.analytics,
             title: 'Prediction',
             onTap: () {
-              _showSnackBar(context, "Membuka Prediction");
               Navigator.pop(context);
               Navigator.push(
                 context,
                 MaterialPageRoute(
-                  builder: (context) => PredictionPage.selectMatch(),
+                  builder: (context) => const PredictionPage(),
                 ),
               );
             },
@@ -108,11 +111,10 @@ class LeftDrawer extends StatelessWidget {
             icon: Icons.people,
             title: 'Teams',
             onTap: () {
-              _showSnackBar(context, "Membuka Teams");
               Navigator.pop(context);
               Navigator.push(
                 context,
-                MaterialPageRoute(builder: (context) => TeamsPage()),
+                MaterialPageRoute(builder: (context) => const TeamsPage()),
               );
             },
           ),
@@ -122,11 +124,10 @@ class LeftDrawer extends StatelessWidget {
             icon: Icons.person,
             title: 'Players',
             onTap: () {
-              _showSnackBar(context, "Membuka Players");
               Navigator.pop(context);
               Navigator.push(
                 context,
-                MaterialPageRoute(builder: (context) => PlayersPage()),
+                MaterialPageRoute(builder: (context) => const PlayersPage()),
               );
             },
           ),
@@ -134,16 +135,34 @@ class LeftDrawer extends StatelessWidget {
           // Divider
           Divider(color: Colors.grey[300]),
 
-          // Logout
-          _buildDrawerItem(
-            context,
-            icon: Icons.logout,
-            title: 'Logout',
-            onTap: () {
-              Navigator.pop(context);
-              _showLogoutDialog(context);
-            },
-          ),
+          // 2. LOGIKA TOMBOL LOGIN / LOGOUT
+          if (request.loggedIn) ...[
+            // JIKA SUDAH LOGIN -> TAMPILKAN LOGOUT
+            _buildDrawerItem(
+              context,
+              icon: Icons.logout,
+              title: 'Logout',
+              onTap: () {
+                Navigator.pop(context);
+                _showLogoutDialog(context);
+              },
+            ),
+          ] else ...[
+            // JIKA BELUM LOGIN (GUEST) -> TAMPILKAN LOGIN
+            _buildDrawerItem(
+              context,
+              icon: Icons.login,
+              title: 'Login',
+              onTap: () {
+                Navigator.pop(context);
+                // Arahkan ke halaman Login
+                Navigator.pushReplacement(
+                  context,
+                  MaterialPageRoute(builder: (context) => const LoginPage()),
+                );
+              },
+            ),
+          ],
         ],
       ),
     );
@@ -157,7 +176,7 @@ class LeftDrawer extends StatelessWidget {
   }) {
     return ListTile(
       leading: Container(
-        padding: EdgeInsets.all(8),
+        padding: const EdgeInsets.all(8),
         decoration: BoxDecoration(
           color: Colors.green[50],
           shape: BoxShape.circle,
@@ -183,7 +202,7 @@ class LeftDrawer extends StatelessWidget {
         SnackBar(
           content: Text(message),
           backgroundColor: Colors.green[600],
-          duration: Duration(seconds: 2),
+          duration: const Duration(seconds: 2),
           behavior: SnackBarBehavior.floating,
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(10),
@@ -197,21 +216,21 @@ class LeftDrawer extends StatelessWidget {
       context: context,
       builder: (BuildContext context) {
         return AlertDialog(
-          title: Text("Logout"),
-          content: Text("Apakah Anda yakin ingin logout?"),
+          title: const Text("Logout"),
+          content: const Text("Apakah Anda yakin ingin logout?"),
           actions: [
             TextButton(
               onPressed: () {
                 Navigator.of(context).pop();
               },
-              child: Text("Batal"),
+              child: const Text("Batal"),
             ),
             TextButton(
               onPressed: () {
                 Navigator.of(context).pop();
                 _performLogout(context);
               },
-              child: Text(
+              child: const Text(
                 "Logout",
                 style: TextStyle(color: Colors.red),
               ),
@@ -222,40 +241,44 @@ class LeftDrawer extends StatelessWidget {
     );
   }
 
-void _performLogout(BuildContext context) async {
-  final request = context.read<CookieRequest>();
-  
-  // Tentukan pesan default
-  String snackbarMessage = "Logout berhasil!";
-  
-  try {
-    // Coba logout ke Django
-    final response = await request.logout(
-      "http://localhost:8000/auth/logout/",
-    );
+  void _performLogout(BuildContext context) async {
+    final request = context.read<CookieRequest>();
 
-  } catch (e) {
-    print("Logout network error: $e");
-    snackbarMessage = "Logout berhasil secara lokal, tetapi gagal menghubungi server.";
+    String snackbarMessage = "Logout berhasil!";
+
+    try {
+      // Pastikan URL konsisten (127.0.0.1 untuk Web)
+      final response = await request.logout(
+        "http://localhost:8000/auth/logout/",
+      );
+
+      // Cek response status kalau perlu, tapi biasanya request.logout
+      // sudah mengupdate state loggedIn jadi false otomatis.
+
+    } catch (e) {
+      print("Logout network error: $e");
+      snackbarMessage =
+          "Logout berhasil secara lokal, tetapi gagal menghubungi server.";
+    }
+
+    if (context.mounted) {
+      _navigateToLogin(context, snackbarMessage);
+    }
   }
-  
-  // Navigasi ke login page setelah upaya logout, berhasil atau gagal.
-  _navigateToLogin(context, snackbarMessage);
-}
 
   void _navigateToLogin(BuildContext context, String message) {
     Navigator.pushReplacement(
       context,
-      MaterialPageRoute(builder: (context) => LoginPage()),
+      MaterialPageRoute(builder: (context) => const LoginPage()),
     );
-    
+
     ScaffoldMessenger.of(context)
       ..hideCurrentSnackBar()
       ..showSnackBar(
         SnackBar(
           content: Text(message),
           backgroundColor: Colors.green[600],
-          duration: Duration(seconds: 2),
+          duration: const Duration(seconds: 2),
         ),
       );
   }

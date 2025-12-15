@@ -4,7 +4,6 @@ import 'package:provider/provider.dart';
 import 'package:intl/intl.dart';
 import 'package:xcore_mobile/screens/scoreboard/scoreboard_service.dart';
 
-// Data negara dipindahkan ke variabel const agar lebih rapi
 const List<Map<String, String>> _countryChoices = [
   {'code': 'jp', 'name': 'Japan'},
   {'code': 'ir', 'name': 'Iran'},
@@ -63,6 +62,12 @@ class AddMatchPage extends StatefulWidget {
 
 class _AddMatchPageState extends State<AddMatchPage> {
   final _formKey = GlobalKey<FormState>();
+  
+  // Warna Tema
+  final Color primaryColor = const Color(0xFF4AA69B);
+  final Color scaffoldBgColor = const Color(0xFFE8F6F4);
+  final Color darkTextColor = const Color(0xFF2C5F5A);
+
   String _homeTeamCode = _countryChoices.first['code']!; 
   String _awayTeamCode = _countryChoices.first['code']!; 
   int _homeScore = 0;
@@ -81,7 +86,6 @@ class _AddMatchPageState extends State<AddMatchPage> {
     super.dispose();
   }
 
-  // Fungsi baru: Memilih Tanggal DAN Jam
   Future<void> _selectDateTime(BuildContext context) async {
     // 1. Pick Date
     final DateTime? pickedDate = await showDatePicker(
@@ -92,7 +96,11 @@ class _AddMatchPageState extends State<AddMatchPage> {
       builder: (context, child) {
         return Theme(
           data: Theme.of(context).copyWith(
-            colorScheme: ColorScheme.light(primary: Colors.green[700]!),
+            colorScheme: ColorScheme.light(
+              primary: primaryColor,
+              onPrimary: Colors.white,
+              onSurface: darkTextColor,
+            ),
           ),
           child: child!,
         );
@@ -101,7 +109,7 @@ class _AddMatchPageState extends State<AddMatchPage> {
 
     if (pickedDate == null) return;
 
-    // 2. Pick Time (Jika Date dipilih)
+    // 2. Pick Time 
     if (!mounted) return;
     final TimeOfDay? pickedTime = await showTimePicker(
       context: context,
@@ -109,7 +117,11 @@ class _AddMatchPageState extends State<AddMatchPage> {
       builder: (context, child) {
         return Theme(
           data: Theme.of(context).copyWith(
-            colorScheme: ColorScheme.light(primary: Colors.green[700]!),
+            colorScheme: ColorScheme.light(
+              primary: primaryColor,
+              onPrimary: Colors.white,
+              onSurface: darkTextColor,
+            ),
           ),
           child: child!,
         );
@@ -152,7 +164,6 @@ class _AddMatchPageState extends State<AddMatchPage> {
         "away_team_code": _awayTeamCode.toLowerCase(),
         "home_score": _homeScore,
         "away_score": _awayScore,
-        // Kirim format lengkap ke backend
         "match_date": DateFormat('yyyy-MM-dd HH:mm').format(_matchDate!), 
         "stadium": _stadium,
         "round": _round,
@@ -161,15 +172,17 @@ class _AddMatchPageState extends State<AddMatchPage> {
       };
 
       try {
-        // Tampilkan loading dialog atau indikator jika perlu
         bool success = await ScoreboardService.addMatch(request, data);
 
         if (success) {
           if (!mounted) return;
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
-              content: const Text('Match berhasil ditambahkan!'),
-              backgroundColor: Colors.green[600],
+              content: const Text(
+                'Match berhasil ditambahkan!',
+                style: TextStyle(fontFamily: 'Nunito Sans'),
+              ),
+              backgroundColor: primaryColor,
             ),
           );
           Navigator.pop(context, true); 
@@ -178,8 +191,11 @@ class _AddMatchPageState extends State<AddMatchPage> {
         if (!mounted) return;
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Gagal menambahkan match: ${e.toString()}'),
-            backgroundColor: Colors.red[600],
+            content: Text(
+              'Gagal menambahkan match: ${e.toString()}',
+              style: const TextStyle(fontFamily: 'Nunito Sans'),
+            ),
+            backgroundColor: const Color(0xFFEF4444),
           ),
         );
       }
@@ -190,15 +206,16 @@ class _AddMatchPageState extends State<AddMatchPage> {
   InputDecoration _buildInputDecoration(String label, {IconData? icon}) {
     return InputDecoration(
       labelText: label,
-      prefixIcon: icon != null ? Icon(icon, color: Colors.green[700]) : null,
+      labelStyle: const TextStyle(fontFamily: 'Nunito Sans', color: Color(0xFF6B8E8A)),
+      prefixIcon: icon != null ? Icon(icon, color: primaryColor) : null,
       border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
       enabledBorder: OutlineInputBorder(
         borderRadius: BorderRadius.circular(12),
-        borderSide: BorderSide(color: Colors.grey.shade400),
+        borderSide: BorderSide(color: primaryColor.withOpacity(0.3)),
       ),
       focusedBorder: OutlineInputBorder(
         borderRadius: BorderRadius.circular(12),
-        borderSide: BorderSide(color: Colors.green[700]!, width: 2),
+        borderSide: BorderSide(color: primaryColor, width: 2),
       ),
       filled: true,
       fillColor: Colors.white,
@@ -209,16 +226,20 @@ class _AddMatchPageState extends State<AddMatchPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.green[50],
+      backgroundColor: scaffoldBgColor,
       appBar: AppBar(
         title: const Text(
           'Tambah Match Baru',
-          style: TextStyle(fontWeight: FontWeight.bold, color: Colors.white),
+          style: TextStyle(
+            fontWeight: FontWeight.bold, 
+            color: Colors.white,
+            fontFamily: 'Nunito Sans',
+          ),
         ),
         centerTitle: true,
-        backgroundColor: Colors.green[700],
+        backgroundColor: primaryColor,
         iconTheme: const IconThemeData(color: Colors.white),
-        elevation: 0,
+        elevation: 2,
       ),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(20.0),
@@ -236,7 +257,15 @@ class _AddMatchPageState extends State<AddMatchPage> {
                   padding: const EdgeInsets.all(16),
                   child: Column(
                     children: [
-                      const Text("Informasi Tim", style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
+                      Text(
+                        "Informasi Tim", 
+                        style: TextStyle(
+                          fontWeight: FontWeight.bold, 
+                          fontSize: 16,
+                          fontFamily: 'Nunito Sans',
+                          color: darkTextColor,
+                        )
+                      ),
                       const SizedBox(height: 16),
                       DropdownButtonFormField<String>(
                         decoration: _buildInputDecoration('Home Team', icon: Icons.flag),
@@ -244,7 +273,7 @@ class _AddMatchPageState extends State<AddMatchPage> {
                         items: _countryChoices.map<DropdownMenuItem<String>>((Map<String, String> item) {
                           return DropdownMenuItem<String>(
                             value: item['code'], 
-                            child: Text(item['name']!), 
+                            child: Text(item['name']!, style: const TextStyle(fontFamily: 'Nunito Sans')), 
                           );
                         }).toList(),
                         onChanged: (newValue) => setState(() => _homeTeamCode = newValue!),
@@ -258,7 +287,7 @@ class _AddMatchPageState extends State<AddMatchPage> {
                         items: _countryChoices.map<DropdownMenuItem<String>>((Map<String, String> item) {
                           return DropdownMenuItem<String>(
                             value: item['code'],
-                            child: Text(item['name']!),
+                            child: Text(item['name']!, style: const TextStyle(fontFamily: 'Nunito Sans')),
                           );
                         }).toList(),
                         onChanged: (newValue) => setState(() => _awayTeamCode = newValue!),
@@ -280,7 +309,15 @@ class _AddMatchPageState extends State<AddMatchPage> {
                   padding: const EdgeInsets.all(16),
                   child: Column(
                     children: [
-                      const Text("Detail Skor", style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
+                      Text(
+                        "Detail Skor", 
+                        style: TextStyle(
+                          fontWeight: FontWeight.bold, 
+                          fontSize: 16,
+                          fontFamily: 'Nunito Sans',
+                          color: darkTextColor,
+                        )
+                      ),
                       const SizedBox(height: 16),
                       Row(
                         children: [
@@ -310,7 +347,7 @@ class _AddMatchPageState extends State<AddMatchPage> {
                         items: <String>['upcoming', 'live', 'finished'].map((String value) {
                           return DropdownMenuItem<String>(
                             value: value, 
-                            child: Text(value.toUpperCase()), 
+                            child: Text(value.toUpperCase(), style: const TextStyle(fontFamily: 'Nunito Sans')), 
                           );
                         }).toList(),
                         onChanged: (newValue) => setState(() => _status = newValue!),
@@ -331,7 +368,15 @@ class _AddMatchPageState extends State<AddMatchPage> {
                   padding: const EdgeInsets.all(16),
                   child: Column(
                     children: [
-                      const Text("Detail Pertandingan", style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
+                      Text(
+                        "Detail Pertandingan", 
+                        style: TextStyle(
+                          fontWeight: FontWeight.bold, 
+                          fontSize: 16,
+                          fontFamily: 'Nunito Sans',
+                          color: darkTextColor,
+                        )
+                      ),
                       const SizedBox(height: 16),
                       // Input Tanggal dengan Jam
                       TextFormField(
@@ -339,7 +384,7 @@ class _AddMatchPageState extends State<AddMatchPage> {
                         readOnly: true,
                         decoration: _buildInputDecoration('Waktu Kick-off', icon: Icons.calendar_month).copyWith(
                           suffixIcon: IconButton(
-                            icon: const Icon(Icons.access_time_filled, color: Colors.blueAccent),
+                            icon: Icon(Icons.access_time_filled, color: darkTextColor),
                             onPressed: () => _selectDateTime(context),
                           ),
                         ),
@@ -383,7 +428,7 @@ class _AddMatchPageState extends State<AddMatchPage> {
               ElevatedButton.icon(
                 onPressed: _submitForm,
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.green[700],
+                  backgroundColor: primaryColor,
                   foregroundColor: Colors.white,
                   padding: const EdgeInsets.symmetric(vertical: 16),
                   shape: RoundedRectangleBorder(
@@ -393,8 +438,12 @@ class _AddMatchPageState extends State<AddMatchPage> {
                 ),
                 icon: const Icon(Icons.save_rounded),
                 label: const Text(
-                  'SIMPAN MATCH',
-                  style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                  'TAMBAH MATCH',
+                  style: TextStyle(
+                    fontSize: 16, 
+                    fontWeight: FontWeight.bold,
+                    fontFamily: 'Nunito Sans',
+                  ),
                 ),
               ),
               const SizedBox(height: 30),
