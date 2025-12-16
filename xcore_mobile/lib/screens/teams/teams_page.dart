@@ -1,92 +1,159 @@
 import 'package:flutter/material.dart';
+import 'dart:convert';
+import 'package:http/http.dart' as http;
+import 'team_service.dart';
 
-class TeamsPage extends StatelessWidget {
+class TeamsPage extends StatefulWidget {
   const TeamsPage({super.key});
 
   @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: const Color(0xFFE8F6F4),
-      appBar: AppBar(
-        title: const Text(
-          "Teams",
-          style: TextStyle(
-            fontFamily: 'Nunito Sans',
-            fontWeight: FontWeight.w700,
-            fontSize: 20,
-          ),
-        ),
-        centerTitle: true,
-        elevation: 2,
-        backgroundColor: const Color(0xFF4AA69B),
-        foregroundColor: const Color(0xFFFFFFFF),
-        
-        // --- BAGIAN INI YANG PENTING ---
-        // Set ke false agar tombol back/drawer TIDAK MUNCUL di halaman ini
-        automaticallyImplyLeading: false, 
-        // -------------------------------
-      ),
-      body: Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            const Icon(
-              Icons.people,
-              size: 80,
-              color: Color(0xFF9CA3AF),
-            ),
-            const SizedBox(height: 24),
-            const Text(
-              "Teams Page (Root)",
-              style: TextStyle(
-                fontFamily: 'Nunito Sans',
-                fontSize: 16,
-                fontWeight: FontWeight.w500,
-                color: Color(0xFF6B8E8A),
-              ),
-            ),
-            const SizedBox(height: 24),
-            
-            // Contoh Tombol untuk masuk ke Detail
-            ElevatedButton(
-              style: ElevatedButton.styleFrom(
-                backgroundColor: const Color(0xFF4AA69B),
-                foregroundColor: Colors.white,
-              ),
-              onPressed: () {
-                // Navigasi ke halaman detail
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(builder: (context) => const TeamDetailPage()),
-                );
-              },
-              child: const Text("Lihat Detail Team"),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
+  State<TeamsPage> createState() => _TeamsPageState();
 }
 
+class _TeamsPageState extends State<TeamsPage> {
+  List<Map<String, String>> teams = [];
+  bool loading = true;
+  bool fabOpen = false;
 
-class TeamDetailPage extends StatelessWidget {
-  const TeamDetailPage({super.key});
+  @override
+  void initState() {
+    super.initState();
+    loadTeams();
+  }
+
+  Future<void> loadTeams() async {
+    if (!mounted) return;
+    setState(() => loading = true);
+
+    try {
+      final response = await http.get(
+        Uri.parse("http://localhost:8000/lineup/api/teams/"),
+      );
+
+      if (!mounted) return;
+
+      if (response.statusCode == 200) {
+        final data = jsonDecode(response.body);
+        final teamsList = data['teams'] as List;
+        final teamData = teamsList
+            .map(
+              (t) => {
+                'name': t['name'].toString(),
+                'code': t['code'].toString(),
+                'id': t['id'].toString(),
+              },
+            )
+            .toList();
+
+        setState(() {
+          teams = teamData.cast<Map<String, String>>();
+          loading = false;
+        });
+      } else {
+        setState(() => loading = false);
+      }
+    } catch (e) {
+      print("Error: $e");
+      if (mounted) setState(() => loading = false);
+    }
+  }
+
+  void uploadTeamsZip(BuildContext context) async {
+    final bytes = await TeamService.pickZipFile();
+    if (bytes == null) return;
+
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (_) => const Center(child: CircularProgressIndicator()),
+    );
+
+    try {
+      await TeamService.uploadTeamsZip(bytes);
+      if (!mounted) return;
+      Navigator.pop(context);
+      await loadTeams();
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text("Teams uploaded successfully"),
+          backgroundColor: Colors.green,
+        ),
+      );
+    } catch (e) {
+      if (!mounted) return;
+      Navigator.pop(context);
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text("Upload failed: $e"),
+          backgroundColor: Colors.red,
+        ),
+      );
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: const Color(0xFFE8F6F4),
       appBar: AppBar(
-        title: const Text("Detail Team"),
+        title: const Text("Teams"),
         backgroundColor: const Color(0xFF4AA69B),
         foregroundColor: Colors.white,
-        // Di sini automaticallyImplyLeading defaultnya TRUE.
-        // Jadi Flutter otomatis kasih tombol back karena ada history navigasi.
+        automaticallyImplyLeading: false,
       ),
-      body: const Center(
-        child: Text("Sekarang ada tombol back di kiri atas!"),
+      floatingActionButton: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.end,
+        children: [
+          if (fabOpen) ...[
+            FloatingActionButton.extended(
+              heroTag: "uploadTeamFAB",
+              backgroundColor: Colors.green,
+              icon: const Icon(Icons.upload_file),
+              label: const Text("Upload ZIP"),
+              onPressed: () => uploadTeamsZip(context),
+            ),
+            const SizedBox(height: 12),
+          ],
+          FloatingActionButton(
+            heroTag: "toggleTeamFAB",
+            backgroundColor: const Color(0xFF4AA69B),
+            child: Icon(fabOpen ? Icons.close : Icons.add),
+            onPressed: () => setState(() => fabOpen = !fabOpen),
+          ),
+        ],
       ),
+      body: loading
+          ? const Center(child: CircularProgressIndicator())
+          : teams.isEmpty
+          ? const Center(child: Text("No teams"))
+          : ListView(
+              padding: const EdgeInsets.all(12),
+              children: [
+                for (final team in teams)
+                  Card(
+                    elevation: 3,
+                    margin: const EdgeInsets.only(bottom: 12),
+                    child: ListTile(
+                      leading: Image.network(
+                        'https://flagcdn.com/24x18/${team['code']?.toLowerCase() ?? ''}.png',
+                        width: 32,
+                        height: 24,
+                        errorBuilder: (context, error, stackTrace) =>
+                            const Icon(Icons.flag),
+                      ),
+                      title: Text(
+                        team['name'] ?? '',
+                        style: const TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                    ),
+                  ),
+              ],
+            ),
     );
   }
 }
