@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:xcore_mobile/screens/statistik/widgets/flag_widget.dart';
 
 class ScoreboardMatchCard extends StatelessWidget {
   final String homeTeam;
@@ -6,13 +7,11 @@ class ScoreboardMatchCard extends StatelessWidget {
   final String homeCode;
   final String awayCode;
   final String status;
-  final int? homeScore;
-  final int? awayScore;
+  final int homeScore;
+  final int awayScore;
   final String stadium;
   final String group;
-  final bool isAdmin;
-  final VoidCallback? onEdit;
-  final VoidCallback? onForum;
+  final DateTime matchDate;
 
   const ScoreboardMatchCard({
     super.key,
@@ -21,239 +20,316 @@ class ScoreboardMatchCard extends StatelessWidget {
     required this.homeCode,
     required this.awayCode,
     required this.status,
-    this.homeScore,
-    this.awayScore,
+    required this.homeScore,
+    required this.awayScore,
     required this.stadium,
     required this.group,
-    this.isAdmin = false,
-    this.onEdit,
-    this.onForum,
+    required this.matchDate,
   });
+
+  // Helper untuk nama bulan
+  String _getMonthName(int month) {
+    const months = [
+      "Jan", "Feb", "Mar", "Apr", "May", "Jun",
+      "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"
+    ];
+    return months[month - 1];
+  }
 
   @override
   Widget build(BuildContext context) {
+    final bool isUpcoming = status.toLowerCase() == 'upcoming';
+    final bool isLive = status.toLowerCase() == 'live';
+
+    // Format Jam (Contoh: 19:30)
+    final String timeString = 
+        "${matchDate.hour.toString().padLeft(2, '0')}:${matchDate.minute.toString().padLeft(2, '0')}";
+
+    // Format Tanggal (Contoh: 12 Oct 2023)
+    final String dateString = 
+        "${matchDate.day} ${_getMonthName(matchDate.month)} ${matchDate.year}";
+
     return Container(
-      padding: const EdgeInsets.all(18),
+      margin: const EdgeInsets.symmetric(horizontal: 4, vertical: 4),
       decoration: BoxDecoration(
-        color: const Color(0xFFFFFFFF),
+        color: Colors.white,
         borderRadius: BorderRadius.circular(16),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.08),
+            color: Colors.grey.withOpacity(0.1),
             blurRadius: 10,
-            offset: const Offset(0, 2),
+            offset: const Offset(0, 4),
           ),
         ],
       ),
       child: Column(
         children: [
-          // STATUS
+          // Header Kartu (Group & Status)
           Container(
-            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
             decoration: BoxDecoration(
-              gradient: LinearGradient(
-                colors: status.toLowerCase() == "upcoming"
-                    ? [const Color(0xFFFBBF24), const Color(0xFFF59E0B)]
-                    : status.toLowerCase() == "live"
-                        ? [const Color(0xFFF87171), const Color(0xFFEF4444)]
-                        : [const Color(0xFF4AA69B), const Color(0xFF56BDA9)],
+              color: Colors.grey.shade50,
+              borderRadius: const BorderRadius.only(
+                topLeft: Radius.circular(16),
+                topRight: Radius.circular(16),
               ),
-              borderRadius: BorderRadius.circular(20),
-            ),
-            child: Text(
-              status.toUpperCase(),
-              style: TextStyle(
-                fontFamily: 'Nunito Sans',
-                fontWeight: FontWeight.w700,
-                color: status.toLowerCase() == "upcoming" 
-                    ? const Color(0xFF78350F) 
-                    : const Color(0xFFFFFFFF),
-                fontSize: 12,
-              ),
-            ),
-          ),
-
-          const SizedBox(height: 15),
-
-          // TEAMS & SCORE
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Expanded(child: _teamItem(homeTeam, homeCode, true)),
-              Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 16),
-                child: Text(
-                  status.toLowerCase() == "upcoming"
-                      ? "VS"
-                      : "$homeScore - $awayScore",
-                  style: const TextStyle(
-                    fontFamily: 'Nunito Sans',
-                    fontSize: 28,
-                    fontWeight: FontWeight.w800,
-                    color: Color(0xFF2C5F5A),
-                  ),
-                ),
-              ),
-              Expanded(child: _teamItem(awayTeam, awayCode, false)),
-            ],
-          ),
-
-          const SizedBox(height: 12),
-
-          // STADIUM
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-            decoration: BoxDecoration(
-              color: const Color(0xFFE8F6F4),
-              borderRadius: BorderRadius.circular(8),
+              border: Border(bottom: BorderSide(color: Colors.grey.shade100)),
             ),
             child: Row(
-              mainAxisSize: MainAxisSize.min,
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                const Icon(
-                  Icons.stadium,
-                  size: 16,
-                  color: Color(0xFF4AA69B),
+                Text(
+                  "Group $group", 
+                  style: TextStyle(
+                    color: Colors.grey.shade600,
+                    fontWeight: FontWeight.w600,
+                    fontSize: 12,
+                    letterSpacing: 0.5,
+                  ),
                 ),
+                _buildStatusBadge(status),
+              ],
+            ),
+          ),
+
+          // Body Kartu (Tim, Bendera, & Skor/Waktu)
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 20.0),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              crossAxisAlignment: CrossAxisAlignment.start, 
+              children: [
+                // Home Team
+                Expanded(
+                  child: Column(
+                    children: [
+                      SizedBox(
+                        height: 48, 
+                        child: Center(
+                          child: FlagWidget(
+                            teamCode: homeCode,
+                            isHome: true,
+                            width: 45,
+                            height: 30,
+                          ),
+                        ),
+                      ),
+                      const SizedBox(height: 12),
+                      Text(
+                        homeTeam,
+                        textAlign: TextAlign.center,
+                        style: const TextStyle(
+                          fontWeight: FontWeight.bold,
+                          fontSize: 14,
+                          height: 1.2,
+                        ),
+                        maxLines: 2,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ],
+                  ),
+                ),
+
+                // Center Area (VS/Score + Date + Time)
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 8.0),
+                  child: Column(
+                    children: [
+                      if (isUpcoming) ...[
+                        // 1. VS Badge
+                        Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
+                          decoration: BoxDecoration(
+                            color: Colors.green.shade50,
+                            borderRadius: BorderRadius.circular(20),
+                          ),
+                          child: Text(
+                            "VS",
+                            style: TextStyle(
+                              fontWeight: FontWeight.w900,
+                              fontSize: 16,
+                              color: Colors.green.shade700,
+                            ),
+                          ),
+                        ),
+                        const SizedBox(height: 8),
+                        
+                        // 2. Tanggal (Dibawah VS)
+                        Text(
+                          dateString,
+                          style: TextStyle(
+                            fontSize: 11,
+                            fontWeight: FontWeight.w600,
+                            color: Colors.grey.shade600,
+                          ),
+                        ),
+                        const SizedBox(height: 4),
+
+                        // 3. Jam (Dibawah Tanggal)
+                        Row(
+                          children: [
+                            Icon(Icons.access_time_rounded, size: 12, color: Colors.grey[800]),
+                            const SizedBox(width: 4),
+                            Text(
+                              timeString,
+                              style: TextStyle(
+                                fontWeight: FontWeight.bold,
+                                fontSize: 13,
+                                color: Colors.grey.shade800,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ] else ...[
+                        // Jika Finished/Live
+                        Row(
+                          children: [
+                            Text(
+                              "$homeScore",
+                              style: TextStyle(
+                                fontWeight: FontWeight.w900,
+                                fontSize: 36,
+                                color: isLive ? Colors.redAccent : Colors.black87,
+                              ),
+                            ),
+                            Padding(
+                              padding: const EdgeInsets.symmetric(horizontal: 8.0),
+                              child: Text(
+                                "-", 
+                                style: TextStyle(
+                                  fontSize: 28, 
+                                  color: Colors.grey.shade300,
+                                  fontWeight: FontWeight.w300
+                                )
+                              ),
+                            ),
+                            Text(
+                              "$awayScore",
+                              style: TextStyle(
+                                fontWeight: FontWeight.w900,
+                                fontSize: 36,
+                                color: isLive ? Colors.redAccent : Colors.black87,
+                              ),
+                            ),
+                          ],
+                        ),
+                        // Tanggal dibawah Skor
+                        const SizedBox(height: 4),
+                        Text(
+                          dateString,
+                          style: TextStyle(
+                            fontSize: 11,
+                            fontWeight: FontWeight.w500,
+                            color: Colors.grey.shade500,
+                          ),
+                        ),
+                      ],
+                    ],
+                  ),
+                ),
+
+                // Away Team
+                Expanded(
+                  child: Column(
+                    children: [
+                      SizedBox(
+                        height: 48,
+                        child: Center(
+                          child: FlagWidget(
+                            teamCode: awayCode,
+                            isHome: false,
+                            width: 45,
+                            height: 30,
+                          ),
+                        ),
+                      ),
+                      const SizedBox(height: 12),
+                      Text(
+                        awayTeam,
+                        textAlign: TextAlign.center,
+                        style: const TextStyle(
+                          fontWeight: FontWeight.bold,
+                          fontSize: 14,
+                          height: 1.2,
+                        ),
+                        maxLines: 2,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          ),
+
+          // Footer Kartu (Stadium)
+          Container(
+            width: double.infinity,
+            padding: const EdgeInsets.only(bottom: 16),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Icon(Icons.stadium_rounded, size: 14, color: Colors.grey.shade400),
                 const SizedBox(width: 6),
                 Flexible(
                   child: Text(
                     stadium,
-                    style: const TextStyle(
-                      fontFamily: 'Nunito Sans',
-                      fontSize: 13,
-                      fontWeight: FontWeight.w600,
-                      color: Color(0xFF2C5F5A),
+                    style: TextStyle(
+                      fontSize: 12,
+                      color: Colors.grey.shade500,
+                      fontWeight: FontWeight.w500,
                     ),
-                    textAlign: TextAlign.center,
+                    overflow: TextOverflow.ellipsis,
                   ),
                 ),
               ],
             ),
           ),
-
-          // ACTION BUTTONS
-          if (isAdmin || onForum != null) const SizedBox(height: 16),
-          
-          if (isAdmin || onForum != null)
-            Row(
-              children: [
-                if (isAdmin) ...[
-                  Expanded(
-                    child: OutlinedButton.icon(
-                      onPressed: onEdit,
-                      style: OutlinedButton.styleFrom(
-                        foregroundColor: const Color(0xFF4AA69B),
-                        side: const BorderSide(
-                          color: Color(0xFF4AA69B),
-                          width: 1.5,
-                        ),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(10),
-                        ),
-                        padding: const EdgeInsets.symmetric(vertical: 10),
-                      ),
-                      icon: const Icon(Icons.edit, size: 18),
-                      label: const Text(
-                        'Edit',
-                        style: TextStyle(
-                          fontFamily: 'Nunito Sans',
-                          fontWeight: FontWeight.w600,
-                          fontSize: 13,
-                        ),
-                      ),
-                    ),
-                  ),
-                  if (onForum != null) const SizedBox(width: 8),
-                ],
-                if (onForum != null)
-                  Expanded(
-                    child: ElevatedButton.icon(
-                      onPressed: onForum,
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: const Color(0xFF4AA69B),
-                        foregroundColor: const Color(0xFFFFFFFF),
-                        elevation: 0,
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(10),
-                        ),
-                        padding: const EdgeInsets.symmetric(vertical: 10),
-                      ),
-                      icon: const Icon(Icons.forum, size: 18),
-                      label: const Text(
-                        'Forum',
-                        style: TextStyle(
-                          fontFamily: 'Nunito Sans',
-                          fontWeight: FontWeight.w600,
-                          fontSize: 13,
-                        ),
-                      ),
-                    ),
-                  ),
-              ],
-            ),
         ],
       ),
     );
   }
 
-  Widget _teamItem(String name, String code, bool isHome) {
-    return Column(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        Container(
-          width: 56,
-          height: 56,
-          decoration: BoxDecoration(
-            shape: BoxShape.circle,
-            border: Border.all(
-              color: const Color(0xFF4AA69B).withOpacity(0.3),
-              width: 2,
-            ),
-            boxShadow: [
-              BoxShadow(
-                color: const Color(0xFF4AA69B).withOpacity(0.2),
-                blurRadius: 8,
-                offset: const Offset(0, 2),
-              ),
-            ],
-          ),
-          child: ClipOval(
-            child: Image.network(
-              "https://flagcdn.com/w80/${code.toLowerCase()}.png",
-              width: 56,
-              height: 56,
-              fit: BoxFit.cover,
-              errorBuilder: (context, error, stackTrace) {
-                return Container(
-                  color: const Color(0xFFE8F6F4),
-                  child: const Icon(
-                    Icons.flag,
-                    color: Color(0xFF4AA69B),
-                    size: 28,
-                  ),
-                );
-              },
-            ),
-          ),
+  Widget _buildStatusBadge(String status) {
+    Color bgColor;
+    Color textColor;
+    String text = status.toUpperCase();
+
+    switch (status.toLowerCase()) {
+      case 'live':
+        bgColor = Colors.red.shade50;
+        textColor = Colors.red.shade700;
+        text = "● LIVE";
+        break;
+      case 'finished':
+        bgColor = Colors.green.shade50;
+        textColor = Colors.green.shade700;
+        text = "FULL TIME";
+        break;
+      case 'upcoming':
+        bgColor = Colors.yellow.shade50;
+        textColor = Colors.yellow.shade700;
+        break;
+      default:
+        bgColor = Colors.blueGrey.shade100;
+        textColor = Colors.blueGrey.shade600;
+    }
+
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+      decoration: BoxDecoration(
+        color: bgColor,
+        borderRadius: BorderRadius.circular(20),
+      ),
+      child: Text(
+        text,
+        style: TextStyle(
+          color: textColor,
+          fontSize: 10,
+          fontWeight: FontWeight.bold,
+          letterSpacing: 0.5,
         ),
-        const SizedBox(height: 8),
-        SizedBox(
-          width: 100,
-          child: Text(
-            name,
-            style: const TextStyle(
-              fontFamily: 'Nunito Sans',
-              fontSize: 13,
-              fontWeight: FontWeight.w700,
-              color: Color(0xFF2C5F5A),
-            ),
-            textAlign: TextAlign.center,
-            maxLines: 2,
-            overflow: TextOverflow.ellipsis,
-          ),
-        ),
-      ],
+      ),
     );
   }
 }

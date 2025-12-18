@@ -53,7 +53,6 @@ const List<Map<String, String>> _countryChoices = [
   {'code': 'in', 'name': 'India'},
 ];
 
-
 class AddMatchPage extends StatefulWidget {
   const AddMatchPage({super.key});
 
@@ -63,6 +62,12 @@ class AddMatchPage extends StatefulWidget {
 
 class _AddMatchPageState extends State<AddMatchPage> {
   final _formKey = GlobalKey<FormState>();
+  
+  // Warna Tema
+  final Color primaryColor = const Color(0xFF4AA69B);
+  final Color scaffoldBgColor = const Color(0xFFE8F6F4);
+  final Color darkTextColor = const Color(0xFF2C5F5A);
+
   String _homeTeamCode = _countryChoices.first['code']!; 
   String _awayTeamCode = _countryChoices.first['code']!; 
   int _homeScore = 0;
@@ -81,19 +86,64 @@ class _AddMatchPageState extends State<AddMatchPage> {
     super.dispose();
   }
 
-  Future<void> _selectDate(BuildContext context) async {
-    final DateTime? picked = await showDatePicker(
+  Future<void> _selectDateTime(BuildContext context) async {
+    // 1. Pick Date
+    final DateTime? pickedDate = await showDatePicker(
       context: context,
       initialDate: _matchDate ?? DateTime.now(),
       firstDate: DateTime(2000),
       lastDate: DateTime(2101),
+      builder: (context, child) {
+        return Theme(
+          data: Theme.of(context).copyWith(
+            colorScheme: ColorScheme.light(
+              primary: primaryColor,
+              onPrimary: Colors.white,
+              onSurface: darkTextColor,
+            ),
+          ),
+          child: child!,
+        );
+      },
     );
-    if (picked != null && picked != _matchDate) {
-      setState(() {
-        _matchDate = picked;
-        _dateController.text = DateFormat('yyyy-MM-dd').format(picked);
-      });
-    }
+
+    if (pickedDate == null) return;
+
+    // 2. Pick Time 
+    if (!mounted) return;
+    final TimeOfDay? pickedTime = await showTimePicker(
+      context: context,
+      initialTime: TimeOfDay.fromDateTime(_matchDate ?? DateTime.now()),
+      builder: (context, child) {
+        return Theme(
+          data: Theme.of(context).copyWith(
+            colorScheme: ColorScheme.light(
+              primary: primaryColor,
+              onPrimary: Colors.white,
+              onSurface: darkTextColor,
+            ),
+          ),
+          child: child!,
+        );
+      },
+    );
+
+    if (pickedTime == null) return;
+
+    // 3. Gabungkan Date & Time
+    final DateTime finalDateTime = DateTime(
+      pickedDate.year,
+      pickedDate.month,
+      pickedDate.day,
+      pickedTime.hour,
+      pickedTime.minute,
+    );
+
+    setState(() {
+      _matchDate = finalDateTime;
+      // Format lengkap dengan Jam
+      _dateController.text = DateFormat('yyyy-MM-dd HH:mm').format(finalDateTime);
+    });
   }
 
   void _submitForm() async {
@@ -102,7 +152,7 @@ class _AddMatchPageState extends State<AddMatchPage> {
 
       if (_matchDate == null) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Tolong pilih tanggal pertandingan!')),
+          const SnackBar(content: Text('Tolong pilih tanggal dan jam pertandingan!')),
         );
         return;
       }
@@ -114,7 +164,7 @@ class _AddMatchPageState extends State<AddMatchPage> {
         "away_team_code": _awayTeamCode.toLowerCase(),
         "home_score": _homeScore,
         "away_score": _awayScore,
-        "match_date": DateFormat('yyyy-MM-dd').format(_matchDate!),
+        "match_date": DateFormat('yyyy-MM-dd HH:mm').format(_matchDate!), 
         "stadium": _stadium,
         "round": _round,
         "group": _group,
@@ -127,160 +177,276 @@ class _AddMatchPageState extends State<AddMatchPage> {
         if (success) {
           if (!mounted) return;
           ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('Match berhasil ditambahkan!')),
+            SnackBar(
+              content: const Text(
+                'Match berhasil ditambahkan!',
+                style: TextStyle(fontFamily: 'Nunito Sans'),
+              ),
+              backgroundColor: primaryColor,
+            ),
           );
           Navigator.pop(context, true); 
         }
       } catch (e) {
         if (!mounted) return;
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Gagal menambahkan match: ${e.toString()}')),
+          SnackBar(
+            content: Text(
+              'Gagal menambahkan match: ${e.toString()}',
+              style: const TextStyle(fontFamily: 'Nunito Sans'),
+            ),
+            backgroundColor: const Color(0xFFEF4444),
+          ),
         );
       }
     }
   }
 
+  // Widget Helper untuk styling Input
+  InputDecoration _buildInputDecoration(String label, {IconData? icon}) {
+    return InputDecoration(
+      labelText: label,
+      labelStyle: const TextStyle(fontFamily: 'Nunito Sans', color: Color(0xFF6B8E8A)),
+      prefixIcon: icon != null ? Icon(icon, color: primaryColor) : null,
+      border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+      enabledBorder: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(12),
+        borderSide: BorderSide(color: primaryColor.withOpacity(0.3)),
+      ),
+      focusedBorder: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(12),
+        borderSide: BorderSide(color: primaryColor, width: 2),
+      ),
+      filled: true,
+      fillColor: Colors.white,
+      contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: scaffoldBgColor,
       appBar: AppBar(
-        title: const Text('Tambah Match Baru'),
+        title: const Text(
+          'Tambah Match Baru',
+          style: TextStyle(
+            fontWeight: FontWeight.bold, 
+            color: Colors.white,
+            fontFamily: 'Nunito Sans',
+          ),
+        ),
+        centerTitle: true,
+        backgroundColor: primaryColor,
+        iconTheme: const IconThemeData(color: Colors.white),
+        elevation: 2,
       ),
       body: SingleChildScrollView(
-        padding: const EdgeInsets.all(16.0),
+        padding: const EdgeInsets.all(20.0),
         child: Form(
           key: _formKey,
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: <Widget>[
-              // Kolom Pilihan Tim Home (DropdownButtonFormField)
-              DropdownButtonFormField<String>(
-                decoration: const InputDecoration(labelText: 'Home Team'),
-                value: _homeTeamCode,
-                items: _countryChoices
-                    .map<DropdownMenuItem<String>>((Map<String, String> item) {
-                  return DropdownMenuItem<String>(
-                    value: item['code'], 
-                    child: Text(item['name']!), 
-                  );
-                }).toList(),
-                onChanged: (String? newValue) {
-                  setState(() {
-                    _homeTeamCode = newValue!;
-                  });
-                },
-                onSaved: (value) => _homeTeamCode = value!,
-                validator: (value) => value == null ? 'Wajib diisi' : null,
-              ),
-              const SizedBox(height: 12),
-              
-              // Kolom Pilihan Tim Away (DropdownButtonFormField)
-              DropdownButtonFormField<String>(
-                decoration: const InputDecoration(labelText: 'Away Team'),
-                value: _awayTeamCode,
-                items: _countryChoices
-                    .map<DropdownMenuItem<String>>((Map<String, String> item) {
-                  return DropdownMenuItem<String>(
-                    value: item['code'],
-                    child: Text(item['name']!),
-                  );
-                }).toList(),
-                onChanged: (String? newValue) {
-                  setState(() {
-                    _awayTeamCode = newValue!;
-                  });
-                },
-                onSaved: (value) => _awayTeamCode = value!,
-                validator: (value) => value == null ? 'Wajib diisi' : null,
-              ),
-              const SizedBox(height: 12),
-
-              // Kolom Skor
-              Row(
-                children: [
-                  Expanded(child: TextFormField(
-                    decoration: const InputDecoration(labelText: 'Home Score'),
-                    keyboardType: TextInputType.number,
-                    onSaved: (value) => _homeScore = int.tryParse(value!) ?? 0,
-                    validator: (value) => value!.isEmpty || int.tryParse(value) == null ? 'Angka' : null,
-                  )),
-                  const SizedBox(width: 8),
-                  Expanded(child: TextFormField(
-                    decoration: const InputDecoration(labelText: 'Away Score'),
-                    keyboardType: TextInputType.number,
-                    onSaved: (value) => _awayScore = int.tryParse(value!) ?? 0,
-                    validator: (value) => value!.isEmpty || int.tryParse(value) == null ? 'Angka' : null,
-                  )),
-                ],
-              ),
-              
-              const SizedBox(height: 12),
-              // Match Date
-              TextFormField(
-                controller: _dateController,
-                readOnly: true,
-                decoration: InputDecoration(
-                  labelText: 'Match Date',
-                  suffixIcon: IconButton(
-                    icon: const Icon(Icons.calendar_today),
-                    onPressed: () => _selectDate(context),
+              // Section Teams
+              Card(
+                elevation: 2,
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                color: Colors.white,
+                child: Padding(
+                  padding: const EdgeInsets.all(16),
+                  child: Column(
+                    children: [
+                      Text(
+                        "Informasi Tim", 
+                        style: TextStyle(
+                          fontWeight: FontWeight.bold, 
+                          fontSize: 16,
+                          fontFamily: 'Nunito Sans',
+                          color: darkTextColor,
+                        )
+                      ),
+                      const SizedBox(height: 16),
+                      DropdownButtonFormField<String>(
+                        decoration: _buildInputDecoration('Home Team', icon: Icons.flag),
+                        value: _homeTeamCode,
+                        items: _countryChoices.map<DropdownMenuItem<String>>((Map<String, String> item) {
+                          return DropdownMenuItem<String>(
+                            value: item['code'], 
+                            child: Text(item['name']!, style: const TextStyle(fontFamily: 'Nunito Sans')), 
+                          );
+                        }).toList(),
+                        onChanged: (newValue) => setState(() => _homeTeamCode = newValue!),
+                        onSaved: (value) => _homeTeamCode = value!,
+                        validator: (value) => value == null ? 'Wajib diisi' : null,
+                      ),
+                      const SizedBox(height: 16),
+                      DropdownButtonFormField<String>(
+                        decoration: _buildInputDecoration('Away Team', icon: Icons.outlined_flag),
+                        value: _awayTeamCode,
+                        items: _countryChoices.map<DropdownMenuItem<String>>((Map<String, String> item) {
+                          return DropdownMenuItem<String>(
+                            value: item['code'],
+                            child: Text(item['name']!, style: const TextStyle(fontFamily: 'Nunito Sans')),
+                          );
+                        }).toList(),
+                        onChanged: (newValue) => setState(() => _awayTeamCode = newValue!),
+                        onSaved: (value) => _awayTeamCode = value!,
+                        validator: (value) => value == null ? 'Wajib diisi' : null,
+                      ),
+                    ],
                   ),
                 ),
-                validator: (value) => _matchDate == null ? 'Tanggal wajib diisi' : null,
-              ),
-              
-              // Stadium
-              TextFormField(
-                decoration: const InputDecoration(labelText: 'Stadium'),
-                onSaved: (value) => _stadium = value!,
-                validator: (value) => value!.isEmpty ? 'Wajib diisi' : null,
-              ),
-
-              // Round dan Group
-              Row(
-                children: [
-                  Expanded(child: TextFormField(
-                    initialValue: _round.toString(),
-                    decoration: const InputDecoration(labelText: 'Round'),
-                    keyboardType: TextInputType.number,
-                    onSaved: (value) => _round = int.tryParse(value!) ?? 1,
-                    validator: (value) => value!.isEmpty || int.tryParse(value) == null ? 'Angka' : null,
-                  )),
-                  const SizedBox(width: 8),
-                  Expanded(child: TextFormField(
-                    decoration: const InputDecoration(labelText: 'Group (e.g. Group A)'),
-                    onSaved: (value) => _group = value!,
-                    validator: (value) => value!.isEmpty ? 'Wajib diisi' : null,
-                  )),
-                ],
-              ),
-
-              // Status Dropdown 
-              DropdownButtonFormField<String>(
-                decoration: const InputDecoration(labelText: 'Status'),
-                value: _status,
-                items: <String>['upcoming', 'live', 'finished']
-                    .map<DropdownMenuItem<String>>((String value) {
-                  String displayText = value[0].toUpperCase() + value.substring(1); 
-                  return DropdownMenuItem<String>(
-                    value: value, 
-                    child: Text(displayText), 
-                  );
-                }).toList(),
-                onChanged: (String? newValue) {
-                  setState(() {
-                    _status = newValue!;
-                  });
-                },
-                onSaved: (value) => _status = value!,
               ),
               const SizedBox(height: 20),
+
+              // Section Score & Status
+              Card(
+                elevation: 2,
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                color: Colors.white,
+                child: Padding(
+                  padding: const EdgeInsets.all(16),
+                  child: Column(
+                    children: [
+                      Text(
+                        "Detail Skor", 
+                        style: TextStyle(
+                          fontWeight: FontWeight.bold, 
+                          fontSize: 16,
+                          fontFamily: 'Nunito Sans',
+                          color: darkTextColor,
+                        )
+                      ),
+                      const SizedBox(height: 16),
+                      Row(
+                        children: [
+                          Expanded(
+                            child: TextFormField(
+                              decoration: _buildInputDecoration('Home Score'),
+                              keyboardType: TextInputType.number,
+                              onSaved: (value) => _homeScore = int.tryParse(value!) ?? 0,
+                              validator: (value) => value!.isEmpty ? 'Isi 0 jika belum' : null,
+                            ),
+                          ),
+                          const SizedBox(width: 12),
+                          Expanded(
+                            child: TextFormField(
+                              decoration: _buildInputDecoration('Away Score'),
+                              keyboardType: TextInputType.number,
+                              onSaved: (value) => _awayScore = int.tryParse(value!) ?? 0,
+                              validator: (value) => value!.isEmpty ? 'Isi 0 jika belum' : null,
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 16),
+                      DropdownButtonFormField<String>(
+                        decoration: _buildInputDecoration('Status', icon: Icons.info_outline),
+                        value: _status,
+                        items: <String>['upcoming', 'live', 'finished'].map((String value) {
+                          return DropdownMenuItem<String>(
+                            value: value, 
+                            child: Text(value.toUpperCase(), style: const TextStyle(fontFamily: 'Nunito Sans')), 
+                          );
+                        }).toList(),
+                        onChanged: (newValue) => setState(() => _status = newValue!),
+                        onSaved: (value) => _status = value!,
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+              const SizedBox(height: 20),
+
+              // Section Match Details
+              Card(
+                elevation: 2,
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                color: Colors.white,
+                child: Padding(
+                  padding: const EdgeInsets.all(16),
+                  child: Column(
+                    children: [
+                      Text(
+                        "Detail Pertandingan", 
+                        style: TextStyle(
+                          fontWeight: FontWeight.bold, 
+                          fontSize: 16,
+                          fontFamily: 'Nunito Sans',
+                          color: darkTextColor,
+                        )
+                      ),
+                      const SizedBox(height: 16),
+                      // Input Tanggal dengan Jam
+                      TextFormField(
+                        controller: _dateController,
+                        readOnly: true,
+                        decoration: _buildInputDecoration('Waktu Kick-off', icon: Icons.calendar_month).copyWith(
+                          suffixIcon: IconButton(
+                            icon: Icon(Icons.access_time_filled, color: darkTextColor),
+                            onPressed: () => _selectDateTime(context),
+                          ),
+                        ),
+                        onTap: () => _selectDateTime(context),
+                        validator: (value) => _matchDate == null ? 'Waktu wajib diisi' : null,
+                      ),
+                      const SizedBox(height: 16),
+                      TextFormField(
+                        decoration: _buildInputDecoration('Stadium', icon: Icons.stadium),
+                        onSaved: (value) => _stadium = value!,
+                        validator: (value) => value!.isEmpty ? 'Wajib diisi' : null,
+                      ),
+                      const SizedBox(height: 16),
+                      Row(
+                        children: [
+                          Expanded(
+                            child: TextFormField(
+                              initialValue: _round.toString(),
+                              decoration: _buildInputDecoration('Round'),
+                              keyboardType: TextInputType.number,
+                              onSaved: (value) => _round = int.tryParse(value!) ?? 1,
+                            ),
+                          ),
+                          const SizedBox(width: 12),
+                          Expanded(
+                            child: TextFormField(
+                              decoration: _buildInputDecoration('Group'),
+                              onSaved: (value) => _group = value!,
+                              validator: (value) => value!.isEmpty ? 'Wajib diisi' : null,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+              const SizedBox(height: 24),
               
               // Submit Button
-              ElevatedButton(
+              ElevatedButton.icon(
                 onPressed: _submitForm,
-                child: const Text('Tambah Match'),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: primaryColor,
+                  foregroundColor: Colors.white,
+                  padding: const EdgeInsets.symmetric(vertical: 16),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  elevation: 4,
+                ),
+                icon: const Icon(Icons.save_rounded),
+                label: const Text(
+                  'TAMBAH MATCH',
+                  style: TextStyle(
+                    fontSize: 16, 
+                    fontWeight: FontWeight.bold,
+                    fontFamily: 'Nunito Sans',
+                  ),
+                ),
               ),
+              const SizedBox(height: 30),
             ],
           ),
         ),
