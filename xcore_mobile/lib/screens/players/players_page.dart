@@ -1,5 +1,8 @@
 import 'package:flutter/material.dart';
 import 'player_service.dart';
+import 'player_detail_service.dart';
+import 'player_detail_page.dart';
+import 'add_player_page.dart';
 import '../../models/player_entry.dart';
 
 class PlayersPage extends StatefulWidget {
@@ -16,11 +19,33 @@ class _PlayersPageState extends State<PlayersPage> {
   String _error = '';
   bool _fabOpen = false;
   String _searchQuery = '';
+  bool _isAdmin = false;
+  bool _isLoading = true;
 
   @override
   void initState() {
     super.initState();
     _loadPlayers();
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    _checkAdminStatus();
+  }
+
+  Future<void> _checkAdminStatus() async {
+    try {
+      final admin_status = await PlayerService.fetchAdminStatus(context);
+      setState(() {
+        _isAdmin = admin_status;
+      });
+    } catch (e) {
+      setState(() {
+        _error = e.toString();
+        _isLoading = false;
+      });
+    }
   }
 
   Future<void> _loadPlayers() async {
@@ -146,14 +171,20 @@ class _PlayersPageState extends State<PlayersPage> {
   Widget build(BuildContext context) {
     if (_loading) {
       return Scaffold(
-        appBar: AppBar(title: const Text("Players")),
+        appBar: AppBar(
+          title: const Text("Players"),
+          automaticallyImplyLeading: false,
+        ),
         body: const Center(child: CircularProgressIndicator()),
       );
     }
 
     if (_error.isNotEmpty) {
       return Scaffold(
-        appBar: AppBar(title: const Text("Players")),
+        appBar: AppBar(
+          title: const Text("Players"),
+          automaticallyImplyLeading: false,
+        ),
         body: Center(
           child: Text(_error, style: const TextStyle(color: Colors.red)),
         ),
@@ -166,6 +197,7 @@ class _PlayersPageState extends State<PlayersPage> {
       appBar: AppBar(
         title: const Text("Players"),
         backgroundColor: const Color(0xFF1e423b),
+        automaticallyImplyLeading: false,
       ),
       body: Column(
         children: [
@@ -238,8 +270,20 @@ class _PlayersPageState extends State<PlayersPage> {
                                       subtitle: Text(
                                         "${player.asal} · Age ${player.umur}",
                                       ),
-                                      onTap: () {
-                                        // TODO navigate to player detail
+                                      onTap: () async {
+                                        final refreshNeeded =
+                                            await Navigator.push(
+                                              context,
+                                              MaterialPageRoute(
+                                                builder: (_) =>
+                                                    PlayerDetailPage(
+                                                      playerId: player.id,
+                                                    ),
+                                              ),
+                                            );
+                                        if (refreshNeeded == true) {
+                                          _loadPlayers();
+                                        }
                                       },
                                     );
                                   }).toList(),
@@ -253,45 +297,53 @@ class _PlayersPageState extends State<PlayersPage> {
       ),
 
       // FLOATING EXPANDING BUTTONS
-      floatingActionButton: Column(
-        mainAxisSize: MainAxisSize.min,
-        crossAxisAlignment: CrossAxisAlignment.end,
-        children: [
-          if (_fabOpen) ...[
-            FloatingActionButton.extended(
-              heroTag: "addPlayerFAB",
-              backgroundColor: Colors.blue,
-              label: const Text("Add Player"),
-              icon: const Icon(Icons.person_add),
-              onPressed: () {
-                // TODO: navigate to add player page
-              },
-            ),
-            const SizedBox(height: 12),
-
-            FloatingActionButton.extended(
-              heroTag: "uploadPlayerFAB",
-              backgroundColor: Colors.green,
-              label: const Text("Upload ZIP"),
-              icon: const Icon(Icons.upload_file),
-              onPressed: () => _uploadPlayersZip(context),
-            ),
-            const SizedBox(height: 12),
-          ],
-
-          FloatingActionButton(
-            heroTag: "toggleFAB",
-            backgroundColor: const Color(0xFF1e423b),
-            child: Icon(
-              _fabOpen ? Icons.close : Icons.add,
-              color: Colors.white,
-            ),
-            onPressed: () {
-              setState(() => _fabOpen = !_fabOpen);
-            },
-          ),
-        ],
-      ),
+      floatingActionButton: _isAdmin
+          ? Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.end,
+              children: [
+                if (_fabOpen) ...[
+                  FloatingActionButton.extended(
+                    heroTag: "addPlayerFAB",
+                    backgroundColor: Colors.blue,
+                    label: const Text("Add Player"),
+                    icon: const Icon(Icons.person_add),
+                    onPressed: () async {
+                      final refreshNeeded = await Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (_) => const AddPlayerPage(),
+                        ),
+                      );
+                      if (refreshNeeded == true) {
+                        _loadPlayers();
+                      }
+                    },
+                  ),
+                  const SizedBox(height: 12),
+                  FloatingActionButton.extended(
+                    heroTag: "uploadPlayerFAB",
+                    backgroundColor: Colors.green,
+                    label: const Text("Upload ZIP"),
+                    icon: const Icon(Icons.upload_file),
+                    onPressed: () => _uploadPlayersZip(context),
+                  ),
+                  const SizedBox(height: 12),
+                ],
+                FloatingActionButton(
+                  heroTag: "toggleFAB",
+                  backgroundColor: const Color(0xFF1e423b),
+                  child: Icon(
+                    _fabOpen ? Icons.close : Icons.add,
+                    color: Colors.white,
+                  ),
+                  onPressed: () {
+                    setState(() => _fabOpen = !_fabOpen);
+                  },
+                ),
+              ],
+            )
+          : null,
     );
   }
 }

@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:pbp_django_auth/pbp_django_auth.dart';
 import 'package:provider/provider.dart';
 import 'package:xcore_mobile/screens/register.dart';
+import 'package:xcore_mobile/services/auth_service.dart';
 
 class LoginPage extends StatefulWidget {
   const LoginPage({super.key});
@@ -63,15 +64,11 @@ class _LoginPageState extends State<LoginPage> {
                   // Username Field
                   TextField(
                     controller: _usernameController,
-                    style: const TextStyle(
-                      fontFamily: 'Nunito Sans',
-                    ),
+                    style: const TextStyle(fontFamily: 'Nunito Sans'),
                     decoration: InputDecoration(
                       labelText: 'Username',
                       hintText: 'Enter your username',
-                      labelStyle: const TextStyle(
-                        fontFamily: 'Nunito Sans',
-                      ),
+                      labelStyle: const TextStyle(fontFamily: 'Nunito Sans'),
                       prefixIcon: const Icon(
                         Icons.person_outline,
                         color: Color(0xFF2C5F5A),
@@ -105,15 +102,11 @@ class _LoginPageState extends State<LoginPage> {
                   TextField(
                     controller: _passwordController,
                     obscureText: true,
-                    style: const TextStyle(
-                      fontFamily: 'Nunito Sans',
-                    ),
+                    style: const TextStyle(fontFamily: 'Nunito Sans'),
                     decoration: InputDecoration(
                       labelText: 'Password',
                       hintText: 'Enter your password',
-                      labelStyle: const TextStyle(
-                        fontFamily: 'Nunito Sans',
-                      ),
+                      labelStyle: const TextStyle(fontFamily: 'Nunito Sans'),
                       prefixIcon: const Icon(
                         Icons.lock_outline,
                         color: Color(0xFF2C5F5A),
@@ -153,20 +146,30 @@ class _LoginPageState extends State<LoginPage> {
                         String password = _passwordController.text.trim();
                         final response = await request.login(
                           "http://localhost:8000/auth/login/",
-                          {
-                            'username': username,
-                            'password': password,
-                          },
+                          {'username': username, 'password': password},
                         );
                         if (request.loggedIn && response["status"] == true) {
                           String message = response["message"];
                           String uname = response["username"];
 
+                          // Save admin status and user data
+                          await AuthService.saveUserData(
+                            response["token"] ?? "",
+                            {
+                              "username": uname,
+                              "is_admin": response["is_admin"] ?? false,
+                            },
+                          );
+                          debugPrint(
+                            "User data saved. is_admin: ${response["is_admin"] ?? false}",
+                          );
+
                           if (context.mounted) {
                             Navigator.pushReplacement(
                               context,
                               MaterialPageRoute(
-                                  builder: (context) => const MainNavigation()),
+                                builder: (context) => const MainNavigation(),
+                              ),
                             );
 
                             ScaffoldMessenger.of(context)

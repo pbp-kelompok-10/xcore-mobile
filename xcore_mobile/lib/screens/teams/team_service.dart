@@ -15,18 +15,12 @@ class TeamService {
   static Future<List<Team>> getTeams() async {
     try {
       final url = Uri.parse("$baseUrl/teams/");
-      debugPrint("🔹 GET $url");
       final response = await http.get(url);
-
-      debugPrint("📊 Response status: ${response.statusCode}");
-      debugPrint("📝 Response body: ${response.body}");
-
       if (response.statusCode != 200) {
         throw Exception("Failed to fetch teams: ${response.statusCode}");
       }
 
       final body = jsonDecode(response.body);
-      debugPrint("✅ Decoded body: $body");
 
       // API returns: {"teams": [{"id": 1, "code": "ARG", "name": "Argentina"}, ...]}
       if (body is! Map || body["teams"] == null) {
@@ -34,11 +28,9 @@ class TeamService {
       }
 
       final teamsList = (body["teams"] as List).cast<Map<String, dynamic>>();
-      debugPrint("🎯 Found ${teamsList.length} teams");
 
       return teamsList.map((team) => Team.fromJson(team)).toList();
     } catch (e) {
-      debugPrint("❌ Error in getTeams: $e");
       rethrow;
     }
   }

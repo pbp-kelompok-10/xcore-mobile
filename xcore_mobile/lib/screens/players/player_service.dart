@@ -3,12 +3,22 @@ import 'dart:typed_data';
 
 import 'package:http/http.dart' as http;
 import 'package:file_picker/file_picker.dart';
-
+import 'package:pbp_django_auth/pbp_django_auth.dart';
 import '../../models/player_entry.dart';
+import 'players_page.dart';
+
+import 'package:flutter/cupertino.dart';
+import 'package:provider/provider.dart';
 
 class PlayerService {
   // 🔥 Change based on your server
   static const String baseUrl = "http://localhost:8000/lineup/api";
+  static bool isAdmin = false;
+
+  // GETTER for isAdmin
+  static bool getIsAdmin() {
+    return isAdmin;
+  }
 
   // ------------------------------------------------------------
   // GET ALL PLAYERS
@@ -26,6 +36,27 @@ class PlayerService {
     return (jsonBody["players"] as List)
         .map((p) => Player.fromJson(p))
         .toList();
+  }
+
+  static Future<bool> fetchAdminStatus(BuildContext context) async {
+    final request = context.watch<CookieRequest>();
+
+    try {
+      final response = await request.get(
+        'http://localhost:8000/auth/is-admin/',
+      );
+
+      // Periksa apakah user terautentikasi DAN apakah admin
+      if (response['status'] == true) {
+        isAdmin = response['is_admin'];
+        return response['is_admin'];
+      } else {
+        // User tidak terautentikasi
+        return false;
+      }
+    } catch (e) {
+      throw Exception('Failed to get admin status : $e');
+    }
   }
 
   // ------------------------------------------------------------

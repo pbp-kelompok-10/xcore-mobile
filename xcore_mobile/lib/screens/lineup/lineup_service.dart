@@ -8,15 +8,14 @@ import 'package:xcore_mobile/models/lineup_entry.dart';
 import 'package:xcore_mobile/models/scoreboard_entry.dart';
 
 class LineupService {
-  static const String baseUrl = 'http://localhost:8000'; // Ganti dengan URL Django Anda
+  static const String baseUrl =
+      'http://localhost:8000'; // Ganti dengan URL Django Anda
 
   static Future<bool> fetchAdminStatus(BuildContext context) async {
     final request = context.watch<CookieRequest>();
 
     try {
-      final response = await request.get(
-        '$baseUrl/auth/is-admin/',
-      );
+      final response = await request.get('http://localhost:8000/auth/is-admin/');
 
       // Periksa apakah user terautentikasi DAN apakah admin
       if (response['status'] == true) {
@@ -33,7 +32,9 @@ class LineupService {
   static Future<MatchLineupResponse> fetchLineup(String matchId) async {
     try {
       final response = await http.get(
-        Uri.parse('$baseUrl/lineup/flutter/$matchId/'), // Sesuaikan dengan URL Django
+        Uri.parse(
+          '$baseUrl/lineup/flutter/$matchId/',
+        ), // Sesuaikan dengan URL Django
         headers: {'Content-Type': 'application/json'},
       );
 
@@ -59,10 +60,7 @@ class LineupService {
       final response = await http.post(
         Uri.parse('$baseUrl/lineup/flutter/create/$matchId/'),
         headers: {'Content-Type': 'application/json'},
-        body: json.encode({
-          'team_code': teamCode,
-          'players': playerIds,
-        }),
+        body: json.encode({'team_code': teamCode, 'players': playerIds}),
       );
 
       return response.statusCode == 200 || response.statusCode == 201;
@@ -79,9 +77,7 @@ class LineupService {
       final response = await http.put(
         Uri.parse('$baseUrl/lineup/flutter/update/$lineupId/'),
         headers: {'Content-Type': 'application/json'},
-        body: json.encode({
-          'players': playerIds,
-        }),
+        body: json.encode({'players': playerIds}),
       );
 
       return response.statusCode == 200;

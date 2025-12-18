@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:pbp_django_auth/pbp_django_auth.dart';
+import 'package:xcore_mobile/screens/landing_page.dart';
 import 'package:xcore_mobile/screens/login.dart';
+import 'package:xcore_mobile/services/auth_service.dart';
 
 class ProfilePage extends StatelessWidget {
   const ProfilePage({super.key});
@@ -25,10 +27,7 @@ class ProfilePage extends StatelessWidget {
                 Navigator.of(context).pop();
                 _performLogout(context);
               },
-              child: const Text(
-                'Logout',
-                style: TextStyle(color: Colors.red),
-              ),
+              child: const Text('Logout', style: TextStyle(color: Colors.red)),
             ),
           ],
         );
@@ -39,29 +38,42 @@ class ProfilePage extends StatelessWidget {
   // --- FUNGSI LOGOUT DIPERBAIKI ---
   Future<void> _performLogout(BuildContext context) async {
     final request = context.read<CookieRequest>();
-    
+
     try {
       // Ganti URL sesuai device (10.0.2.2 untuk emulator Android)
       final response = await request.logout(
-        "http://10.0.2.2:8000/auth/logout/", 
+        "http://localhost:8000/auth/logout/",
       );
 
-      // Jika sukses, Provider akan otomatis mengubah state 'loggedIn' jadi false.
-      // UI akan rebuild sendiri karena kita pakai context.watch di build().
-      
-      if (context.mounted) {
-        String message = response['message'] ?? "Logout berhasil!";
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(message),
-            backgroundColor: const Color(0xFF4AA69B),
-          ),
-        );
-        // KITA TIDAK MELAKUKAN NAVIGASI APA-APA DISINI
-        // Biarkan halaman tetap di ProfilePage, tapi tampilannya akan berubah sendiri.
-      }
+      debugPrint("✅ Logout response: $response");
 
+      // Clear stored user data
+      await AuthService.clearUserData();
+      debugPrint("✅ User data cleared");
+
+      if (!context.mounted) return;
+
+      String message = response['message'] ?? "Logout berhasil!";
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(message),
+          backgroundColor: const Color(0xFF4AA69B),
+          duration: const Duration(seconds: 1),
+        ),
+      );
+
+      debugPrint("✅ Navigating to LandingPage...");
+
+      // Navigate immediately without delay - the logout() call should have already updated the state
+      if (context.mounted) {
+        Navigator.of(context).pushAndRemoveUntil(
+          MaterialPageRoute(builder: (context) => const LandingPage()),
+          (Route<dynamic> route) => false,
+        );
+        debugPrint("✅ Navigation completed");
+      }
     } catch (e) {
+      debugPrint("❌ Logout error: $e");
       if (context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
@@ -84,19 +96,19 @@ class ProfilePage extends StatelessWidget {
         title: const Text("Profile"),
         backgroundColor: const Color(0xFF4AA69B),
         foregroundColor: Colors.white,
-        
+
         // --- BAGIAN INI YANG PENTING ---
         // Set ke false agar tombol back/drawer TIDAK MUNCUL di halaman ini
-        automaticallyImplyLeading: false, 
+        automaticallyImplyLeading: false,
         // -------------------------------
       ),
       body: Center(
         child: Padding(
           padding: const EdgeInsets.all(24.0),
           // Logika Switch Tampilan
-          child: isLoggedIn 
+          child: isLoggedIn
               ? _buildLoggedInView(context, request) // Tampilan Profil User
-              : _buildLoggedOutView(context),        // Tampilan Tombol Login
+              : _buildLoggedOutView(context), // Tampilan Tombol Login
         ),
       ),
     );
@@ -161,11 +173,7 @@ class ProfilePage extends StatelessWidget {
     return Column(
       mainAxisAlignment: MainAxisAlignment.center,
       children: [
-        Icon(
-          Icons.person_off_outlined,
-          size: 100,
-          color: Colors.grey[400],
-        ),
+        Icon(Icons.person_off_outlined, size: 100, color: Colors.grey[400]),
         const SizedBox(height: 24),
         Text(
           'Anda Belum Login',
