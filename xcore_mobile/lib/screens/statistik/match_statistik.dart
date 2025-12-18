@@ -41,6 +41,15 @@ class _MatchStatisticsPageState extends State<MatchStatisticsPage> {
   String _error = '';
   bool _isAdmin = false;
 
+  // Warna dari PROD
+  static const Color primaryColor = Color(0xFF4AA69B);
+  static const Color scaffoldBgColor = Color(0xFFE8F6F4);
+  static const Color darkTextColor = Color(0xFF2C5F5A);
+  static const Color mutedTextColor = Color(0xFF6B8E8A);
+  static const Color accentColor = Color(0xFF34C6B8);
+  static const Color lightBgColor = Color(0xFFD1F0EB);
+  static const Color whiteColor = Colors.white;
+
   @override
   void initState() {
     super.initState();
@@ -151,18 +160,22 @@ class _MatchStatisticsPageState extends State<MatchStatisticsPage> {
     final confirmed = await showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        title: Text('Hapus Statistik'),
-        content: Text('Yakin ingin menghapus statistik pertandingan ini?'),
+        title: Text('Hapus Statistik', style: TextStyle(color: darkTextColor)),
+        content: Text('Yakin ingin menghapus statistik pertandingan ini?', style: TextStyle(color: mutedTextColor)),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context, false),
-            child: Text('Batal'),
+            child: Text('Batal', style: TextStyle(color: mutedTextColor)),
           ),
           TextButton(
             onPressed: () => Navigator.pop(context, true),
             child: Text('Hapus', style: TextStyle(color: Colors.red)),
           ),
         ],
+        backgroundColor: Colors.white,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(12),
+        ),
       ),
     );
 
@@ -173,7 +186,7 @@ class _MatchStatisticsPageState extends State<MatchStatisticsPage> {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
               content: Text('✅ Statistik berhasil dihapus'),
-              backgroundColor: Colors.green[700],
+              backgroundColor: primaryColor,
               duration: Duration(seconds: 2),
             )
           );
@@ -205,7 +218,7 @@ class _MatchStatisticsPageState extends State<MatchStatisticsPage> {
       ..showSnackBar(
         SnackBar(
           content: Text(message),
-          backgroundColor: Colors.green[600],
+          backgroundColor: primaryColor,
           duration: Duration(seconds: 2),
           behavior: SnackBarBehavior.floating,
           shape: RoundedRectangleBorder(
@@ -231,25 +244,32 @@ class _MatchStatisticsPageState extends State<MatchStatisticsPage> {
     return Container(
       padding: EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: Colors.green[50],
+        color: whiteColor,
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: Colors.green[100]!),
+        border: Border.all(color: primaryColor.withOpacity(0.2)),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.05),
+            blurRadius: 8,
+            offset: Offset(0, 2),
+          ),
+        ],
       ),
       child: Column(
         children: [
-          // Header "MATCH" (opsional, bisa dihapus juga kalo mau)
+          // Header "MATCH"
           Text(
-            'MATCH',
+            'MATCH STATISTICS',
             style: TextStyle(
-              fontSize: 12,
+              fontSize: 14,
               fontWeight: FontWeight.bold,
-              color: Colors.green[800],
-              letterSpacing: 1.0,
+              color: primaryColor,
+              letterSpacing: 0.5,
             ),
           ),
           SizedBox(height: 16),
           
-          // Team names dengan VS di tengah DAN BENDERA
+          // Team names dengan VS di tengah DAN BENDERA - DENGAN NAMA NEGARA
           Row(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
@@ -271,33 +291,53 @@ class _MatchStatisticsPageState extends State<MatchStatisticsPage> {
                       widget.homeTeam,
                       style: TextStyle(
                         fontSize: 14,
-                        fontWeight: FontWeight.bold,
-                        color: Colors.green[800],
+                        fontWeight: FontWeight.w600,
+                        color: darkTextColor,
                       ),
                       textAlign: TextAlign.center,
                       maxLines: 2,
                       overflow: TextOverflow.ellipsis,
                     ),
+                    SizedBox(height: 4),
+                    // Label HOME
+                    Container(
+                      padding: EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                      decoration: BoxDecoration(
+                        color: primaryColor.withOpacity(0.1),
+                        borderRadius: BorderRadius.circular(4),
+                      ),
+                      child: Text(
+                        'HOME',
+                        style: TextStyle(
+                          fontSize: 10,
+                          fontWeight: FontWeight.bold,
+                          color: primaryColor,
+                        ),
+                      ),
+                    ),
                   ],
                 ),
               ),
               
-              // VS di tengah TANPA SKOR
+              // VS di tengah
               Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 12.0),
                 child: Container(
-                  padding: EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                  width: 40,
+                  height: 40,
                   decoration: BoxDecoration(
-                    color: Colors.grey[100],
-                    borderRadius: BorderRadius.circular(20),
+                    color: accentColor.withOpacity(0.1),
+                    shape: BoxShape.circle,
+                    border: Border.all(color: accentColor.withOpacity(0.3), width: 2),
                   ),
-                  child: Text(
-                    'VS',
-                    style: TextStyle(
-                      fontSize: 16,
-                      fontWeight: FontWeight.bold,
-                      color: Colors.grey[700],
-                      fontStyle: FontStyle.italic,
+                  child: Center(
+                    child: Text(
+                      'VS',
+                      style: TextStyle(
+                        fontSize: 14,
+                        fontWeight: FontWeight.bold,
+                        color: darkTextColor,
+                      ),
                     ),
                   ),
                 ),
@@ -321,12 +361,29 @@ class _MatchStatisticsPageState extends State<MatchStatisticsPage> {
                       widget.awayTeam,
                       style: TextStyle(
                         fontSize: 14,
-                        fontWeight: FontWeight.bold,
-                        color: Colors.blue[800],
+                        fontWeight: FontWeight.w600,
+                        color: darkTextColor,
                       ),
                       textAlign: TextAlign.center,
                       maxLines: 2,
                       overflow: TextOverflow.ellipsis,
+                    ),
+                    SizedBox(height: 4),
+                    // Label AWAY
+                    Container(
+                      padding: EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                      decoration: BoxDecoration(
+                        color: accentColor.withOpacity(0.1),
+                        borderRadius: BorderRadius.circular(4),
+                      ),
+                      child: Text(
+                        'AWAY',
+                        style: TextStyle(
+                          fontSize: 10,
+                          fontWeight: FontWeight.bold,
+                          color: accentColor,
+                        ),
+                      ),
                     ),
                   ],
                 ),
@@ -334,17 +391,31 @@ class _MatchStatisticsPageState extends State<MatchStatisticsPage> {
             ],
           ),
           SizedBox(height: 12),
-          Divider(height: 1, color: Colors.green[200]),
+          Divider(height: 1, color: mutedTextColor.withOpacity(0.3)),
           SizedBox(height: 8),
-          // Hanya tampilkan Match ID saja
+          // Match ID
           Row(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              Text(
-                'Match ID: ${widget.matchId}',
-                style: TextStyle(
-                  fontSize: 12,
-                  color: Colors.grey[600],
+              Container(
+                padding: EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                decoration: BoxDecoration(
+                  color: primaryColor.withOpacity(0.05),
+                  borderRadius: BorderRadius.circular(6),
+                ),
+                child: Row(
+                  children: [
+                    Icon(Icons.fingerprint, size: 12, color: primaryColor),
+                    SizedBox(width: 4),
+                    Text(
+                      'Match ID: ${widget.matchId}',
+                      style: TextStyle(
+                        fontSize: 11,
+                        fontWeight: FontWeight.w500,
+                        color: primaryColor,
+                      ),
+                    ),
+                  ],
                 ),
               ),
             ],
@@ -369,7 +440,7 @@ class _MatchStatisticsPageState extends State<MatchStatisticsPage> {
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
                 CircularProgressIndicator(
-                  valueColor: AlwaysStoppedAnimation<Color>(Colors.green[700]!),
+                  valueColor: AlwaysStoppedAnimation<Color>(primaryColor),
                   strokeWidth: 2,
                 ),
                 SizedBox(height: 16),
@@ -378,7 +449,7 @@ class _MatchStatisticsPageState extends State<MatchStatisticsPage> {
                   style: TextStyle(
                     fontSize: 16,
                     fontWeight: FontWeight.w500,
-                    color: Colors.grey[600],
+                    color: mutedTextColor,
                   ),
                 ),
               ],
@@ -408,63 +479,80 @@ class _MatchStatisticsPageState extends State<MatchStatisticsPage> {
           
           SizedBox(height: 24),
           
-          // Error message
+          // Error message dalam KOTAK dengan LEBAR KONSISTEN
           Padding(
-            padding: EdgeInsets.all(24),
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Container(
-                  padding: EdgeInsets.all(16),
-                  decoration: BoxDecoration(
-                    color: Colors.red[50],
-                    shape: BoxShape.circle,
+            padding: EdgeInsets.symmetric(horizontal: 16),
+            child: Container(
+              padding: EdgeInsets.all(24),
+              decoration: BoxDecoration(
+                color: whiteColor,
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(color: Colors.red.withOpacity(0.2)),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withOpacity(0.05),
+                    blurRadius: 8,
+                    offset: Offset(0, 2),
                   ),
-                  child: Icon(Icons.error_outline, size: 48, color: Colors.red[400]),
-                ),
-                SizedBox(height: 20),
-                Text(
-                  'Failed to Load Statistics',
-                  style: TextStyle(
-                    fontSize: 20,
-                    fontWeight: FontWeight.bold,
-                    color: Colors.grey[800],
+                ],
+              ),
+              child: Column(
+                children: [
+                  Container(
+                    padding: EdgeInsets.all(16),
+                    decoration: BoxDecoration(
+                      color: Colors.red.withOpacity(0.1),
+                      shape: BoxShape.circle,
+                    ),
+                    child: Icon(Icons.error_outline, size: 40, color: Colors.red),
                   ),
-                ),
-                SizedBox(height: 8),
-                Text(
-                  _error,
-                  textAlign: TextAlign.center,
-                  style: TextStyle(
-                    fontSize: 14,
-                    color: Colors.grey[600],
+                  SizedBox(height: 20),
+                  Text(
+                    'Failed to Load Statistics',
+                    style: TextStyle(
+                      fontSize: 18,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.red,
+                    ),
                   ),
-                ),
-                SizedBox(height: 24),
-                ElevatedButton(
-                  onPressed: _loadStatistik,
-                  child: Text('Try Again'),
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.green[700],
-                    foregroundColor: Colors.white,
+                  SizedBox(height: 8),
+                  Text(
+                    _error,
+                    textAlign: TextAlign.center,
+                    style: TextStyle(
+                      fontSize: 14,
+                      color: mutedTextColor,
+                    ),
                   ),
-                ),
-                SizedBox(height: 12),
-                if (_isAdmin)
-                  ElevatedButton.icon(
-                    icon: Icon(Icons.add, size: 18),
-                    label: Text('Tambah Statistik'),
-                    onPressed: _addStatistik,
+                  SizedBox(height: 24),
+                  ElevatedButton(
+                    onPressed: _loadStatistik,
+                    child: Text('Try Again'),
                     style: ElevatedButton.styleFrom(
-                      backgroundColor: Colors.orange,
+                      backgroundColor: primaryColor,
                       foregroundColor: Colors.white,
-                      padding: EdgeInsets.symmetric(horizontal: 20, vertical: 12),
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(8),
                       ),
                     ),
                   ),
-              ],
+                  SizedBox(height: 12),
+                  if (_isAdmin)
+                    ElevatedButton.icon(
+                      icon: Icon(Icons.add, size: 18),
+                      label: Text('Tambah Statistik'),
+                      onPressed: _addStatistik,
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: accentColor,
+                        foregroundColor: Colors.white,
+                        padding: EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                      ),
+                    ),
+                ],
+              ),
             ),
           ),
         ],
@@ -491,54 +579,68 @@ class _MatchStatisticsPageState extends State<MatchStatisticsPage> {
           
           SizedBox(height: 24),
           
-          // Empty message
+          // Empty message dalam KOTAK dengan LEBAR KONSISTEN (sama dengan tabel statistik)
           Padding(
-            padding: EdgeInsets.all(24),
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Container(
-                  padding: EdgeInsets.all(16),
-                  decoration: BoxDecoration(
-                    color: Colors.green[50],
-                    shape: BoxShape.circle,
+            padding: EdgeInsets.symmetric(horizontal: 16),
+            child: Container(
+              padding: EdgeInsets.all(32),
+              decoration: BoxDecoration(
+                color: whiteColor,
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(color: primaryColor.withOpacity(0.2)),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withOpacity(0.05),
+                    blurRadius: 8,
+                    offset: Offset(0, 2),
                   ),
-                  child: Icon(Icons.analytics_outlined, size: 48, color: Colors.green[400]),
-                ),
-                SizedBox(height: 20),
-                Text(
-                  'No Statistics Available',
-                  style: TextStyle(
-                    fontSize: 20,
-                    fontWeight: FontWeight.bold,
-                    color: Colors.grey[800],
+                ],
+              ),
+              child: Column(
+                children: [
+                  Container(
+                    padding: EdgeInsets.all(16),
+                    decoration: BoxDecoration(
+                      color: primaryColor.withOpacity(0.1),
+                      shape: BoxShape.circle,
+                    ),
+                    child: Icon(Icons.analytics_outlined, size: 40, color: primaryColor),
                   ),
-                ),
-                SizedBox(height: 8),
-                Text(
-                  'Statistics will be available once\nthe match begins',
-                  textAlign: TextAlign.center,
-                  style: TextStyle(
-                    fontSize: 14,
-                    color: Colors.grey[600],
-                  ),
-                ),
-                SizedBox(height: 24),
-                if (_isAdmin)
-                  ElevatedButton.icon(
-                    icon: Icon(Icons.add, size: 18),
-                    label: Text('Tambah Statistik'),
-                    onPressed: _addStatistik,
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: Colors.orange,
-                      foregroundColor: Colors.white,
-                      padding: EdgeInsets.symmetric(horizontal: 20, vertical: 12),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(8),
-                      ),
+                  SizedBox(height: 20),
+                  Text(
+                    'No Statistics Available',
+                    style: TextStyle(
+                      fontSize: 18,
+                      fontWeight: FontWeight.bold,
+                      color: darkTextColor,
                     ),
                   ),
-              ],
+                  SizedBox(height: 8),
+                  Text(
+                    'Statistics will be available once\nthe match begins',
+                    textAlign: TextAlign.center,
+                    style: TextStyle(
+                      fontSize: 14,
+                      color: mutedTextColor,
+                    ),
+                  ),
+                  SizedBox(height: 24),
+                  if (_isAdmin)
+                    ElevatedButton.icon(
+                      icon: Icon(Icons.add, size: 18),
+                      label: Text('Tambah Statistik'),
+                      onPressed: _addStatistik,
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: accentColor,
+                        foregroundColor: Colors.white,
+                        padding: EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                      ),
+                    ),
+                ],
+              ),
             ),
           ),
         ],
@@ -550,12 +652,104 @@ class _MatchStatisticsPageState extends State<MatchStatisticsPage> {
     return _statistik != null;
   }
 
+  // Helper method untuk membuat statistik row dengan centering
+  Widget _buildStatistikRowWithCentering({
+    required String title,
+    required int homeValue,
+    required int awayValue,
+    required IconData icon,
+  }) {
+    return Container(
+      padding: EdgeInsets.symmetric(vertical: 14, horizontal: 16),
+      decoration: BoxDecoration(
+        border: Border(bottom: BorderSide(color: primaryColor.withOpacity(0.1))),
+      ),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          // Home value
+          Expanded(
+            flex: 2,
+            child: Center(
+              child: Container(
+                width: 40,
+                padding: EdgeInsets.symmetric(vertical: 6, horizontal: 8),
+                decoration: BoxDecoration(
+                  color: primaryColor.withOpacity(0.1),
+                  borderRadius: BorderRadius.circular(8),
+                  border: Border.all(color: primaryColor.withOpacity(0.3)),
+                ),
+                child: Text(
+                  homeValue.toString(),
+                  style: TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.bold,
+                    color: darkTextColor,
+                  ),
+                  textAlign: TextAlign.center,
+                ),
+              ),
+            ),
+          ),
+          
+          // Title dengan icon
+          Expanded(
+            flex: 3,
+            child: Center(
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Icon(icon, size: 16, color: primaryColor),
+                  SizedBox(width: 6),
+                  Text(
+                    title,
+                    style: TextStyle(
+                      fontSize: 14,
+                      fontWeight: FontWeight.w600,
+                      color: darkTextColor,
+                    ),
+                    textAlign: TextAlign.center,
+                  ),
+                ],
+              ),
+            ),
+          ),
+          
+          // Away value
+          Expanded(
+            flex: 2,
+            child: Center(
+              child: Container(
+                width: 40,
+                padding: EdgeInsets.symmetric(vertical: 6, horizontal: 8),
+                decoration: BoxDecoration(
+                  color: accentColor.withOpacity(0.1),
+                  borderRadius: BorderRadius.circular(8),
+                  border: Border.all(color: accentColor.withOpacity(0.3)),
+                ),
+                child: Text(
+                  awayValue.toString(),
+                  style: TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.bold,
+                    color: darkTextColor,
+                  ),
+                  textAlign: TextAlign.center,
+                ),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
   Widget _buildContent() {
     return SingleChildScrollView(
       physics: BouncingScrollPhysics(),
       child: Column(
         children: [
-          // Navigation Cards di ATAS Header Section (setelah menambahkan statistik)
+          // Navigation Cards di ATAS Header Section
           Padding(
             padding: EdgeInsets.symmetric(horizontal: 16, vertical: 16),
             child: _buildNavigationCards(),
@@ -564,140 +758,344 @@ class _MatchStatisticsPageState extends State<MatchStatisticsPage> {
           SizedBox(height: 8),
           
           // Header Section dengan skor (ketika sudah ada statistik)
-          HeaderSection(
-            stadium: _statistik!.stadium,
-            matchDate: _statistik!.matchDate,
-            homeTeam: widget.homeTeam,
-            awayTeam: widget.awayTeam,
-            homeTeamCode: widget.homeTeamCode,
-            awayTeamCode: widget.awayTeamCode,
-            homeScore: _statistik!.homeScore,
-            awayScore: _statistik!.awayScore,
-          ),
-          
-          SizedBox(height: 20),
-          
-          // Statistics Section
           Padding(
             padding: EdgeInsets.symmetric(horizontal: 16),
-            child: Card(
-              elevation: 4,
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(16),
+            child: HeaderSection(
+              stadium: _statistik!.stadium,
+              matchDate: _statistik!.matchDate,
+              homeTeam: widget.homeTeam,
+              awayTeam: widget.awayTeam,
+              homeTeamCode: widget.homeTeamCode,
+              awayTeamCode: widget.awayTeamCode,
+              homeScore: _statistik!.homeScore,
+              awayScore: _statistik!.awayScore,
+            ),
+          ),
+          
+          SizedBox(height: 24),
+          
+          // Statistics Section Title
+          Padding(
+            padding: EdgeInsets.symmetric(horizontal: 16),
+            child: Row(
+              children: [
+                Icon(Icons.analytics, size: 20, color: primaryColor),
+                SizedBox(width: 8),
+                Text(
+                  'STATISTIK PERTANDINGAN',
+                  style: TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.bold,
+                    color: darkTextColor,
+                    letterSpacing: 0.5,
+                  ),
+                ),
+              ],
+            ),
+          ),
+          
+          SizedBox(height: 12),
+          
+          // Statistics Table yang DIKEMBALIKAN ke format asli
+          Padding(
+            padding: EdgeInsets.symmetric(horizontal: 16),
+            child: Container(
+              decoration: BoxDecoration(
+                color: whiteColor,
+                borderRadius: BorderRadius.circular(12),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withOpacity(0.05),
+                    blurRadius: 8,
+                    offset: Offset(0, 2),
+                  ),
+                ],
               ),
-              child: ClipRRect(
-                borderRadius: BorderRadius.circular(16),
-                child: Column(
-                  children: [
-                    // Statistics Header
-                    Container(
-                      padding: EdgeInsets.all(16),
-                      decoration: BoxDecoration(
-                        gradient: LinearGradient(
-                          begin: Alignment.topLeft,
-                          end: Alignment.bottomRight,
-                          colors: [Colors.green[700]!, Colors.green[600]!],
-                        ),
+              child: Column(
+                children: [
+                  // Statistics Header dengan NAMA TIM dan STATISTIK di tengah
+                  Container(
+                    padding: EdgeInsets.all(16),
+                    decoration: BoxDecoration(
+                      color: primaryColor,
+                      borderRadius: BorderRadius.only(
+                        topLeft: Radius.circular(12),
+                        topRight: Radius.circular(12),
                       ),
-                      child: Row(
-                        children: [
-                          Expanded(
+                    ),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        // Home Team
+                        Expanded(
+                          flex: 2,
+                          child: Center(
                             child: Text(
                               widget.homeTeam,
                               style: TextStyle(
-                                color: Colors.white,
+                                color: whiteColor,
                                 fontWeight: FontWeight.bold,
-                                fontSize: 14,
+                                fontSize: 12,
                               ),
-                              textAlign: TextAlign.left,
+                              textAlign: TextAlign.center,
                               overflow: TextOverflow.ellipsis,
                             ),
                           ),
-                          Expanded(
-                            child: Text(
-                              'TEAM STATISTICS',
-                              style: TextStyle(
-                                color: Colors.white,
-                                fontWeight: FontWeight.bold,
-                                fontSize: 14,
-                                letterSpacing: 0.5,
+                        ),
+                        
+                        // Statistics Title
+                        Expanded(
+                          flex: 1,
+                          child: Center(
+                            child: Container(
+                              padding: EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                              decoration: BoxDecoration(
+                                color: whiteColor.withOpacity(0.2),
+                                borderRadius: BorderRadius.circular(20),
                               ),
-                              textAlign: TextAlign.center,
+                              child: Text(
+                                'STATISTIK',
+                                style: TextStyle(
+                                  color: whiteColor,
+                                  fontWeight: FontWeight.bold,
+                                  fontSize: 12,
+                                  letterSpacing: 0.5,
+                                ),
+                              ),
                             ),
                           ),
-                          Expanded(
+                        ),
+                        
+                        // Away Team
+                        Expanded(
+                          flex: 2,
+                          child: Center(
                             child: Text(
                               widget.awayTeam,
                               style: TextStyle(
-                                color: Colors.white,
+                                color: whiteColor,
                                 fontWeight: FontWeight.bold,
-                                fontSize: 14,
+                                fontSize: 12,
                               ),
-                              textAlign: TextAlign.right,
+                              textAlign: TextAlign.center,
                               overflow: TextOverflow.ellipsis,
                             ),
                           ),
-                        ],
+                        ),
+                      ],
+                    ),
+                  ),
+                  
+                  // Statistics Rows dengan DIVIDER antar row
+                  _buildStatistikRowWithCentering(
+                    title: 'Passes',
+                    homeValue: _statistik!.homePasses,
+                    awayValue: _statistik!.awayPasses,
+                    icon: Icons.swap_horiz,
+                  ),
+                  Divider(height: 1, color: Colors.grey[200]),
+                  
+                  _buildStatistikRowWithCentering(
+                    title: 'Total Shots',
+                    homeValue: _statistik!.homeShots,
+                    awayValue: _statistik!.awayShots,
+                    icon: Icons.sports_soccer,
+                  ),
+                  Divider(height: 1, color: Colors.grey[200]),
+                  
+                  _buildStatistikRowWithCentering(
+                    title: 'Shots on Target',
+                    homeValue: _statistik!.homeShotsOnTarget,
+                    awayValue: _statistik!.awayShotsOnTarget,
+                    icon: Icons.flag,
+                  ),
+                  Divider(height: 1, color: Colors.grey[200]),
+                  
+                  // Ball Possession dengan % di samping angka
+                  Container(
+                    padding: EdgeInsets.symmetric(vertical: 14, horizontal: 16),
+                    decoration: BoxDecoration(
+                      border: Border(bottom: BorderSide(color: primaryColor.withOpacity(0.1))),
+                      gradient: LinearGradient(
+                        begin: Alignment.centerLeft,
+                        end: Alignment.centerRight,
+                        colors: [whiteColor, primaryColor.withOpacity(0.05)],
                       ),
                     ),
-                    
-                    // Statistics Rows
-                    StatistikRow(
-                      title: 'Passes',
-                      homeValue: _statistik!.homePasses,
-                      awayValue: _statistik!.awayPasses,
-                      icon: Icons.swap_horiz,
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        // Home value dengan background dan % di samping
+                        Expanded(
+                          flex: 2,
+                          child: Center(
+                            child: Container(
+                              width: 60,
+                              padding: EdgeInsets.symmetric(vertical: 6, horizontal: 8),
+                              decoration: BoxDecoration(
+                                color: primaryColor.withOpacity(0.1),
+                                borderRadius: BorderRadius.circular(8),
+                                border: Border.all(color: primaryColor.withOpacity(0.3)),
+                              ),
+                              child: Row(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  Text(
+                                    _statistik!.homePossession.toStringAsFixed(0),
+                                    style: TextStyle(
+                                      fontSize: 16,
+                                      fontWeight: FontWeight.bold,
+                                      color: darkTextColor,
+                                    ),
+                                  ),
+                                  SizedBox(width: 2),
+                                  Text(
+                                    '%',
+                                    style: TextStyle(
+                                      fontSize: 12,
+                                      fontWeight: FontWeight.w500,
+                                      color: darkTextColor,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ),
+                        ),
+                        
+                        // Title di tengah
+                        Expanded(
+                          flex: 3,
+                          child: Center(
+                            child: Row(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                Icon(Icons.pie_chart, size: 16, color: primaryColor),
+                                SizedBox(width: 6),
+                                Text(
+                                  'Ball Possession',
+                                  style: TextStyle(
+                                    fontSize: 14,
+                                    fontWeight: FontWeight.w600,
+                                    color: darkTextColor,
+                                  ),
+                                  textAlign: TextAlign.center,
+                                ),
+                              ],
+                            ),
+                          ),
+                        ),
+                        
+                        // Away value dengan background dan % di samping
+                        Expanded(
+                          flex: 2,
+                          child: Center(
+                            child: Container(
+                              width: 60,
+                              padding: EdgeInsets.symmetric(vertical: 6, horizontal: 8),
+                              decoration: BoxDecoration(
+                                color: accentColor.withOpacity(0.1),
+                                borderRadius: BorderRadius.circular(8),
+                                border: Border.all(color: accentColor.withOpacity(0.3)),
+                              ),
+                              child: Row(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  Text(
+                                    _statistik!.awayPossession.toStringAsFixed(0),
+                                    style: TextStyle(
+                                      fontSize: 16,
+                                      fontWeight: FontWeight.bold,
+                                      color: darkTextColor,
+                                    ),
+                                  ),
+                                  SizedBox(width: 2),
+                                  Text(
+                                    '%',
+                                    style: TextStyle(
+                                      fontSize: 12,
+                                      fontWeight: FontWeight.w500,
+                                      color: darkTextColor,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ),
+                        ),
+                      ],
                     ),
-                    StatistikRow(
-                      title: 'Shoot',
-                      homeValue: _statistik!.homeShots,
-                      awayValue: _statistik!.awayShots,
-                      icon: Icons.sports_soccer,
-                    ),
-                    StatistikRow(
-                      title: 'Shoot on Target',
-                      homeValue: _statistik!.homeShotsOnTarget,
-                      awayValue: _statistik!.awayShotsOnTarget,
-                      icon: Icons.flag,
-                    ),
-                    StatistikRow(
-                      title: 'Ball Possession',
-                      homeValue: _statistik!.homePossession,
-                      awayValue: _statistik!.awayPossession,
-                      isPercentage: true,
-                      icon: Icons.pie_chart,
-                    ),
-                    StatistikRow(
-                      title: 'Red Card',
-                      homeValue: _statistik!.homeRedCards,
-                      awayValue: _statistik!.awayRedCards,
-                      icon: Icons.error,
-                    ),
-                    StatistikRow(
-                      title: 'Yellow Card',
-                      homeValue: _statistik!.homeYellowCards,
-                      awayValue: _statistik!.awayYellowCards,
-                      icon: Icons.warning,
-                    ),
-                    StatistikRow(
-                      title: 'Offside',
-                      homeValue: _statistik!.homeOffsides,
-                      awayValue: _statistik!.awayOffsides,
-                      icon: Icons.gps_not_fixed,
-                    ),
-                    StatistikRow(
-                      title: 'Corner',
-                      homeValue: _statistik!.homeCorners,
-                      awayValue: _statistik!.awayCorners,
-                      icon: Icons.circle,
-                    ),
-                  ],
-                ),
+                  ),
+                  Divider(height: 1, color: Colors.grey[200]),
+                  
+                  _buildStatistikRowWithCentering(
+                    title: 'Yellow Cards',
+                    homeValue: _statistik!.homeYellowCards,
+                    awayValue: _statistik!.awayYellowCards,
+                    icon: Icons.warning,
+                  ),
+                  Divider(height: 1, color: Colors.grey[200]),
+                  
+                  _buildStatistikRowWithCentering(
+                    title: 'Red Cards',
+                    homeValue: _statistik!.homeRedCards,
+                    awayValue: _statistik!.awayRedCards,
+                    icon: Icons.error,
+                  ),
+                  Divider(height: 1, color: Colors.grey[200]),
+                  
+                  _buildStatistikRowWithCentering(
+                    title: 'Offsides',
+                    homeValue: _statistik!.homeOffsides,
+                    awayValue: _statistik!.awayOffsides,
+                    icon: Icons.gps_not_fixed,
+                  ),
+                  Divider(height: 1, color: Colors.grey[200]),
+                  
+                  _buildStatistikRowWithCentering(
+                    title: 'Corners',
+                    homeValue: _statistik!.homeCorners,
+                    awayValue: _statistik!.awayCorners,
+                    icon: Icons.circle,
+                  ),
+                ],
               ),
             ),
           ),
           
-          SizedBox(height: 30),
+          SizedBox(height: 32),
+          
+          // Info footer dengan LEBAR KONSISTEN
+          Padding(
+            padding: EdgeInsets.symmetric(horizontal: 16),
+            child: Container(
+              padding: EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                color: primaryColor.withOpacity(0.05),
+                borderRadius: BorderRadius.circular(8),
+                border: Border.all(color: primaryColor.withOpacity(0.1)),
+              ),
+              child: Row(
+                children: [
+                  Icon(Icons.info_outline, size: 16, color: primaryColor),
+                  SizedBox(width: 8),
+                  Expanded(
+                    child: Text(
+                      'Statistik diperbarui secara real-time selama pertandingan berlangsung',
+                      style: TextStyle(
+                        fontSize: 11,
+                        color: mutedTextColor,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+          
+          SizedBox(height: 32),
         ],
       ),
     );
@@ -706,7 +1104,7 @@ class _MatchStatisticsPageState extends State<MatchStatisticsPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.grey[50],
+      backgroundColor: scaffoldBgColor,
       appBar: AppBar(
         title: Text(
           'Match Statistics',
@@ -716,7 +1114,7 @@ class _MatchStatisticsPageState extends State<MatchStatisticsPage> {
             fontSize: 18,
           ),
         ),
-        backgroundColor: Colors.green[700],
+        backgroundColor: primaryColor,
         elevation: 0,
         leading: IconButton(
           icon: Icon(Icons.arrow_back_ios_new_rounded, size: 20, color: Colors.white),
@@ -749,7 +1147,8 @@ class _MatchStatisticsPageState extends State<MatchStatisticsPage> {
           ? FloatingActionButton(
               onPressed: _addStatistik,
               child: Icon(Icons.add),
-              backgroundColor: Colors.orange,
+              backgroundColor: accentColor,
+              foregroundColor: Colors.white,
               tooltip: 'Tambah Statistik',
             )
           : null,

@@ -34,7 +34,7 @@ class NavigationCards extends StatelessWidget {
               gradient: LinearGradient(
                 begin: Alignment.topLeft,
                 end: Alignment.bottomRight,
-                colors: [Colors.green[700]!, Colors.green[600]!],
+                colors: [Color(0xFF4AA69B), Color(0xFF34C6B8)],
               ),
             ),
             child: Column(
