@@ -9,6 +9,9 @@ import '../lineup/lineup_page.dart';
 import 'widgets/header_section.dart';
 import 'widgets/navigation_cards.dart';
 import 'widgets/statistik_row.dart';
+import 'package:xcore_mobile/services/auth_service.dart';
+import 'admin/add_statistik_page.dart';
+import 'admin/edit_statistik_page.dart';
 
 class MatchStatisticsPage extends StatefulWidget {
   final String matchId;
@@ -34,11 +37,20 @@ class _MatchStatisticsPageState extends State<MatchStatisticsPage> {
   StatistikEntry? _statistik;
   bool _isLoading = true;
   String _error = '';
+  bool _isAdmin = false;
 
   @override
   void initState() {
     super.initState();
     _loadStatistik();
+    _checkAdminStatus();
+  }
+
+  Future<void> _checkAdminStatus() async {
+    final isAdmin = await AuthService.isAdmin();
+    setState(() {
+      _isAdmin = isAdmin;
+    });
   }
 
   Future<void> _loadStatistik() async {
@@ -56,7 +68,7 @@ class _MatchStatisticsPageState extends State<MatchStatisticsPage> {
     }
   }
 
-  // Fungsi navigation yang konsisten
+  // Navigation functions
   void _navigateToScoreboard() {
     _showSnackBar("Kembali ke Scoreboard");
     Navigator.pop(context);
@@ -82,7 +94,7 @@ class _MatchStatisticsPageState extends State<MatchStatisticsPage> {
     _showSnackBar("Membuka Prediction");
     Navigator.push(
       context,
-      MaterialPageRoute(builder: (context) => PredictionPage(matchId: widget.matchId)),
+      MaterialPageRoute(builder: (context) => const PredictionPage()),
     );
   }
 
@@ -94,14 +106,114 @@ class _MatchStatisticsPageState extends State<MatchStatisticsPage> {
     );
   }
 
+  // Admin functions
+  void _addStatistik() {
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => AddStatistikPage(
+          matchId: widget.matchId,
+          homeTeam: widget.homeTeam,
+          awayTeam: widget.awayTeam,
+          onStatistikAdded: _loadStatistik,
+        ),
+      ),
+    );
+  }
+
+  void _editStatistik() {
+    if (_statistik != null) {
+      Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (context) => EditStatistikPage(
+            statistik: _statistik!,
+            onStatistikUpdated: _loadStatistik,
+          ),
+        ),
+      );
+    }
+  }
+
+  void _deleteStatistik() async {
+    final confirmed = await showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        backgroundColor: const Color(0xFFFFFFFF),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(16),
+        ),
+        title: const Text(
+          'Hapus Statistik',
+          style: TextStyle(
+            fontFamily: 'Nunito Sans',
+            fontWeight: FontWeight.w700,
+            color: Color(0xFF2C5F5A),
+          ),
+        ),
+        content: const Text(
+          'Yakin ingin menghapus statistik pertandingan ini?',
+          style: TextStyle(
+            fontFamily: 'Nunito Sans',
+            color: Color(0xFF6B8E8A),
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: const Text(
+              'Batal',
+              style: TextStyle(
+                fontFamily: 'Nunito Sans',
+                fontWeight: FontWeight.w600,
+                color: Color(0xFF6B7280),
+              ),
+            ),
+          ),
+          TextButton(
+            onPressed: () => Navigator.pop(context, true),
+            child: const Text(
+              'Hapus',
+              style: TextStyle(
+                fontFamily: 'Nunito Sans',
+                fontWeight: FontWeight.w600,
+                color: Color(0xFFEF4444),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+
+    if (confirmed == true) {
+      try {
+        final success = await StatistikService.deleteStatistik(widget.matchId);
+        if (success) {
+          _showSnackBar('Statistik berhasil dihapus');
+          _loadStatistik();
+        } else {
+          _showSnackBar('Gagal menghapus statistik');
+        }
+      } catch (e) {
+        _showSnackBar('Error: $e');
+      }
+    }
+  }
+
   void _showSnackBar(String message) {
     ScaffoldMessenger.of(context)
       ..hideCurrentSnackBar()
       ..showSnackBar(
         SnackBar(
-          content: Text(message),
-          backgroundColor: Colors.green[600],
-          duration: Duration(seconds: 2),
+          content: Text(
+            message,
+            style: const TextStyle(
+              fontFamily: 'Nunito Sans',
+              fontWeight: FontWeight.w600,
+            ),
+          ),
+          backgroundColor: const Color(0xFF4AA69B),
+          duration: const Duration(seconds: 2),
           behavior: SnackBarBehavior.floating,
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(10),
@@ -110,22 +222,68 @@ class _MatchStatisticsPageState extends State<MatchStatisticsPage> {
       );
   }
 
-  Widget _buildLoadingState() {
-    return Center(
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
+  // Build admin FAB
+  Widget _buildAdminFab() {
+    if (!_isAdmin) return const SizedBox();
+
+    return FloatingActionButton(
+      onPressed: _statistik == null ? _addStatistik : _editStatistik,
+      backgroundColor: const Color(0xFF4AA69B),
+      child: Icon(_statistik == null ? Icons.add : Icons.edit, color: Colors.white),
+    );
+  }
+
+  // Build admin actions
+  Widget _buildAdminActions() {
+    if (!_isAdmin || _statistik == null) return const SizedBox();
+
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+      child: Row(
         children: [
-          CircularProgressIndicator(
-            valueColor: AlwaysStoppedAnimation<Color>(Colors.green[700]!),
-            strokeWidth: 2,
+          Expanded(
+            child: ElevatedButton.icon(
+              icon: const Icon(Icons.edit, size: 18),
+              label: const Text(
+                'Edit Statistik',
+                style: TextStyle(
+                  fontFamily: 'Nunito Sans',
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+              onPressed: _editStatistik,
+              style: ElevatedButton.styleFrom(
+                backgroundColor: const Color(0xFF4AA69B),
+                foregroundColor: Colors.white,
+                elevation: 0,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(10),
+                ),
+                padding: const EdgeInsets.symmetric(vertical: 12),
+              ),
+            ),
           ),
-          SizedBox(height: 16),
-          Text(
-            'Loading Statistics...',
-            style: TextStyle(
-              fontSize: 16,
-              fontWeight: FontWeight.w500,
-              color: Colors.grey[600],
+          const SizedBox(width: 8),
+          Expanded(
+            child: ElevatedButton.icon(
+              icon: const Icon(Icons.delete, size: 18),
+              label: const Text(
+                'Hapus',
+                style: TextStyle(
+                  fontFamily: 'Nunito Sans',
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+              onPressed: _deleteStatistik,
+              style: ElevatedButton.styleFrom(
+                backgroundColor: const Color(0xFFEF4444),
+                foregroundColor: Colors.white,
+                elevation: 0,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(10),
+                ),
+                padding: const EdgeInsets.symmetric(vertical: 12),
+              ),
             ),
           ),
         ],
@@ -133,106 +291,169 @@ class _MatchStatisticsPageState extends State<MatchStatisticsPage> {
     );
   }
 
+  // Loading state
+  Widget _buildLoadingState() {
+    return Center(
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          const CircularProgressIndicator(
+            color: Color(0xFF4AA69B),
+          ),
+          const SizedBox(height: 16),
+          const Text(
+            'Loading Statistics...',
+            style: TextStyle(
+              fontFamily: 'Nunito Sans',
+              fontSize: 16,
+              fontWeight: FontWeight.w500,
+              color: Color(0xFF6B8E8A),
+            ),
+          ),
+          if (_isAdmin && _statistik == null) ...[
+            const SizedBox(height: 20),
+            ElevatedButton.icon(
+              icon: const Icon(Icons.add),
+              label: const Text(
+                'Tambah Statistik',
+                style: TextStyle(
+                  fontFamily: 'Nunito Sans',
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+              onPressed: _addStatistik,
+              style: ElevatedButton.styleFrom(
+                backgroundColor: const Color(0xFF4AA69B),
+                foregroundColor: Colors.white,
+                elevation: 0,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(10),
+                ),
+                padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+              ),
+            ),
+          ],
+        ],
+      ),
+    );
+  }
+
+  // Error state
   Widget _buildErrorState() {
     return Center(
       child: Padding(
-        padding: EdgeInsets.all(24),
+        padding: const EdgeInsets.all(24),
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Container(
-              padding: EdgeInsets.all(16),
-              decoration: BoxDecoration(
-                color: Colors.red[50],
-                shape: BoxShape.circle,
-              ),
-              child: Icon(Icons.error_outline, size: 48, color: Colors.red[400]),
+            Icon(
+              Icons.error_outline,
+              size: 80,
+              color: const Color(0xFF9CA3AF),
             ),
-            SizedBox(height: 20),
-            Text(
+            const SizedBox(height: 24),
+            const Text(
               'Failed to Load',
               style: TextStyle(
+                fontFamily: 'Nunito Sans',
                 fontSize: 20,
-                fontWeight: FontWeight.bold,
-                color: Colors.grey[800],
+                fontWeight: FontWeight.w700,
+                color: Color(0xFF2C5F5A),
               ),
             ),
-            SizedBox(height: 8),
+            const SizedBox(height: 8),
             Text(
               _error,
               textAlign: TextAlign.center,
-              style: TextStyle(
+              style: const TextStyle(
+                fontFamily: 'Nunito Sans',
                 fontSize: 14,
-                color: Colors.grey[600],
+                color: Color(0xFF6B8E8A),
               ),
             ),
-            SizedBox(height: 24),
-            ElevatedButton.icon(
-              icon: Icon(Icons.refresh_rounded, size: 18),
-              label: Text('Try Again'),
-              onPressed: _loadStatistik,
-              style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.green[700],
-                foregroundColor: Colors.white,
-                padding: EdgeInsets.symmetric(horizontal: 20, vertical: 12),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(8),
+            const SizedBox(height: 24),
+            if (_isAdmin)
+              ElevatedButton.icon(
+                icon: const Icon(Icons.add, size: 18),
+                label: const Text(
+                  'Tambah Statistik',
+                  style: TextStyle(
+                    fontFamily: 'Nunito Sans',
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+                onPressed: _addStatistik,
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: const Color(0xFF4AA69B),
+                  foregroundColor: Colors.white,
+                  elevation: 0,
+                  padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(10),
+                  ),
                 ),
               ),
-            ),
           ],
         ),
       ),
     );
   }
 
+  // Empty state
   Widget _buildEmptyState() {
     return Center(
       child: Padding(
-        padding: EdgeInsets.all(24),
+        padding: const EdgeInsets.all(24),
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Container(
-              padding: EdgeInsets.all(16),
-              decoration: BoxDecoration(
-                color: Colors.green[50],
-                shape: BoxShape.circle,
-              ),
-              child: Icon(Icons.analytics_outlined, size: 48, color: Colors.green[400]),
+            Icon(
+              Icons.analytics_outlined,
+              size: 80,
+              color: const Color(0xFF9CA3AF),
             ),
-            SizedBox(height: 20),
-            Text(
+            const SizedBox(height: 24),
+            const Text(
               'No Statistics',
               style: TextStyle(
+                fontFamily: 'Nunito Sans',
                 fontSize: 20,
-                fontWeight: FontWeight.bold,
-                color: Colors.grey[800],
+                fontWeight: FontWeight.w700,
+                color: Color(0xFF2C5F5A),
               ),
             ),
-            SizedBox(height: 8),
-            Text(
+            const SizedBox(height: 8),
+            const Text(
               'Statistics will be available once\nthe match begins',
               textAlign: TextAlign.center,
               style: TextStyle(
+                fontFamily: 'Nunito Sans',
                 fontSize: 14,
-                color: Colors.grey[600],
+                color: Color(0xFF6B8E8A),
               ),
             ),
-            SizedBox(height: 24),
-            ElevatedButton.icon(
-              icon: Icon(Icons.refresh_rounded, size: 18),
-              label: Text('Refresh'),
-              onPressed: _loadStatistik,
-              style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.green[700],
-                foregroundColor: Colors.white,
-                padding: EdgeInsets.symmetric(horizontal: 20, vertical: 12),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(8),
+            const SizedBox(height: 24),
+            if (_isAdmin)
+              ElevatedButton.icon(
+                icon: const Icon(Icons.add, size: 18),
+                label: const Text(
+                  'Tambah Statistik',
+                  style: TextStyle(
+                    fontFamily: 'Nunito Sans',
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+                onPressed: _addStatistik,
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: const Color(0xFF4AA69B),
+                  foregroundColor: Colors.white,
+                  elevation: 0,
+                  padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(10),
+                  ),
                 ),
               ),
-            ),
           ],
         ),
       ),
@@ -241,10 +462,10 @@ class _MatchStatisticsPageState extends State<MatchStatisticsPage> {
 
   Widget _buildContent() {
     return SingleChildScrollView(
-      physics: BouncingScrollPhysics(),
+      physics: const BouncingScrollPhysics(),
       child: Column(
         children: [
-          // Header Section menggunakan widget terpisah
+          // Header Section
           HeaderSection(
             stadium: _statistik!.stadium,
             matchDate: _statistik!.matchDate,
@@ -256,23 +477,27 @@ class _MatchStatisticsPageState extends State<MatchStatisticsPage> {
             awayScore: _statistik!.awayScore,
           ),
           
-          SizedBox(height: 20),
+          const SizedBox(height: 20),
           
-          // Navigation Cards menggunakan widget terpisah
+          // Admin Actions
+          _buildAdminActions(),
+          
+          // Navigation Cards
           NavigationCards(
             onForumTap: _navigateToForum,
             onHighlightTap: _navigateToHighlight,
             onPredictionTap: _navigateToPrediction,
             onLineupTap: _navigateToLineup,
+            matchId: widget.matchId,
           ),
           
-          SizedBox(height: 24),
+          const SizedBox(height: 24),
           
           // Statistics Section
           Padding(
-            padding: EdgeInsets.symmetric(horizontal: 16),
+            padding: const EdgeInsets.symmetric(horizontal: 16),
             child: Card(
-              elevation: 4,
+              elevation: 2,
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(16),
               ),
@@ -282,35 +507,36 @@ class _MatchStatisticsPageState extends State<MatchStatisticsPage> {
                   children: [
                     // Statistics Header
                     Container(
-                      padding: EdgeInsets.all(16),
-                      decoration: BoxDecoration(
+                      padding: const EdgeInsets.all(16),
+                      decoration: const BoxDecoration(
                         gradient: LinearGradient(
                           begin: Alignment.topLeft,
                           end: Alignment.bottomRight,
-                          colors: [Colors.green[700]!, Colors.green[600]!],
+                          colors: [Color(0xFF4AA69B), Color(0xFF56BDA9)],
                         ),
                       ),
                       child: Row(
-                        // diubah
                         children: [
                           Expanded(
                             child: Text(
                               widget.homeTeam,
-                              style: TextStyle(
+                              style: const TextStyle(
+                                fontFamily: 'Nunito Sans',
                                 color: Colors.white,
-                                fontWeight: FontWeight.bold,
+                                fontWeight: FontWeight.w700,
                                 fontSize: 14,
                               ),
                               textAlign: TextAlign.left,
                               overflow: TextOverflow.ellipsis,
                             ),
                           ),
-                          Expanded(
+                          const Expanded(
                             child: Text(
                               'TEAM STATISTICS',
                               style: TextStyle(
+                                fontFamily: 'Nunito Sans',
                                 color: Colors.white,
-                                fontWeight: FontWeight.bold,
+                                fontWeight: FontWeight.w700,
                                 fontSize: 14,
                                 letterSpacing: 0.5,
                               ),
@@ -320,9 +546,10 @@ class _MatchStatisticsPageState extends State<MatchStatisticsPage> {
                           Expanded(
                             child: Text(
                               widget.awayTeam,
-                              style: TextStyle(
+                              style: const TextStyle(
+                                fontFamily: 'Nunito Sans',
                                 color: Colors.white,
-                                fontWeight: FontWeight.bold,
+                                fontWeight: FontWeight.w700,
                                 fontSize: 14,
                               ),
                               textAlign: TextAlign.right,
@@ -330,12 +557,10 @@ class _MatchStatisticsPageState extends State<MatchStatisticsPage> {
                             ),
                           ),
                         ],
-                        // end diubah
                       ),
-
                     ),
                     
-                    // Statistics Rows menggunakan widget terpisah
+                    // Statistics Rows
                     StatistikRow(
                       title: 'Passes',
                       homeValue: _statistik!.homePasses,
@@ -391,7 +616,7 @@ class _MatchStatisticsPageState extends State<MatchStatisticsPage> {
             ),
           ),
           
-          SizedBox(height: 30),
+          const SizedBox(height: 30),
         ],
       ),
     );
@@ -400,23 +625,98 @@ class _MatchStatisticsPageState extends State<MatchStatisticsPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.grey[50],
+      backgroundColor: const Color(0xFFE8F6F4),
       appBar: AppBar(
-        title: Text(
+        title: const Text(
           'Match Statistics',
           style: TextStyle(
-            fontWeight: FontWeight.bold,
-            color: Colors.white,
-            fontSize: 18,
+            fontFamily: 'Nunito Sans',
+            fontWeight: FontWeight.w700,
+            fontSize: 20,
           ),
         ),
-        backgroundColor: Colors.green[700],
-        elevation: 0,
+        backgroundColor: const Color(0xFF4AA69B),
+        foregroundColor: const Color(0xFFFFFFFF),
+        elevation: 2,
+        centerTitle: true,
         leading: IconButton(
-          icon: Icon(Icons.arrow_back_ios_new_rounded, size: 20, color: Colors.white),
+          icon: const Icon(Icons.arrow_back_ios_new_rounded, size: 20),
           onPressed: _navigateToScoreboard,
         ),
-        centerTitle: true,
+        actions: _isAdmin ? [
+          IconButton(
+            icon: const Icon(Icons.settings),
+            onPressed: () {
+              showDialog(
+                context: context,
+                builder: (context) => AlertDialog(
+                  backgroundColor: const Color(0xFFFFFFFF),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(16),
+                  ),
+                  title: const Text(
+                    'Admin Options',
+                    style: TextStyle(
+                      fontFamily: 'Nunito Sans',
+                      fontWeight: FontWeight.w700,
+                      color: Color(0xFF2C5F5A),
+                    ),
+                  ),
+                  content: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      ListTile(
+                        leading: const Icon(Icons.add, color: Color(0xFF4AA69B)),
+                        title: const Text(
+                          'Tambah Statistik',
+                          style: TextStyle(
+                            fontFamily: 'Nunito Sans',
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                        onTap: () {
+                          Navigator.pop(context);
+                          _addStatistik();
+                        },
+                      ),
+                      if (_statistik != null) ...[
+                        ListTile(
+                          leading: const Icon(Icons.edit, color: Color(0xFF4AA69B)),
+                          title: const Text(
+                            'Edit Statistik',
+                            style: TextStyle(
+                              fontFamily: 'Nunito Sans',
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                          onTap: () {
+                            Navigator.pop(context);
+                            _editStatistik();
+                          },
+                        ),
+                        ListTile(
+                          leading: const Icon(Icons.delete, color: Color(0xFFEF4444)),
+                          title: const Text(
+                            'Hapus Statistik',
+                            style: TextStyle(
+                              fontFamily: 'Nunito Sans',
+                              fontWeight: FontWeight.w600,
+                              color: Color(0xFFEF4444),
+                            ),
+                          ),
+                          onTap: () {
+                            Navigator.pop(context);
+                            _deleteStatistik();
+                          },
+                        ),
+                      ],
+                    ],
+                  ),
+                ),
+              );
+            },
+          ),
+        ] : null,
       ),
       body: _isLoading
           ? _buildLoadingState()
@@ -425,6 +725,7 @@ class _MatchStatisticsPageState extends State<MatchStatisticsPage> {
               : _statistik == null
                   ? _buildEmptyState()
                   : _buildContent(),
+      floatingActionButton: _buildAdminFab(),
     );
   }
 }

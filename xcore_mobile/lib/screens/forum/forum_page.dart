@@ -1,4 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:pbp_django_auth/pbp_django_auth.dart';
+import 'package:provider/provider.dart';
+import 'package:xcore_mobile/config.dart';
 import 'package:xcore_mobile/models/forum_entry.dart';
 import 'package:xcore_mobile/models/post_entry.dart';
 import 'forum_service.dart';
@@ -20,6 +23,10 @@ class _ForumPageState extends State<ForumPage> {
   final TextEditingController _postController = TextEditingController();
   final Map<String, TextEditingController> _editControllers = {};
 
+  // Variabel untuk current user yang sedang login
+  int? _currentUserId;
+  bool? _isAdmin;
+
   @override
   void initState() {
     super.initState();
@@ -29,13 +36,22 @@ class _ForumPageState extends State<ForumPage> {
   Future<void> _loadForumData() async {
     try {
       final forum = await ForumService.fetchForumByMatch(widget.matchId);
-      final posts = await ForumService.fetchPosts(forum.id);
+
+      // fetchPosts sekarang mengembalikan Map dengan posts dan user info
+      final response = await ForumService.fetchPosts(forum.id, context);
 
       setState(() {
         _forum = forum;
-        _posts = posts;
+        _posts = response['posts']; // Ambil posts dari response
+        _currentUserId = response['user_id']; // Simpan user ID
+        _isAdmin = response['user_is_admin']; // Simpan status admin
         _isLoading = false;
       });
+
+      // Debug
+      print('Current User ID: $_currentUserId');
+      print('Is Admin: $_isAdmin');
+
     } catch (e) {
       setState(() {
         _error = e.toString();
@@ -46,10 +62,13 @@ class _ForumPageState extends State<ForumPage> {
 
   Future<void> _addPost() async {
     final message = _postController.text.trim();
-    if (message.isEmpty || _forum == null) return;
+    if (message.isEmpty || _forum == null) {
+      _showSnackBar('Message cannot be empty!');
+      return;
+    }
 
     try {
-      await ForumService.addPost(_forum!.id, message);
+      await ForumService.addPost(_forum!.id, message, context);
       _postController.clear();
       await _loadForumData(); // Refresh posts
       _showSnackBar('Post added successfully!');
@@ -59,12 +78,21 @@ class _ForumPageState extends State<ForumPage> {
   }
 
   Future<void> _editPost(String postId, String newMessage) async {
-    if (newMessage.isEmpty || _forum == null) return;
+    final request = context.watch<CookieRequest>();
+
+    if (newMessage.isEmpty || _forum == null) {
+      _showSnackBar('Message cannot be empty!');
+      return;
+    }
 
     try {
-      await ForumService.editPost(_forum!.id, postId, newMessage);
+      await ForumService.editPost(_forum!.id, postId, newMessage, context);
       await _loadForumData(); // Refresh posts
-      _showSnackBar('Post updated successfully!');
+
+      _editControllers.remove(postId);
+
+      _showSnackBar('Post message updated successfully!');
+
     } catch (e) {
       _showSnackBar('Failed to update post: ${e.toString()}');
     }
@@ -76,16 +104,47 @@ class _ForumPageState extends State<ForumPage> {
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('Delete Post'),
-        content: const Text('Are you sure you want to delete this post?'),
+        backgroundColor: const Color(0xFFFFFFFF),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(16),
+        ),
+        title: const Text(
+          'Delete Post',
+          style: TextStyle(
+            fontFamily: 'Nunito Sans',
+            fontWeight: FontWeight.w700,
+            color: Color(0xFF2C5F5A),
+          ),
+        ),
+        content: const Text(
+          'Are you sure you want to delete this post?',
+          style: TextStyle(
+            fontFamily: 'Nunito Sans',
+            color: Color(0xFF6B8E8A),
+          ),
+        ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context, false),
-            child: const Text('Cancel'),
+            child: const Text(
+              'Cancel',
+              style: TextStyle(
+                fontFamily: 'Nunito Sans',
+                fontWeight: FontWeight.w600,
+                color: Color(0xFF6B7280),
+              ),
+            ),
           ),
           TextButton(
             onPressed: () => Navigator.pop(context, true),
-            child: const Text('Delete', style: TextStyle(color: Colors.red)),
+            child: const Text(
+              'Delete',
+              style: TextStyle(
+                fontFamily: 'Nunito Sans',
+                fontWeight: FontWeight.w600,
+                color: Color(0xFFEF4444),
+              ),
+            ),
           ),
         ],
       ),
@@ -93,7 +152,7 @@ class _ForumPageState extends State<ForumPage> {
 
     if (confirmed == true) {
       try {
-        await ForumService.deletePost(_forum!.id, postId);
+        await ForumService.deletePost(_forum!.id, postId, context);
         await _loadForumData(); // Refresh posts
         _showSnackBar('Post deleted successfully!');
       } catch (e) {
@@ -105,9 +164,19 @@ class _ForumPageState extends State<ForumPage> {
   void _showSnackBar(String message) {
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
-        content: Text(message),
-        backgroundColor: Colors.green[600],
+        content: Text(
+          message,
+          style: const TextStyle(
+            fontFamily: 'Nunito Sans',
+            fontWeight: FontWeight.w600,
+          ),
+        ),
+        backgroundColor: const Color(0xFF4AA69B),
         duration: const Duration(seconds: 2),
+        behavior: SnackBarBehavior.floating,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(10),
+        ),
       ),
     );
   }
@@ -125,24 +194,24 @@ class _ForumPageState extends State<ForumPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.grey[50],
+      backgroundColor: const Color(0xFFE8F6F4),
       appBar: AppBar(
         title: Text(
           _forum?.nama ?? 'Forum',
           style: const TextStyle(
-            fontWeight: FontWeight.bold,
-            color: Colors.white,
-            fontSize: 18,
+            fontFamily: 'Nunito Sans',
+            fontWeight: FontWeight.w700,
+            fontSize: 20,
           ),
         ),
-        backgroundColor: Colors.green[700],
-        elevation: 0,
+        backgroundColor: const Color(0xFF4AA69B),
+        foregroundColor: const Color(0xFFFFFFFF),
+        elevation: 2,
+        centerTitle: true,
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back_ios_new_rounded,
-              size: 20, color: Colors.white),
+          icon: const Icon(Icons.arrow_back_ios_new_rounded, size: 20),
           onPressed: () => Navigator.pop(context),
         ),
-        centerTitle: true,
       ),
       body: _isLoading
           ? _buildLoadingState()
@@ -157,16 +226,17 @@ class _ForumPageState extends State<ForumPage> {
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          CircularProgressIndicator(
-            valueColor: AlwaysStoppedAnimation<Color>(Colors.green[700]!),
+          const CircularProgressIndicator(
+            color: Color(0xFF4AA69B),
           ),
           const SizedBox(height: 16),
-          Text(
+          const Text(
             'Loading Forum...',
             style: TextStyle(
+              fontFamily: 'Nunito Sans',
               fontSize: 16,
               fontWeight: FontWeight.w500,
-              color: Colors.grey[600],
+              color: Color(0xFF6B8E8A),
             ),
           ),
         ],
@@ -181,29 +251,50 @@ class _ForumPageState extends State<ForumPage> {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(Icons.error_outline, size: 48, color: Colors.red[400]),
-            const SizedBox(height: 16),
+            Icon(
+              Icons.error_outline,
+              size: 80,
+              color: const Color(0xFF9CA3AF),
+            ),
+            const SizedBox(height: 24),
             const Text(
               'Failed to Load Forum',
               style: TextStyle(
-                fontSize: 18,
-                fontWeight: FontWeight.bold,
+                fontFamily: 'Nunito Sans',
+                fontSize: 20,
+                fontWeight: FontWeight.w700,
+                color: Color(0xFF2C5F5A),
               ),
             ),
             const SizedBox(height: 8),
             Text(
               _error,
               textAlign: TextAlign.center,
-              style: const TextStyle(color: Colors.grey),
+              style: const TextStyle(
+                fontFamily: 'Nunito Sans',
+                fontSize: 14,
+                color: Color(0xFF6B8E8A),
+              ),
             ),
-            const SizedBox(height: 20),
+            const SizedBox(height: 24),
             ElevatedButton(
               onPressed: _loadForumData,
               style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.green[700],
+                backgroundColor: const Color(0xFF4AA69B),
                 foregroundColor: Colors.white,
+                elevation: 0,
+                padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(10),
+                ),
               ),
-              child: const Text('Try Again'),
+              child: const Text(
+                'Try Again',
+                style: TextStyle(
+                  fontFamily: 'Nunito Sans',
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
             ),
           ],
         ),
@@ -219,30 +310,24 @@ class _ForumPageState extends State<ForumPage> {
           Container(
             width: double.infinity,
             padding: const EdgeInsets.all(16),
-            decoration: BoxDecoration(
+            decoration: const BoxDecoration(
               gradient: LinearGradient(
                 begin: Alignment.topLeft,
                 end: Alignment.bottomRight,
-                colors: [Colors.green[700]!, Colors.green[500]!],
+                colors: [Color(0xFF4AA69B), Color(0xFF56BDA9)],
               ),
             ),
             child: Column(
               children: [
-                Text(
-                  '${_forum!.matchHome} vs ${_forum!.matchAway}',
-                  style: const TextStyle(
-                    fontSize: 16,
-                    fontWeight: FontWeight.bold,
-                    color: Colors.white,
-                  ),
-                ),
                 const SizedBox(height: 4),
-                Text(
-                  _forum!.nama,
-                  style: const TextStyle(
+                const Text(
+                  'Welcome to the Discussion Forum. Please keep conversations respectful and relevant. Start a new topic or explore existing discussions.',
+                  style: TextStyle(
+                    fontFamily: 'Nunito Sans',
                     fontSize: 14,
-                    color: Colors.white70,
+                    color: Color(0xFFE8F6F4),
                   ),
+                  textAlign: TextAlign.center,
                 ),
               ],
             ),
@@ -275,20 +360,29 @@ class _ForumPageState extends State<ForumPage> {
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Icon(Icons.forum_outlined, size: 64, color: Colors.grey[400]),
-          const SizedBox(height: 16),
+          Icon(
+            Icons.forum_outlined,
+            size: 80,
+            color: const Color(0xFF9CA3AF),
+          ),
+          const SizedBox(height: 24),
           const Text(
             'No Posts Yet',
             style: TextStyle(
-              fontSize: 18,
-              fontWeight: FontWeight.bold,
-              color: Colors.grey,
+              fontFamily: 'Nunito Sans',
+              fontSize: 20,
+              fontWeight: FontWeight.w700,
+              color: Color(0xFF2C5F5A),
             ),
           ),
           const SizedBox(height: 8),
           const Text(
             'Be the first to start the discussion!',
-            style: TextStyle(color: Colors.grey),
+            style: TextStyle(
+              fontFamily: 'Nunito Sans',
+              fontSize: 14,
+              color: Color(0xFF6B8E8A),
+            ),
           ),
         ],
       ),
@@ -299,6 +393,7 @@ class _ForumPageState extends State<ForumPage> {
     return Card(
       margin: const EdgeInsets.only(bottom: 12),
       elevation: 2,
+      color: const Color(0xFFFFFFFF),
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
       child: Padding(
         padding: const EdgeInsets.all(16),
@@ -310,8 +405,11 @@ class _ForumPageState extends State<ForumPage> {
               children: [
                 CircleAvatar(
                   radius: 16,
+                  backgroundColor: const Color(0xFFE8F6F4),
                   backgroundImage: NetworkImage(
-                    post.authorPicture ?? 'https://via.placeholder.com/40',
+                    post.authorPicture != null
+                        ? '${Config.baseUrl}${post.authorPicture}'
+                        : 'https://via.placeholder.com/40',
                   ),
                   onBackgroundImageError: (_, __) {},
                 ),
@@ -323,53 +421,86 @@ class _ForumPageState extends State<ForumPage> {
                       Text(
                         post.authorName,
                         style: const TextStyle(
-                          fontWeight: FontWeight.bold,
+                          fontFamily: 'Nunito Sans',
+                          fontWeight: FontWeight.w700,
                           fontSize: 14,
+                          color: Color(0xFF2C5F5A),
                         ),
                       ),
                       Text(
                         _formatPostTime(post),
-                        style: TextStyle(
+                        style: const TextStyle(
+                          fontFamily: 'Nunito Sans',
                           fontSize: 12,
-                          color: Colors.grey[600],
+                          color: Color(0xFF9CA3AF),
                         ),
                       ),
                     ],
                   ),
                 ),
-                // Edit/Delete buttons (only for own posts)
-                if (post.authorId == 1) // Ganti dengan current user ID
+
+                // Popup menu button
+                if (post.authorId == _currentUserId || _isAdmin == true)
                   PopupMenuButton<String>(
-                    icon: Icon(Icons.more_vert, color: Colors.grey[600]),
+                    icon: const Icon(Icons.more_vert, color: Color(0xFF9CA3AF)),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
                     onSelected: (value) {
-                      if (value == 'edit') {
+                      if (value == 'edit' && post.authorId == _currentUserId) {
                         _startEditPost(post);
                       } else if (value == 'delete') {
                         _deletePost(post.id);
                       }
                     },
-                    itemBuilder: (context) => [
-                      const PopupMenuItem(
-                        value: 'edit',
-                        child: Row(
-                          children: [
-                            Icon(Icons.edit, size: 18),
-                            SizedBox(width: 8),
-                            Text('Edit'),
-                          ],
+                    itemBuilder: (context) {
+                      final menuItems = <PopupMenuEntry<String>>[];
+
+                      // Hanya tampilkan edit untuk pemilik post
+                      if (post.authorId == _currentUserId) {
+                        menuItems.add(
+                          const PopupMenuItem(
+                            value: 'edit',
+                            child: Row(
+                              children: [
+                                Icon(Icons.edit, size: 18, color: Color(0xFF4AA69B)),
+                                SizedBox(width: 8),
+                                Text(
+                                  'Edit',
+                                  style: TextStyle(
+                                    fontFamily: 'Nunito Sans',
+                                    fontWeight: FontWeight.w600,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        );
+                      }
+
+                      // Tampilkan delete untuk pemilik post dan admin
+                      menuItems.add(
+                        const PopupMenuItem(
+                          value: 'delete',
+                          child: Row(
+                            children: [
+                              Icon(Icons.delete, size: 18, color: Color(0xFFEF4444)),
+                              SizedBox(width: 8),
+                              Text(
+                                'Delete',
+                                style: TextStyle(
+                                  fontFamily: 'Nunito Sans',
+                                  fontWeight: FontWeight.w600,
+                                  color: Color(0xFFEF4444),
+                                ),
+                              ),
+                            ],
+                          ),
                         ),
-                      ),
-                      const PopupMenuItem(
-                        value: 'delete',
-                        child: Row(
-                          children: [
-                            Icon(Icons.delete, size: 18, color: Colors.red),
-                            SizedBox(width: 8),
-                            Text('Delete', style: TextStyle(color: Colors.red)),
-                          ],
-                        ),
-                      ),
-                    ],
+                      );
+
+                      return menuItems;
+                    },
                   ),
               ],
             ),
@@ -380,7 +511,12 @@ class _ForumPageState extends State<ForumPage> {
             if (!isEditing)
               Text(
                 post.message,
-                style: const TextStyle(fontSize: 14, height: 1.4),
+                style: const TextStyle(
+                  fontFamily: 'Nunito Sans',
+                  fontSize: 14,
+                  height: 1.4,
+                  color: Color(0xFF2C5F5A),
+                ),
               ),
 
             // Edit Mode
@@ -390,9 +526,17 @@ class _ForumPageState extends State<ForumPage> {
                   TextField(
                     controller: _editControllers[post.id],
                     maxLines: 3,
+                    style: const TextStyle(
+                      fontFamily: 'Nunito Sans',
+                    ),
                     decoration: InputDecoration(
                       border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(8),
+                        borderRadius: BorderRadius.circular(10),
+                        borderSide: const BorderSide(color: Color(0xFF4AA69B)),
+                      ),
+                      focusedBorder: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(10),
+                        borderSide: const BorderSide(color: Color(0xFF4AA69B), width: 2),
                       ),
                       contentPadding: const EdgeInsets.all(12),
                     ),
@@ -403,21 +547,45 @@ class _ForumPageState extends State<ForumPage> {
                     children: [
                       TextButton(
                         onPressed: () => _cancelEdit(post.id),
-                        child: const Text('Cancel'),
+                        child: const Text(
+                          'Cancel',
+                          style: TextStyle(
+                            fontFamily: 'Nunito Sans',
+                            fontWeight: FontWeight.w600,
+                            color: Color(0xFF6B7280),
+                          ),
+                        ),
                       ),
                       const SizedBox(width: 8),
                       ElevatedButton(
                         onPressed: () {
                           final newMessage = _editControllers[post.id]!.text.trim();
+
+                          if (newMessage == post.message){
+                            _showSnackBar('Message cannot be the same!');
+                            _cancelEdit(post.id);
+                            return;
+                          }
+
                           if (newMessage.isNotEmpty) {
                             _editPost(post.id, newMessage);
                           }
                         },
                         style: ElevatedButton.styleFrom(
-                          backgroundColor: Colors.green[700],
+                          backgroundColor: const Color(0xFF4AA69B),
                           foregroundColor: Colors.white,
+                          elevation: 0,
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(8),
+                          ),
                         ),
-                        child: const Text('Save'),
+                        child: const Text(
+                          'Save',
+                          style: TextStyle(
+                            fontFamily: 'Nunito Sans',
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
                       ),
                     ],
                   ),
@@ -432,20 +600,33 @@ class _ForumPageState extends State<ForumPage> {
   Widget _buildPostInput() {
     return Container(
       padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        border: Border(top: BorderSide(color: Colors.grey[300]!)),
+      decoration: const BoxDecoration(
+        color: Color(0xFFFFFFFF),
+        border: Border(
+          top: BorderSide(color: Color(0xFFE5E7EB)),
+        ),
       ),
       child: Column(
         children: [
           TextField(
             controller: _postController,
             maxLines: 3,
+            style: const TextStyle(
+              fontFamily: 'Nunito Sans',
+            ),
             decoration: InputDecoration(
               hintText: 'Write your post...',
+              hintStyle: const TextStyle(
+                fontFamily: 'Nunito Sans',
+                color: Color(0xFF9CA3AF),
+              ),
               border: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(12),
-                borderSide: BorderSide(color: Colors.grey[400]!),
+                borderSide: const BorderSide(color: Color(0xFFE5E7EB)),
+              ),
+              focusedBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(12),
+                borderSide: const BorderSide(color: Color(0xFF4AA69B), width: 2),
               ),
               contentPadding: const EdgeInsets.all(16),
             ),
@@ -456,16 +637,21 @@ class _ForumPageState extends State<ForumPage> {
             child: ElevatedButton(
               onPressed: _addPost,
               style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.green[700],
+                backgroundColor: const Color(0xFF4AA69B),
                 foregroundColor: Colors.white,
-                padding: const EdgeInsets.symmetric(vertical: 12),
+                elevation: 0,
+                padding: const EdgeInsets.symmetric(vertical: 14),
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(12),
                 ),
               ),
               child: const Text(
                 'Send Post',
-                style: TextStyle(fontWeight: FontWeight.bold),
+                style: TextStyle(
+                  fontFamily: 'Nunito Sans',
+                  fontWeight: FontWeight.w700,
+                  fontSize: 15,
+                ),
               ),
             ),
           ),
