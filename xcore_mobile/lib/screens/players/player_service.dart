@@ -1,5 +1,5 @@
 import 'dart:convert';
-import 'dart:io';
+import 'dart:typed_data';
 
 import 'package:http/http.dart' as http;
 import 'package:file_picker/file_picker.dart';
@@ -80,7 +80,7 @@ class PlayerService {
         "asal": asal,
         "umur": umur,
         "nomor": nomor,
-        "tim": teamId
+        "tim": teamId,
       }),
     );
 
@@ -108,7 +108,7 @@ class PlayerService {
         "asal": asal,
         "umur": umur,
         "nomor": nomor,
-        "tim": teamId
+        "tim": teamId,
       }),
     );
 
@@ -127,9 +127,9 @@ class PlayerService {
   }
 
   // ------------------------------------------------------------
-  // PICK ZIP FILE USING file_picker
+  // PICK ZIP FILE USING file_picker (Flutter Web compatible)
   // ------------------------------------------------------------
-  static Future<File?> pickPlayersZip() async {
+  static Future<Uint8List?> pickPlayersZip() async {
     final result = await FilePicker.platform.pickFiles(
       type: FileType.custom,
       allowedExtensions: ["zip"],
@@ -137,21 +137,36 @@ class PlayerService {
 
     if (result == null) return null;
 
-    return File(result.files.single.path!);
+    return result.files.single.bytes;
   }
 
   // ------------------------------------------------------------
-  // UPLOAD PLAYERS ZIP
+  // UPLOAD PLAYERS ZIP (base64 JSON format for Flutter Web)
   // ------------------------------------------------------------
-  static Future<Map<String, dynamic>> uploadPlayersZip(File zipFile) async {
+  static Future<Map<String, dynamic>> uploadPlayersZip(
+    Uint8List zipBytes,
+  ) async {
     final url = Uri.parse("$baseUrl/upload/players/");
 
-    final request = http.MultipartRequest("POST", url)
-      ..files.add(await http.MultipartFile.fromPath("file", zipFile.path));
+    final base64File = base64Encode(zipBytes);
 
-    final streamed = await request.send();
-    final response = await http.Response.fromStream(streamed);
+    final response = await http.post(
+      url,
+      headers: {"Content-Type": "application/json"},
+      body: jsonEncode({"file": base64File}),
+    );
 
-    return jsonDecode(response.body);
+    if (response.statusCode != 200) {
+      final errorData = jsonDecode(response.body);
+      throw Exception(errorData['error'] ?? 'Upload failed');
+    }
+
+    final result = jsonDecode(response.body);
+
+    if (result['status'] != 'ok') {
+      throw Exception('Upload returned an error');
+    }
+
+    return result;
   }
 }

@@ -10,11 +10,7 @@ class Team {
   String name;
   String code;
 
-  Team({
-    required this.id,
-    required this.name,
-    required this.code,
-  });
+  Team({required this.id, required this.name, required this.code});
 
   factory Team.fromJson(Map<String, dynamic> json) => Team(
     id: json["id"]?.toString() ?? '',
@@ -22,11 +18,7 @@ class Team {
     code: json["code"]?.toString() ?? '',
   );
 
-  Map<String, dynamic> toJson() => {
-    "id": id,
-    "name": name,
-    "code": code,
-  };
+  Map<String, dynamic> toJson() => {"id": id, "name": name, "code": code};
 }
 
 // Player Model - sesuai dengan Django Player
@@ -37,7 +29,7 @@ class Player {
   String id;
   String nama;
   String asal;
-  int umur;
+  int? umur;
   int nomor;
   String timId;
   Team? tim; // Optional, jika termasuk data team lengkap
@@ -46,7 +38,7 @@ class Player {
     required this.id,
     required this.nama,
     required this.asal,
-    required this.umur,
+    this.umur,
     required this.nomor,
     required this.timId,
     this.tim,
@@ -61,6 +53,13 @@ class Player {
     timId: json["tim"]?.toString() ?? '',
     tim: json["tim_object"] != null ? Team.fromJson(json["tim_object"]) : null,
   );
+
+  static int? _parseIntOrNull(dynamic value) {
+    if (value == null) return 0;
+    if (value is int) return value;
+    if (value is String) return int.tryParse(value);
+    return null;
+  }
 
   static int _parseInt(dynamic value) {
     if (value == null) return 0;
@@ -102,7 +101,8 @@ class Lineup {
     matchId: json["match"]?.toString() ?? '',
     team: Team.fromJson(json["team"] ?? {}),
     players: List<Player>.from(
-        (json["players"] ?? []).map((x) => Player.fromJson(x))),
+      (json["players"] ?? []).map((x) => Player.fromJson(x)),
+    ),
   );
 
   Map<String, dynamic> toJson() => {
@@ -114,25 +114,28 @@ class Lineup {
 }
 
 // Match Lineup Response - untuk menampung kedua lineup (home & away)
-MatchLineupResponse matchLineupResponseFromJson(String str) => MatchLineupResponse.fromJson(json.decode(str));
-String matchLineupResponseToJson(MatchLineupResponse data) => json.encode(data.toJson());
+MatchLineupResponse matchLineupResponseFromJson(String str) =>
+    MatchLineupResponse.fromJson(json.decode(str));
+String matchLineupResponseToJson(MatchLineupResponse data) =>
+    json.encode(data.toJson());
 
 class MatchLineupResponse {
   ScoreboardEntry match;
   Lineup? homeLineup;
   Lineup? awayLineup;
 
-  MatchLineupResponse({
-    required this.match,
-    this.homeLineup,
-    this.awayLineup,
-  });
+  MatchLineupResponse({required this.match, this.homeLineup, this.awayLineup});
 
-  factory MatchLineupResponse.fromJson(Map<String, dynamic> json) => MatchLineupResponse(
-    match: ScoreboardEntry.fromJson(json["match"] ?? {}),
-    homeLineup: json["home_lineup"] != null ? Lineup.fromJson(json["home_lineup"]) : null,
-    awayLineup: json["away_lineup"] != null ? Lineup.fromJson(json["away_lineup"]) : null,
-  );
+  factory MatchLineupResponse.fromJson(Map<String, dynamic> json) =>
+      MatchLineupResponse(
+        match: ScoreboardEntry.fromJson(json["match"] ?? {}),
+        homeLineup: json["home_lineup"] != null
+            ? Lineup.fromJson(json["home_lineup"])
+            : null,
+        awayLineup: json["away_lineup"] != null
+            ? Lineup.fromJson(json["away_lineup"])
+            : null,
+      );
 
   Map<String, dynamic> toJson() => {
     "match": match.toJson(),
