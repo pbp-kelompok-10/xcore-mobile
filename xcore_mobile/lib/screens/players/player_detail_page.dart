@@ -26,7 +26,8 @@ class _PlayerDetailPageState extends State<PlayerDetailPage> {
 
   bool _isEditing = false;
   bool _isLoading = false;
-  bool _isAdmin = PlayerService.getIsAdmin();
+  bool _isAdmin = false;
+  String? _error;
 
   @override
   void initState() {
@@ -46,6 +47,26 @@ class _PlayerDetailPageState extends State<PlayerDetailPage> {
     _umurController.dispose();
     _nomorController.dispose();
     super.dispose();
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    _checkAdminStatus();
+  }
+
+  Future<void> _checkAdminStatus() async {
+    try {
+      final admin_status = await PlayerService.fetchAdminStatus(context);
+      setState(() {
+        _isAdmin = admin_status;
+      });
+    } catch (e) {
+      setState(() {
+        _error = e.toString();
+        _isLoading = false;
+      });
+    }
   }
 
   void _initializeControllers(Map<String, dynamic> playerData) {

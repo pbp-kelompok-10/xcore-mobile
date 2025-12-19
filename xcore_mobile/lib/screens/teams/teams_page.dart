@@ -3,54 +3,56 @@ import 'dart:convert';
 import 'package:http/http.dart' as http;
 import 'team_service.dart';
 import 'team_create_update_service.dart';
+import 'team_detail_page.dart';
+import '../players/player_service.dart';
 
 const List<Map<String, String>> countryChoices = [
-  {'code': 'jp', 'name': 'Japan'},
-  {'code': 'ir', 'name': 'Iran'},
-  {'code': 'kr', 'name': 'South Korea'},
-  {'code': 'au', 'name': 'Australia'},
-  {'code': 'sa', 'name': 'Saudi Arabia'},
-  {'code': 'uz', 'name': 'Uzbekistan'},
-  {'code': 'jo', 'name': 'Jordan'},
-  {'code': 'iq', 'name': 'Iraq'},
-  {'code': 'ae', 'name': 'United Arab Emirates'},
-  {'code': 'qa', 'name': 'Qatar'},
-  {'code': 'cn', 'name': 'China'},
-  {'code': 'om', 'name': 'Oman'},
-  {'code': 'id', 'name': 'Indonesia'},
-  {'code': 'bh', 'name': 'Bahrain'},
-  {'code': 'kw', 'name': 'Kuwait'},
-  {'code': 'th', 'name': 'Thailand'},
-  {'code': 'kp', 'name': 'North Korea'},
-  {'code': 'ps', 'name': 'Palestine'},
-  {'code': 'sy', 'name': 'Syria'},
-  {'code': 'vn', 'name': 'Vietnam'},
-  {'code': 'my', 'name': 'Malaysia'},
-  {'code': 'lb', 'name': 'Lebanon'},
-  {'code': 'np', 'name': 'Nepal'},
-  {'code': 'bd', 'name': 'Bangladesh'},
-  {'code': 'mm', 'name': 'Myanmar'},
-  {'code': 'mv', 'name': 'Maldives'},
   {'code': 'af', 'name': 'Afghanistan'},
-  {'code': 'ph', 'name': 'Philippines'},
-  {'code': 'hk', 'name': 'Hong Kong'},
-  {'code': 'tm', 'name': 'Turkmenistan'},
-  {'code': 'kg', 'name': 'Kyrgyzstan'},
-  {'code': 'tj', 'name': 'Tajikistan'},
-  {'code': 'tw', 'name': 'Chinese Taipei'},
-  {'code': 'ye', 'name': 'Yemen'},
-  {'code': 'bn', 'name': 'Brunei'},
-  {'code': 'la', 'name': 'Laos'},
-  {'code': 'lk', 'name': 'Sri Lanka'},
-  {'code': 'kh', 'name': 'Cambodia'},
+  {'code': 'au', 'name': 'Australia'},
+  {'code': 'bh', 'name': 'Bahrain'},
+  {'code': 'bd', 'name': 'Bangladesh'},
   {'code': 'bt', 'name': 'Bhutan'},
+  {'code': 'bn', 'name': 'Brunei'},
+  {'code': 'kh', 'name': 'Cambodia'},
+  {'code': 'cn', 'name': 'China'},
+  {'code': 'tw', 'name': 'Chinese Taipei'},
   {'code': 'gu', 'name': 'Guam'},
-  {'code': 'mn', 'name': 'Mongolia'},
-  {'code': 'pk', 'name': 'Pakistan'},
-  {'code': 'tl', 'name': 'Timor-Leste'},
-  {'code': 'mo', 'name': 'Macau'},
-  {'code': 'sg', 'name': 'Singapore'},
+  {'code': 'hk', 'name': 'Hong Kong'},
   {'code': 'in', 'name': 'India'},
+  {'code': 'id', 'name': 'Indonesia'},
+  {'code': 'ir', 'name': 'Iran'},
+  {'code': 'iq', 'name': 'Iraq'},
+  {'code': 'jp', 'name': 'Japan'},
+  {'code': 'jo', 'name': 'Jordan'},
+  {'code': 'kg', 'name': 'Kyrgyzstan'},
+  {'code': 'kw', 'name': 'Kuwait'},
+  {'code': 'la', 'name': 'Laos'},
+  {'code': 'lb', 'name': 'Lebanon'},
+  {'code': 'mo', 'name': 'Macau'},
+  {'code': 'my', 'name': 'Malaysia'},
+  {'code': 'mv', 'name': 'Maldives'},
+  {'code': 'mn', 'name': 'Mongolia'},
+  {'code': 'mm', 'name': 'Myanmar'},
+  {'code': 'np', 'name': 'Nepal'},
+  {'code': 'kp', 'name': 'North Korea'},
+  {'code': 'om', 'name': 'Oman'},
+  {'code': 'pk', 'name': 'Pakistan'},
+  {'code': 'ps', 'name': 'Palestine'},
+  {'code': 'ph', 'name': 'Philippines'},
+  {'code': 'qa', 'name': 'Qatar'},
+  {'code': 'kr', 'name': 'South Korea'},
+  {'code': 'sa', 'name': 'Saudi Arabia'},
+  {'code': 'sg', 'name': 'Singapore'},
+  {'code': 'lk', 'name': 'Sri Lanka'},
+  {'code': 'sy', 'name': 'Syria'},
+  {'code': 'tj', 'name': 'Tajikistan'},
+  {'code': 'th', 'name': 'Thailand'},
+  {'code': 'tl', 'name': 'Timor-Leste'},
+  {'code': 'tm', 'name': 'Turkmenistan'},
+  {'code': 'ae', 'name': 'United Arab Emirates'},
+  {'code': 'uz', 'name': 'Uzbekistan'},
+  {'code': 'vn', 'name': 'Vietnam'},
+  {'code': 'ye', 'name': 'Yemen'},
 ];
 
 class TeamsPage extends StatefulWidget {
@@ -65,11 +67,35 @@ class _TeamsPageState extends State<TeamsPage> {
   bool loading = true;
   bool fabOpen = false;
   String? selectedCountry;
+  bool _isAdmin = PlayerService.getIsAdmin();
+  String _error = '';
+  bool _isLoading = true;
 
   @override
   void initState() {
     super.initState();
     loadTeams();
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    _checkAdminStatus();
+  }
+
+  Future<void> _checkAdminStatus() async {
+    try {
+      final admin_status = await PlayerService.fetchAdminStatus(context);
+      setState(() {
+        _isAdmin = admin_status;
+        debugPrint("🔐 _isAdmin: $_isAdmin");
+      });
+    } catch (e) {
+      setState(() {
+        _error = e.toString();
+        _isLoading = false;
+      });
+    }
   }
 
   Future<void> loadTeams() async {
@@ -341,7 +367,7 @@ class _TeamsPageState extends State<TeamsPage> {
         foregroundColor: Colors.white,
         automaticallyImplyLeading: false,
       ),
-      floatingActionButton: Column(
+      floatingActionButton: _isAdmin ? Column(
         mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.end,
         children: [
@@ -370,7 +396,7 @@ class _TeamsPageState extends State<TeamsPage> {
             onPressed: () => setState(() => fabOpen = !fabOpen),
           ),
         ],
-      ),
+      ) : null,
       body: loading
           ? const Center(child: CircularProgressIndicator())
           : teams.isEmpty
@@ -397,14 +423,24 @@ class _TeamsPageState extends State<TeamsPage> {
                           fontWeight: FontWeight.w600,
                         ),
                       ),
-                      trailing: IconButton(
+                      onTap: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (_) => TeamDetailPage(
+                              teamId: int.parse(team['id'] ?? '0'),
+                            ),
+                          ),
+                        );
+                      },
+                      trailing: _isAdmin ? IconButton(
                         icon: const Icon(Icons.edit),
                         onPressed: () => showEditTeamDialog(
                           context,
                           team['id'] ?? '',
                           team['name'] ?? '',
                         ),
-                      ),
+                      ) : null,
                     ),
                   ),
               ],
