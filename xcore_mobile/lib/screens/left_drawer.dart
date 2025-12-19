@@ -57,10 +57,7 @@ class LeftDrawer extends StatelessWidget {
                 // Tampilkan info status user di header (Opsional, biar keren)
                 Text(
                   request.loggedIn ? 'Welcome, User!' : 'Guest Mode',
-                  style: const TextStyle(
-                    color: Colors.white70,
-                    fontSize: 12,
-                  ),
+                  style: const TextStyle(color: Colors.white70, fontSize: 12),
                 ),
               ],
             ),
@@ -99,9 +96,7 @@ class LeftDrawer extends StatelessWidget {
               Navigator.pop(context);
               Navigator.push(
                 context,
-                MaterialPageRoute(
-                  builder: (context) => const PredictionPage(),
-                ),
+                MaterialPageRoute(builder: (context) => const PredictionPage()),
               );
             },
           ),
@@ -185,10 +180,7 @@ class LeftDrawer extends StatelessWidget {
       ),
       title: Text(
         title,
-        style: TextStyle(
-          fontWeight: FontWeight.w600,
-          color: Colors.grey[800],
-        ),
+        style: TextStyle(fontWeight: FontWeight.w600, color: Colors.grey[800]),
       ),
       trailing: Icon(Icons.chevron_right_rounded, color: Colors.grey[400]),
       onTap: onTap,
@@ -230,10 +222,7 @@ class LeftDrawer extends StatelessWidget {
                 Navigator.of(context).pop();
                 _performLogout(context);
               },
-              child: const Text(
-                "Logout",
-                style: TextStyle(color: Colors.red),
-              ),
+              child: const Text("Logout", style: TextStyle(color: Colors.red)),
             ),
           ],
         );
@@ -249,12 +238,11 @@ class LeftDrawer extends StatelessWidget {
     try {
       // Pastikan URL konsisten (127.0.0.1 untuk Web)
       final response = await request.logout(
-        "http://localhost:8000/auth/logout/",
+        "https://alvin-christian-xcore.pbp.cs.ui.ac.id/auth/logout/",
       );
 
       // Cek response status kalau perlu, tapi biasanya request.logout
       // sudah mengupdate state loggedIn jadi false otomatis.
-
     } catch (e) {
       print("Logout network error: $e");
       snackbarMessage =

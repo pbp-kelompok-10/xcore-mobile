@@ -1,5 +1,8 @@
 import 'package:flutter/material.dart';
 import 'player_service.dart';
+import 'player_detail_service.dart';
+import 'player_detail_page.dart';
+import 'add_player_page.dart';
 import '../../models/player_entry.dart';
 
 class PlayersPage extends StatefulWidget {
@@ -11,14 +14,38 @@ class PlayersPage extends StatefulWidget {
 
 class _PlayersPageState extends State<PlayersPage> {
   List<Player> _players = [];
+  List<Player> _filteredPlayers = [];
   bool _loading = true;
   String _error = '';
   bool _fabOpen = false;
+  String _searchQuery = '';
+  bool _isAdmin = false;
+  bool _isLoading = true;
 
   @override
   void initState() {
     super.initState();
     _loadPlayers();
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    _checkAdminStatus();
+  }
+
+  Future<void> _checkAdminStatus() async {
+    try {
+      final admin_status = await PlayerService.fetchAdminStatus(context);
+      setState(() {
+        _isAdmin = admin_status;
+      });
+    } catch (e) {
+      setState(() {
+        _error = e.toString();
+        _isLoading = false;
+      });
+    }
   }
 
   Future<void> _loadPlayers() async {
@@ -31,6 +58,7 @@ class _PlayersPageState extends State<PlayersPage> {
       final players = await PlayerService.getPlayers();
       setState(() {
         _players = players;
+        _filteredPlayers = players;
       });
     } catch (e) {
       setState(() {
@@ -43,12 +71,28 @@ class _PlayersPageState extends State<PlayersPage> {
     });
   }
 
+  void _filterPlayers(String query) {
+    setState(() {
+      _searchQuery = query;
+      if (query.isEmpty) {
+        _filteredPlayers = _players;
+      } else {
+        _filteredPlayers = _players
+            .where(
+              (player) =>
+                  player.nama.toLowerCase().contains(query.toLowerCase()),
+            )
+            .toList();
+      }
+    });
+  }
+
   // GROUP BY TEAM NAME
   Map<String, List<Player>> groupByTeam(List<Player> players) {
     final Map<String, List<Player>> grouped = {};
 
     for (var player in players) {
-      final teamName = player.tim.name;
+      final teamName = player.teamName;
 
       if (!grouped.containsKey(teamName)) {
         grouped[teamName] = [];
@@ -63,35 +107,53 @@ class _PlayersPageState extends State<PlayersPage> {
   // ======== ASYNC UPLOAD ZIP WITH PROGRESS ========
   Future<void> _uploadPlayersZip(BuildContext context) async {
     // Pick ZIP file
-    final fileBytes = await PlayerService.pickPlayersZip();
-    if (fileBytes == null) return;
+    final zipFile = await PlayerService.pickPlayersZip();
+    if (zipFile == null) return;
 
     // Show progress dialog
     showDialog(
       context: context,
       barrierDismissible: false,
-      builder: (_) => const Center(
-        child: CircularProgressIndicator(),
-      ),
+      builder: (_) => const Center(child: CircularProgressIndicator()),
     );
 
     try {
-      final result = await PlayerService.uploadPlayersZip(fileBytes);
+      final result = await PlayerService.uploadPlayersZip(zipFile);
 
       if (!mounted) return;
       Navigator.pop(context); // Close loading dialog
 
+      // Parse results
+      final added = result['added'] as List? ?? [];
+      final skipped = result['skipped'] as List? ?? [];
+      final missingTeams = result['missing_teams'] as List? ?? [];
+      final invalidFiles = result['invalid_files'] as List? ?? [];
+
+      // Build summary message
+      String message = "Upload complete!\n";
+      message += "✓ Added: ${added.length}\n";
+
+      if (skipped.isNotEmpty) {
+        message += "⚠ Skipped: ${skipped.length}\n";
+      }
+      if (missingTeams.isNotEmpty) {
+        message += "✗ Missing teams: ${missingTeams.join(', ')}\n";
+      }
+      if (invalidFiles.isNotEmpty) {
+        message += "✗ Invalid files: ${invalidFiles.length}\n";
+      }
+
       // Show result
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text("Upload complete"),
+          content: Text(message),
           backgroundColor: Colors.green,
+          duration: const Duration(seconds: 3),
         ),
       );
 
       // Auto refresh data
       await _loadPlayers();
-
     } catch (e) {
       if (!mounted) return;
       Navigator.pop(context);
@@ -109,106 +171,179 @@ class _PlayersPageState extends State<PlayersPage> {
   Widget build(BuildContext context) {
     if (_loading) {
       return Scaffold(
-        appBar: AppBar(title: const Text("Players")),
+        appBar: AppBar(
+          title: const Text("Players"),
+          automaticallyImplyLeading: false,
+        ),
         body: const Center(child: CircularProgressIndicator()),
       );
     }
 
     if (_error.isNotEmpty) {
       return Scaffold(
-        appBar: AppBar(title: const Text("Players")),
+        appBar: AppBar(
+          title: const Text("Players"),
+          automaticallyImplyLeading: false,
+        ),
         body: Center(
-          child: Text(
-            _error,
-            style: const TextStyle(color: Colors.red),
-          ),
+          child: Text(_error, style: const TextStyle(color: Colors.red)),
         ),
       );
     }
 
-    final grouped = groupByTeam(_players);
+    final grouped = groupByTeam(_filteredPlayers);
 
     return Scaffold(
       appBar: AppBar(
         title: const Text("Players"),
         backgroundColor: const Color(0xFF1e423b),
+        automaticallyImplyLeading: false,
       ),
-
-      // FLOATING EXPANDING BUTTONS
-      floatingActionButton: Column(
-        mainAxisSize: MainAxisSize.min,
-        crossAxisAlignment: CrossAxisAlignment.end,
+      body: Column(
         children: [
-          if (_fabOpen) ...[
-            FloatingActionButton.extended(
-              heroTag: "addPlayerFAB",
-              backgroundColor: Colors.blue,
-              label: const Text("Add Player"),
-              icon: const Icon(Icons.person_add),
-              onPressed: () {
-                // TODO: navigate to add player page
-              },
+          Padding(
+            padding: const EdgeInsets.all(12),
+            child: TextField(
+              onChanged: _filterPlayers,
+              decoration: InputDecoration(
+                hintText: 'Search player',
+                prefixIcon: const Icon(Icons.search),
+                suffixIcon: _searchQuery.isNotEmpty
+                    ? IconButton(
+                        icon: const Icon(Icons.clear),
+                        onPressed: () => _filterPlayers(''),
+                      )
+                    : null,
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                contentPadding: const EdgeInsets.symmetric(horizontal: 16),
+              ),
             ),
-            const SizedBox(height: 12),
+          ),
+          Expanded(
+            child: _filteredPlayers.isEmpty
+                ? const Center(
+                    child: Text(
+                      "No players available",
+                      style: TextStyle(fontSize: 16),
+                    ),
+                  )
+                : RefreshIndicator(
+                    onRefresh: _loadPlayers,
+                    child: ListView(
+                      children:
+                          (grouped.entries.toList()
+                                ..sort((a, b) => a.key.compareTo(b.key)))
+                              .map((entry) {
+                                final teamName = entry.key;
+                                final players = entry.value;
 
-            FloatingActionButton.extended(
-              heroTag: "uploadPlayerFAB",
-              backgroundColor: Colors.green,
-              label: const Text("Upload ZIP"),
-              icon: const Icon(Icons.upload_file),
-              onPressed: () => _uploadPlayersZip(context),
-            ),
-            const SizedBox(height: 12),
-          ],
-
-          FloatingActionButton(
-            heroTag: "toggleFAB",
-            backgroundColor: const Color(0xFF1e423b),
-            child: Icon(
-              _fabOpen ? Icons.close : Icons.add,
-              color: Colors.white,
-            ),
-            onPressed: () {
-              setState(() => _fabOpen = !_fabOpen);
-            },
+                                return ExpansionTile(
+                                  leading: Image.network(
+                                    'https://flagcdn.com/24x18/${players.first.teamCode.toLowerCase()}.png',
+                                    width: 32,
+                                    height: 24,
+                                    errorBuilder:
+                                        (context, error, stackTrace) =>
+                                            const Icon(Icons.flag),
+                                  ),
+                                  title: Text(
+                                    teamName,
+                                    style: const TextStyle(
+                                      fontSize: 18,
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                                  ),
+                                  children: players.map((player) {
+                                    return ListTile(
+                                      leading: CircleAvatar(
+                                        backgroundColor: Colors.green[700],
+                                        child: Text(
+                                          player.nomor.toString(),
+                                          style: const TextStyle(
+                                            color: Colors.white,
+                                          ),
+                                        ),
+                                      ),
+                                      title: Text(player.nama),
+                                      subtitle: Text(
+                                        "${player.asal} · Age ${player.umur}",
+                                      ),
+                                      onTap: () async {
+                                        final refreshNeeded =
+                                            await Navigator.push(
+                                              context,
+                                              MaterialPageRoute(
+                                                builder: (_) =>
+                                                    PlayerDetailPage(
+                                                      playerId: player.id,
+                                                    ),
+                                              ),
+                                            );
+                                        if (refreshNeeded == true) {
+                                          _loadPlayers();
+                                        }
+                                      },
+                                    );
+                                  }).toList(),
+                                );
+                              })
+                              .toList(),
+                    ),
+                  ),
           ),
         ],
       ),
 
-      // BODY
-      body: RefreshIndicator(
-        onRefresh: _loadPlayers,
-        child: ListView(
-          children: grouped.entries.map((entry) {
-            final teamName = entry.key;
-            final players = entry.value;
-
-            return ExpansionTile(
-              title: Text(
-                teamName,
-                style: const TextStyle(
-                    fontSize: 18, fontWeight: FontWeight.bold),
-              ),
-              children: players.map((player) {
-                return ListTile(
-                  leading: CircleAvatar(
-                    backgroundColor: Colors.green[700],
-                    child: Text(
-                      player.nomor.toString(),
-                      style: const TextStyle(color: Colors.white),
-                    ),
+      // FLOATING EXPANDING BUTTONS
+      floatingActionButton: _isAdmin
+          ? Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.end,
+              children: [
+                if (_fabOpen) ...[
+                  FloatingActionButton.extended(
+                    heroTag: "addPlayerFAB",
+                    backgroundColor: Colors.blue,
+                    label: const Text("Add Player"),
+                    icon: const Icon(Icons.person_add),
+                    onPressed: () async {
+                      final refreshNeeded = await Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (_) => const AddPlayerPage(),
+                        ),
+                      );
+                      if (refreshNeeded == true) {
+                        _loadPlayers();
+                      }
+                    },
                   ),
-                  title: Text(player.nama),
-                  subtitle: Text("${player.asal} · Age ${player.umur}"),
-                  onTap: () {
-                    // TODO navigate to player detail
+                  const SizedBox(height: 12),
+                  FloatingActionButton.extended(
+                    heroTag: "uploadPlayerFAB",
+                    backgroundColor: Colors.green,
+                    label: const Text("Upload ZIP"),
+                    icon: const Icon(Icons.upload_file),
+                    onPressed: () => _uploadPlayersZip(context),
+                  ),
+                  const SizedBox(height: 12),
+                ],
+                FloatingActionButton(
+                  heroTag: "toggleFAB",
+                  backgroundColor: const Color(0xFF1e423b),
+                  child: Icon(
+                    _fabOpen ? Icons.close : Icons.add,
+                    color: Colors.white,
+                  ),
+                  onPressed: () {
+                    setState(() => _fabOpen = !_fabOpen);
                   },
-                );
-              }).toList(),
-            );
-          }).toList(),
-        ),
-      ),
+                ),
+              ],
+            )
+          : null,
     );
   }
 }

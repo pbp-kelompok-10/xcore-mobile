@@ -1,14 +1,25 @@
 import 'dart:convert';
-import 'dart:io';
+import 'dart:typed_data';
 
 import 'package:http/http.dart' as http;
 import 'package:file_picker/file_picker.dart';
-
+import 'package:pbp_django_auth/pbp_django_auth.dart';
 import '../../models/player_entry.dart';
+import 'players_page.dart';
+
+import 'package:flutter/cupertino.dart';
+import 'package:provider/provider.dart';
 
 class PlayerService {
   // 🔥 Change based on your server
-  static const String baseUrl = "http://localhost:8000/lineup/api";
+  static const String baseUrl =
+      "https://alvin-christian-xcore.pbp.cs.ui.ac.id/lineup/api";
+  static bool isAdmin = false;
+
+  // GETTER for isAdmin
+  static bool getIsAdmin() {
+    return isAdmin;
+  }
 
   // ------------------------------------------------------------
   // GET ALL PLAYERS
@@ -26,6 +37,27 @@ class PlayerService {
     return (jsonBody["players"] as List)
         .map((p) => Player.fromJson(p))
         .toList();
+  }
+
+  static Future<bool> fetchAdminStatus(BuildContext context) async {
+    final request = context.watch<CookieRequest>();
+
+    try {
+      final response = await request.get(
+        'https://alvin-christian-xcore.pbp.cs.ui.ac.id/auth/is-admin/',
+      );
+
+      // Periksa apakah user terautentikasi DAN apakah admin
+      if (response['status'] == true) {
+        isAdmin = response['is_admin'];
+        return response['is_admin'];
+      } else {
+        // User tidak terautentikasi
+        return false;
+      }
+    } catch (e) {
+      throw Exception('Failed to get admin status : $e');
+    }
   }
 
   // ------------------------------------------------------------
@@ -80,7 +112,7 @@ class PlayerService {
         "asal": asal,
         "umur": umur,
         "nomor": nomor,
-        "tim": teamId
+        "tim": teamId,
       }),
     );
 
@@ -108,7 +140,7 @@ class PlayerService {
         "asal": asal,
         "umur": umur,
         "nomor": nomor,
-        "tim": teamId
+        "tim": teamId,
       }),
     );
 
@@ -127,9 +159,9 @@ class PlayerService {
   }
 
   // ------------------------------------------------------------
-  // PICK ZIP FILE USING file_picker
+  // PICK ZIP FILE USING file_picker (Flutter Web compatible)
   // ------------------------------------------------------------
-  static Future<File?> pickPlayersZip() async {
+  static Future<Uint8List?> pickPlayersZip() async {
     final result = await FilePicker.platform.pickFiles(
       type: FileType.custom,
       allowedExtensions: ["zip"],
@@ -137,21 +169,36 @@ class PlayerService {
 
     if (result == null) return null;
 
-    return File(result.files.single.path!);
+    return result.files.single.bytes;
   }
 
   // ------------------------------------------------------------
-  // UPLOAD PLAYERS ZIP
+  // UPLOAD PLAYERS ZIP (base64 JSON format for Flutter Web)
   // ------------------------------------------------------------
-  static Future<Map<String, dynamic>> uploadPlayersZip(File zipFile) async {
+  static Future<Map<String, dynamic>> uploadPlayersZip(
+    Uint8List zipBytes,
+  ) async {
     final url = Uri.parse("$baseUrl/upload/players/");
 
-    final request = http.MultipartRequest("POST", url)
-      ..files.add(await http.MultipartFile.fromPath("file", zipFile.path));
+    final base64File = base64Encode(zipBytes);
 
-    final streamed = await request.send();
-    final response = await http.Response.fromStream(streamed);
+    final response = await http.post(
+      url,
+      headers: {"Content-Type": "application/json"},
+      body: jsonEncode({"file": base64File}),
+    );
 
-    return jsonDecode(response.body);
+    if (response.statusCode != 200) {
+      final errorData = jsonDecode(response.body);
+      throw Exception(errorData['error'] ?? 'Upload failed');
+    }
+
+    final result = jsonDecode(response.body);
+
+    if (result['status'] != 'ok') {
+      throw Exception('Upload returned an error');
+    }
+
+    return result;
   }
 }

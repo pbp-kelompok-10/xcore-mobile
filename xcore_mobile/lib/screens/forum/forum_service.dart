@@ -10,7 +10,8 @@ import 'package:provider/provider.dart';
 import '../../services/auth_service.dart';
 
 class ForumService {
-  static const String baseUrl = 'http://localhost:8000'; // Ganti URL Django
+  static const String baseUrl =
+      'https://alvin-christian-xcore.pbp.cs.ui.ac.id'; // Ganti URL Django
 
   // Get forum by match ID
   static Future<ForumEntry> fetchForumByMatch(String matchId) async {
@@ -30,7 +31,10 @@ class ForumService {
   }
 
   // Get posts for a forum dengan informasi user
-  static Future<Map<String, dynamic>> fetchPosts(String forumId, BuildContext context) async {
+  static Future<Map<String, dynamic>> fetchPosts(
+    String forumId,
+    BuildContext context,
+  ) async {
     final request = Provider.of<CookieRequest>(context, listen: false);
 
     try {
@@ -46,7 +50,9 @@ class ForumService {
         final List<dynamic> postsJson = response['posts'];
 
         // Convert ke List<PostEntry>
-        final posts = postsJson.map((json) => PostEntry.fromJson(json)).toList();
+        final posts = postsJson
+            .map((json) => PostEntry.fromJson(json))
+            .toList();
 
         // Kembalikan posts DAN informasi user
         return {
@@ -65,7 +71,11 @@ class ForumService {
   }
 
   // Add new post
-  static Future<void> addPost(String forumId, String message, BuildContext context) async {
+  static Future<void> addPost(
+    String forumId,
+    String message,
+    BuildContext context,
+  ) async {
     final request = context.read<CookieRequest>();
 
     try {
@@ -76,36 +86,35 @@ class ForumService {
       // Menggunakan CookieRequest untuk mengirim request dengan cookies/session
       final response = await request.post(
         '${ForumService.baseUrl}/forum/flutter/$forumId/add_post/',
-        {
-          'message': message,
-        },
+        {'message': message},
       );
 
       if (response['success'] != true) {
         throw Exception(response['error'] ?? 'Failed to edit post');
       }
-
     } catch (e) {
       rethrow;
     }
-
   }
 
   // Edit post
-  static Future<void> editPost(String forumId, String postId, String message, BuildContext context) async {
+  static Future<void> editPost(
+    String forumId,
+    String postId,
+    String message,
+    BuildContext context,
+  ) async {
     final request = context.read<CookieRequest>();
 
     try {
-      if (!request.loggedIn){
+      if (!request.loggedIn) {
         throw Exception('User not logged in. Please login first.');
       }
 
       // Menggunakan CookieRequest untuk mengirim request dengan cookies/session
       final response = await request.post(
         '${ForumService.baseUrl}/forum/flutter/$forumId/edit_post/$postId/',
-        {
-          'message': message,
-        },
+        {'message': message},
       );
 
       if (response['success'] != true) {
@@ -117,13 +126,17 @@ class ForumService {
   }
 
   // Delete post
-  static Future<void> deletePost(String forumId, String postId, BuildContext context) async {
+  static Future<void> deletePost(
+    String forumId,
+    String postId,
+    BuildContext context,
+  ) async {
     final request = context.read<CookieRequest>();
 
     try {
       final response = await request.post(
         '${baseUrl}/forum/flutter/$forumId/delete_post/$postId/',
-        {}
+        {},
       );
 
       if (response['success'] != true) {
@@ -132,6 +145,5 @@ class ForumService {
     } catch (e) {
       rethrow;
     }
-
   }
 }

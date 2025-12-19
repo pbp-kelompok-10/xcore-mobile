@@ -7,15 +7,13 @@ import '../../models/highlights_entry.dart';
 import '../../models/scoreboard_entry.dart';
 
 class HighlightService {
-  static const String baseUrl = "http://localhost:8000";
+  static const String baseUrl = "https://alvin-christian-xcore.pbp.cs.ui.ac.id";
 
   static Future<bool> fetchAdminStatus(BuildContext context) async {
     final request = context.watch<CookieRequest>();
 
     try {
-      final response = await request.get(
-        '$baseUrl/auth/is-admin/',
-      );
+      final response = await request.get('$baseUrl/auth/is-admin/');
 
       // Periksa apakah user terautentikasi DAN apakah admin
       if (response['status'] == true) {

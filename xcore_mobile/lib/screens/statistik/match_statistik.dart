@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:pbp_django_auth/pbp_django_auth.dart';
+import 'package:provider/provider.dart';
 import 'package:xcore_mobile/models/statistik_entry.dart'; 
 import 'statistik_service.dart';
 import '../scoreboard/scoreboard_page.dart';
@@ -9,7 +11,7 @@ import '../lineup/lineup_page.dart';
 import 'widgets/header_section.dart';
 import 'widgets/navigation_cards.dart';
 import 'widgets/statistik_row.dart';
-import 'package:xcore_mobile/services/auth_service.dart';
+import 'widgets/flag_widget.dart'; // Import FlagWidget
 import 'admin/add_statistik_page.dart';
 import 'admin/edit_statistik_page.dart';
 
@@ -39,22 +41,45 @@ class _MatchStatisticsPageState extends State<MatchStatisticsPage> {
   String _error = '';
   bool _isAdmin = false;
 
+  // Warna dari PROD
+  static const Color primaryColor = Color(0xFF4AA69B);
+  static const Color scaffoldBgColor = Color(0xFFE8F6F4);
+  static const Color darkTextColor = Color(0xFF2C5F5A);
+  static const Color mutedTextColor = Color(0xFF6B8E8A);
+  static const Color accentColor = Color(0xFF34C6B8);
+  static const Color lightBgColor = Color(0xFFD1F0EB);
+  static const Color whiteColor = Colors.white;
+
   @override
   void initState() {
     super.initState();
     _loadStatistik();
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
     _checkAdminStatus();
   }
 
   Future<void> _checkAdminStatus() async {
-    final isAdmin = await AuthService.isAdmin();
-    setState(() {
-      _isAdmin = isAdmin;
-    });
+    try {
+      final admin_status = await StatistikService.fetchAdminStatus(context);
+      setState(() {
+        _isAdmin = admin_status;
+      });
+    } catch (e) {
+      print('Error checking admin status: $e');
+    }
   }
 
   Future<void> _loadStatistik() async {
     try {
+      setState(() {
+        _isLoading = true;
+        _error = '';
+      });
+      
       final statistik = await StatistikService.fetchStatistik(widget.matchId);
       setState(() {
         _statistik = statistik;
@@ -65,17 +90,16 @@ class _MatchStatisticsPageState extends State<MatchStatisticsPage> {
         _error = e.toString();
         _isLoading = false;
       });
+      print('Error loading statistik: $e');
     }
   }
 
   // Navigation functions
   void _navigateToScoreboard() {
-    _showSnackBar("Kembali ke Scoreboard");
     Navigator.pop(context);
   }
 
   void _navigateToForum() {
-    _showSnackBar("Membuka Forum");
     Navigator.push(
       context,
       MaterialPageRoute(builder: (context) => ForumPage(matchId: widget.matchId)),
@@ -83,7 +107,6 @@ class _MatchStatisticsPageState extends State<MatchStatisticsPage> {
   }
 
   void _navigateToHighlight() {
-    _showSnackBar("Membuka Highlight");
     Navigator.push(
       context,
       MaterialPageRoute(builder: (context) => HighlightPage(matchId: widget.matchId)),
@@ -91,15 +114,13 @@ class _MatchStatisticsPageState extends State<MatchStatisticsPage> {
   }
 
   void _navigateToPrediction() {
-    _showSnackBar("Membuka Prediction");
     Navigator.push(
       context,
-      MaterialPageRoute(builder: (context) => const PredictionPage()),
+      MaterialPageRoute(builder: (context) => PredictionPage()),
     );
   }
 
   void _navigateToLineup() {
-    _showSnackBar("Membuka Lineup");
     Navigator.push(
       context,
       MaterialPageRoute(builder: (context) => LineupPage(matchId: widget.matchId)),
@@ -139,63 +160,54 @@ class _MatchStatisticsPageState extends State<MatchStatisticsPage> {
     final confirmed = await showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        backgroundColor: const Color(0xFFFFFFFF),
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(16),
-        ),
-        title: const Text(
-          'Hapus Statistik',
-          style: TextStyle(
-            fontFamily: 'Nunito Sans',
-            fontWeight: FontWeight.w700,
-            color: Color(0xFF2C5F5A),
-          ),
-        ),
-        content: const Text(
-          'Yakin ingin menghapus statistik pertandingan ini?',
-          style: TextStyle(
-            fontFamily: 'Nunito Sans',
-            color: Color(0xFF6B8E8A),
-          ),
-        ),
+        title: Text('Hapus Statistik', style: TextStyle(color: darkTextColor)),
+        content: Text('Yakin ingin menghapus statistik pertandingan ini?', style: TextStyle(color: mutedTextColor)),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context, false),
-            child: const Text(
-              'Batal',
-              style: TextStyle(
-                fontFamily: 'Nunito Sans',
-                fontWeight: FontWeight.w600,
-                color: Color(0xFF6B7280),
-              ),
-            ),
+            child: Text('Batal', style: TextStyle(color: mutedTextColor)),
           ),
           TextButton(
             onPressed: () => Navigator.pop(context, true),
-            child: const Text(
-              'Hapus',
-              style: TextStyle(
-                fontFamily: 'Nunito Sans',
-                fontWeight: FontWeight.w600,
-                color: Color(0xFFEF4444),
-              ),
-            ),
+            child: Text('Hapus', style: TextStyle(color: Colors.red)),
           ),
         ],
+        backgroundColor: Colors.white,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(12),
+        ),
       ),
     );
 
     if (confirmed == true) {
       try {
-        final success = await StatistikService.deleteStatistik(widget.matchId);
+        final success = await StatistikService.deleteStatistik(context, widget.matchId);
         if (success) {
-          _showSnackBar('Statistik berhasil dihapus');
-          _loadStatistik();
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text('✅ Statistik berhasil dihapus'),
+              backgroundColor: primaryColor,
+              duration: Duration(seconds: 2),
+            )
+          );
+          _loadStatistik(); // Auto refresh setelah delete
         } else {
-          _showSnackBar('Gagal menghapus statistik');
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text('❌ Gagal menghapus statistik'),
+              backgroundColor: Colors.red[600],
+              duration: Duration(seconds: 2),
+            )
+          );
         }
       } catch (e) {
-        _showSnackBar('Error: $e');
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('❌ Error: $e'),
+            backgroundColor: Colors.red[600],
+            duration: Duration(seconds: 3),
+          )
+        );
       }
     }
   }
@@ -205,15 +217,9 @@ class _MatchStatisticsPageState extends State<MatchStatisticsPage> {
       ..hideCurrentSnackBar()
       ..showSnackBar(
         SnackBar(
-          content: Text(
-            message,
-            style: const TextStyle(
-              fontFamily: 'Nunito Sans',
-              fontWeight: FontWeight.w600,
-            ),
-          ),
-          backgroundColor: const Color(0xFF4AA69B),
-          duration: const Duration(seconds: 2),
+          content: Text(message),
+          backgroundColor: primaryColor,
+          duration: Duration(seconds: 2),
           behavior: SnackBarBehavior.floating,
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(10),
@@ -222,401 +228,874 @@ class _MatchStatisticsPageState extends State<MatchStatisticsPage> {
       );
   }
 
-  // Build admin FAB
-  Widget _buildAdminFab() {
-    if (!_isAdmin) return const SizedBox();
-
-    return FloatingActionButton(
-      onPressed: _statistik == null ? _addStatistik : _editStatistik,
-      backgroundColor: const Color(0xFF4AA69B),
-      child: Icon(_statistik == null ? Icons.add : Icons.edit, color: Colors.white),
+  // Navigation Cards yang selalu tampil
+  Widget _buildNavigationCards() {
+    return NavigationCards(
+      onForumTap: _navigateToForum,
+      onHighlightTap: _navigateToHighlight,
+      onPredictionTap: _navigateToPrediction,
+      onLineupTap: _navigateToLineup,
+      matchId: widget.matchId,
     );
   }
 
-  // Build admin actions
-  Widget _buildAdminActions() {
-    if (!_isAdmin || _statistik == null) return const SizedBox();
-
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-      child: Row(
-        children: [
-          Expanded(
-            child: ElevatedButton.icon(
-              icon: const Icon(Icons.edit, size: 18),
-              label: const Text(
-                'Edit Statistik',
-                style: TextStyle(
-                  fontFamily: 'Nunito Sans',
-                  fontWeight: FontWeight.w600,
-                ),
-              ),
-              onPressed: _editStatistik,
-              style: ElevatedButton.styleFrom(
-                backgroundColor: const Color(0xFF4AA69B),
-                foregroundColor: Colors.white,
-                elevation: 0,
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(10),
-                ),
-                padding: const EdgeInsets.symmetric(vertical: 12),
-              ),
-            ),
-          ),
-          const SizedBox(width: 8),
-          Expanded(
-            child: ElevatedButton.icon(
-              icon: const Icon(Icons.delete, size: 18),
-              label: const Text(
-                'Hapus',
-                style: TextStyle(
-                  fontFamily: 'Nunito Sans',
-                  fontWeight: FontWeight.w600,
-                ),
-              ),
-              onPressed: _deleteStatistik,
-              style: ElevatedButton.styleFrom(
-                backgroundColor: const Color(0xFFEF4444),
-                foregroundColor: Colors.white,
-                elevation: 0,
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(10),
-                ),
-                padding: const EdgeInsets.symmetric(vertical: 12),
-              ),
-            ),
+  // Widget untuk menampilkan header seperti di AddStatistikPage (tanpa skor) DENGAN FlagWidget
+  Widget _buildMatchHeaderWithoutScore() {
+    return Container(
+      padding: EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: whiteColor,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: primaryColor.withOpacity(0.2)),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.05),
+            blurRadius: 8,
+            offset: Offset(0, 2),
           ),
         ],
       ),
-    );
-  }
-
-  // Loading state
-  Widget _buildLoadingState() {
-    return Center(
       child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          const CircularProgressIndicator(
-            color: Color(0xFF4AA69B),
-          ),
-          const SizedBox(height: 16),
-          const Text(
-            'Loading Statistics...',
+          // Header "MATCH"
+          Text(
+            'MATCH STATISTICS',
             style: TextStyle(
-              fontFamily: 'Nunito Sans',
-              fontSize: 16,
-              fontWeight: FontWeight.w500,
-              color: Color(0xFF6B8E8A),
+              fontSize: 14,
+              fontWeight: FontWeight.bold,
+              color: primaryColor,
+              letterSpacing: 0.5,
             ),
           ),
-          if (_isAdmin && _statistik == null) ...[
-            const SizedBox(height: 20),
-            ElevatedButton.icon(
-              icon: const Icon(Icons.add),
-              label: const Text(
-                'Tambah Statistik',
-                style: TextStyle(
-                  fontFamily: 'Nunito Sans',
-                  fontWeight: FontWeight.w600,
+          SizedBox(height: 16),
+          
+          // Team names dengan VS di tengah DAN BENDERA - DENGAN NAMA NEGARA
+          Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              // Home team dengan bendera di atas nama
+              Expanded(
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    // Bendera menggunakan FlagWidget
+                    FlagWidget(
+                      teamCode: widget.homeTeamCode,
+                      isHome: true,
+                      width: 60,
+                      height: 40,
+                    ),
+                    SizedBox(height: 8),
+                    // Nama tim
+                    Text(
+                      widget.homeTeam,
+                      style: TextStyle(
+                        fontSize: 14,
+                        fontWeight: FontWeight.w600,
+                        color: darkTextColor,
+                      ),
+                      textAlign: TextAlign.center,
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                    SizedBox(height: 4),
+                    // Label HOME
+                    Container(
+                      padding: EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                      decoration: BoxDecoration(
+                        color: primaryColor.withOpacity(0.1),
+                        borderRadius: BorderRadius.circular(4),
+                      ),
+                      child: Text(
+                        'HOME',
+                        style: TextStyle(
+                          fontSize: 10,
+                          fontWeight: FontWeight.bold,
+                          color: primaryColor,
+                        ),
+                      ),
+                    ),
+                  ],
                 ),
               ),
-              onPressed: _addStatistik,
-              style: ElevatedButton.styleFrom(
-                backgroundColor: const Color(0xFF4AA69B),
-                foregroundColor: Colors.white,
-                elevation: 0,
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(10),
+              
+              // VS di tengah
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 12.0),
+                child: Container(
+                  width: 40,
+                  height: 40,
+                  decoration: BoxDecoration(
+                    color: accentColor.withOpacity(0.1),
+                    shape: BoxShape.circle,
+                    border: Border.all(color: accentColor.withOpacity(0.3), width: 2),
+                  ),
+                  child: Center(
+                    child: Text(
+                      'VS',
+                      style: TextStyle(
+                        fontSize: 14,
+                        fontWeight: FontWeight.bold,
+                        color: darkTextColor,
+                      ),
+                    ),
+                  ),
                 ),
-                padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
               ),
-            ),
-          ],
+              
+              // Away team dengan bendera di atas nama
+              Expanded(
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    // Bendera menggunakan FlagWidget
+                    FlagWidget(
+                      teamCode: widget.awayTeamCode,
+                      isHome: false,
+                      width: 60,
+                      height: 40,
+                    ),
+                    SizedBox(height: 8),
+                    // Nama tim
+                    Text(
+                      widget.awayTeam,
+                      style: TextStyle(
+                        fontSize: 14,
+                        fontWeight: FontWeight.w600,
+                        color: darkTextColor,
+                      ),
+                      textAlign: TextAlign.center,
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                    SizedBox(height: 4),
+                    // Label AWAY
+                    Container(
+                      padding: EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                      decoration: BoxDecoration(
+                        color: accentColor.withOpacity(0.1),
+                        borderRadius: BorderRadius.circular(4),
+                      ),
+                      child: Text(
+                        'AWAY',
+                        style: TextStyle(
+                          fontSize: 10,
+                          fontWeight: FontWeight.bold,
+                          color: accentColor,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+          SizedBox(height: 12),
+          Divider(height: 1, color: mutedTextColor.withOpacity(0.3)),
+          SizedBox(height: 8),
+          // Match ID
+          Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Container(
+                padding: EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                decoration: BoxDecoration(
+                  color: primaryColor.withOpacity(0.05),
+                  borderRadius: BorderRadius.circular(6),
+                ),
+                child: Row(
+                  children: [
+                    Icon(Icons.fingerprint, size: 12, color: primaryColor),
+                    SizedBox(width: 4),
+                    Text(
+                      'Match ID: ${widget.matchId}',
+                      style: TextStyle(
+                        fontSize: 11,
+                        fontWeight: FontWeight.w500,
+                        color: primaryColor,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
         ],
       ),
     );
   }
 
-  // Error state
-  Widget _buildErrorState() {
-    return Center(
-      child: Padding(
-        padding: const EdgeInsets.all(24),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Icon(
-              Icons.error_outline,
-              size: 80,
-              color: const Color(0xFF9CA3AF),
-            ),
-            const SizedBox(height: 24),
-            const Text(
-              'Failed to Load',
-              style: TextStyle(
-                fontFamily: 'Nunito Sans',
-                fontSize: 20,
-                fontWeight: FontWeight.w700,
-                color: Color(0xFF2C5F5A),
-              ),
-            ),
-            const SizedBox(height: 8),
-            Text(
-              _error,
-              textAlign: TextAlign.center,
-              style: const TextStyle(
-                fontFamily: 'Nunito Sans',
-                fontSize: 14,
-                color: Color(0xFF6B8E8A),
-              ),
-            ),
-            const SizedBox(height: 24),
-            if (_isAdmin)
-              ElevatedButton.icon(
-                icon: const Icon(Icons.add, size: 18),
-                label: const Text(
-                  'Tambah Statistik',
-                  style: TextStyle(
-                    fontFamily: 'Nunito Sans',
-                    fontWeight: FontWeight.w600,
-                  ),
-                ),
-                onPressed: _addStatistik,
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: const Color(0xFF4AA69B),
-                  foregroundColor: Colors.white,
-                  elevation: 0,
-                  padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(10),
-                  ),
-                ),
-              ),
-          ],
+  // Loading state DENGAN Navigation Cards
+  Widget _buildLoadingState() {
+    return Column(
+      children: [
+        // Navigation Cards di atas loading indicator
+        Padding(
+          padding: EdgeInsets.all(16),
+          child: _buildNavigationCards(),
         ),
+        Expanded(
+          child: Center(
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                CircularProgressIndicator(
+                  valueColor: AlwaysStoppedAnimation<Color>(primaryColor),
+                  strokeWidth: 2,
+                ),
+                SizedBox(height: 16),
+                Text(
+                  'Loading Statistics...',
+                  style: TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.w500,
+                    color: mutedTextColor,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+
+  // Error state DENGAN Navigation Cards
+  Widget _buildErrorState() {
+    return SingleChildScrollView(
+      child: Column(
+        children: [
+          // Navigation Cards di atas
+          Padding(
+            padding: EdgeInsets.all(16),
+            child: _buildNavigationCards(),
+          ),
+          
+          // Match Header dengan bendera
+          Padding(
+            padding: EdgeInsets.symmetric(horizontal: 16),
+            child: _buildMatchHeaderWithoutScore(),
+          ),
+          
+          SizedBox(height: 24),
+          
+          // Error message dalam KOTAK dengan LEBAR KONSISTEN
+          Padding(
+            padding: EdgeInsets.symmetric(horizontal: 16),
+            child: Container(
+              padding: EdgeInsets.all(24),
+              decoration: BoxDecoration(
+                color: whiteColor,
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(color: Colors.red.withOpacity(0.2)),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withOpacity(0.05),
+                    blurRadius: 8,
+                    offset: Offset(0, 2),
+                  ),
+                ],
+              ),
+              child: Column(
+                children: [
+                  Container(
+                    padding: EdgeInsets.all(16),
+                    decoration: BoxDecoration(
+                      color: Colors.red.withOpacity(0.1),
+                      shape: BoxShape.circle,
+                    ),
+                    child: Icon(Icons.error_outline, size: 40, color: Colors.red),
+                  ),
+                  SizedBox(height: 20),
+                  Text(
+                    'Failed to Load Statistics',
+                    style: TextStyle(
+                      fontSize: 18,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.red,
+                    ),
+                  ),
+                  SizedBox(height: 8),
+                  Text(
+                    _error,
+                    textAlign: TextAlign.center,
+                    style: TextStyle(
+                      fontSize: 14,
+                      color: mutedTextColor,
+                    ),
+                  ),
+                  SizedBox(height: 24),
+                  ElevatedButton(
+                    onPressed: _loadStatistik,
+                    child: Text('Try Again'),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: primaryColor,
+                      foregroundColor: Colors.white,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                    ),
+                  ),
+                  SizedBox(height: 12),
+                  if (_isAdmin)
+                    ElevatedButton.icon(
+                      icon: Icon(Icons.add, size: 18),
+                      label: Text('Tambah Statistik'),
+                      onPressed: _addStatistik,
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: accentColor,
+                        foregroundColor: Colors.white,
+                        padding: EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                      ),
+                    ),
+                ],
+              ),
+            ),
+          ),
+        ],
       ),
     );
   }
 
-  // Empty state
+  // Empty state (belum ada statistik) DENGAN Navigation Cards dan Match Header
   Widget _buildEmptyState() {
-    return Center(
-      child: Padding(
-        padding: const EdgeInsets.all(24),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Icon(
-              Icons.analytics_outlined,
-              size: 80,
-              color: const Color(0xFF9CA3AF),
-            ),
-            const SizedBox(height: 24),
-            const Text(
-              'No Statistics',
-              style: TextStyle(
-                fontFamily: 'Nunito Sans',
-                fontSize: 20,
-                fontWeight: FontWeight.w700,
-                color: Color(0xFF2C5F5A),
+    return SingleChildScrollView(
+      child: Column(
+        children: [
+          // Navigation Cards di atas
+          Padding(
+            padding: EdgeInsets.all(16),
+            child: _buildNavigationCards(),
+          ),
+          
+          // Match Header dengan bendera
+          Padding(
+            padding: EdgeInsets.symmetric(horizontal: 16),
+            child: _buildMatchHeaderWithoutScore(),
+          ),
+          
+          SizedBox(height: 24),
+          
+          // Empty message dalam KOTAK dengan LEBAR KONSISTEN (sama dengan tabel statistik)
+          Padding(
+            padding: EdgeInsets.symmetric(horizontal: 16),
+            child: Container(
+              padding: EdgeInsets.all(32),
+              decoration: BoxDecoration(
+                color: whiteColor,
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(color: primaryColor.withOpacity(0.2)),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withOpacity(0.05),
+                    blurRadius: 8,
+                    offset: Offset(0, 2),
+                  ),
+                ],
+              ),
+              child: Column(
+                children: [
+                  Container(
+                    padding: EdgeInsets.all(16),
+                    decoration: BoxDecoration(
+                      color: primaryColor.withOpacity(0.1),
+                      shape: BoxShape.circle,
+                    ),
+                    child: Icon(Icons.analytics_outlined, size: 40, color: primaryColor),
+                  ),
+                  SizedBox(height: 20),
+                  Text(
+                    'No Statistics Available',
+                    style: TextStyle(
+                      fontSize: 18,
+                      fontWeight: FontWeight.bold,
+                      color: darkTextColor,
+                    ),
+                  ),
+                  SizedBox(height: 8),
+                  Text(
+                    'Statistics will be available once\nthe match begins',
+                    textAlign: TextAlign.center,
+                    style: TextStyle(
+                      fontSize: 14,
+                      color: mutedTextColor,
+                    ),
+                  ),
+                  SizedBox(height: 24),
+                  if (_isAdmin)
+                    ElevatedButton.icon(
+                      icon: Icon(Icons.add, size: 18),
+                      label: Text('Tambah Statistik'),
+                      onPressed: _addStatistik,
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: accentColor,
+                        foregroundColor: Colors.white,
+                        padding: EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                      ),
+                    ),
+                ],
               ),
             ),
-            const SizedBox(height: 8),
-            const Text(
-              'Statistics will be available once\nthe match begins',
-              textAlign: TextAlign.center,
-              style: TextStyle(
-                fontFamily: 'Nunito Sans',
-                fontSize: 14,
-                color: Color(0xFF6B8E8A),
-              ),
-            ),
-            const SizedBox(height: 24),
-            if (_isAdmin)
-              ElevatedButton.icon(
-                icon: const Icon(Icons.add, size: 18),
-                label: const Text(
-                  'Tambah Statistik',
+          ),
+        ],
+      ),
+    );
+  }
+
+  bool get _hasStatistik {
+    return _statistik != null;
+  }
+
+  // Helper method untuk membuat statistik row dengan centering
+  Widget _buildStatistikRowWithCentering({
+    required String title,
+    required int homeValue,
+    required int awayValue,
+    required IconData icon,
+  }) {
+    return Container(
+      padding: EdgeInsets.symmetric(vertical: 14, horizontal: 16),
+      decoration: BoxDecoration(
+        border: Border(bottom: BorderSide(color: primaryColor.withOpacity(0.1))),
+      ),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          // Home value
+          Expanded(
+            flex: 2,
+            child: Center(
+              child: Container(
+                width: 40,
+                padding: EdgeInsets.symmetric(vertical: 6, horizontal: 8),
+                decoration: BoxDecoration(
+                  color: primaryColor.withOpacity(0.1),
+                  borderRadius: BorderRadius.circular(8),
+                  border: Border.all(color: primaryColor.withOpacity(0.3)),
+                ),
+                child: Text(
+                  homeValue.toString(),
                   style: TextStyle(
-                    fontFamily: 'Nunito Sans',
-                    fontWeight: FontWeight.w600,
+                    fontSize: 16,
+                    fontWeight: FontWeight.bold,
+                    color: darkTextColor,
                   ),
-                ),
-                onPressed: _addStatistik,
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: const Color(0xFF4AA69B),
-                  foregroundColor: Colors.white,
-                  elevation: 0,
-                  padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(10),
-                  ),
+                  textAlign: TextAlign.center,
                 ),
               ),
-          ],
-        ),
+            ),
+          ),
+          
+          // Title dengan icon
+          Expanded(
+            flex: 3,
+            child: Center(
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Icon(icon, size: 16, color: primaryColor),
+                  SizedBox(width: 6),
+                  Text(
+                    title,
+                    style: TextStyle(
+                      fontSize: 14,
+                      fontWeight: FontWeight.w600,
+                      color: darkTextColor,
+                    ),
+                    textAlign: TextAlign.center,
+                  ),
+                ],
+              ),
+            ),
+          ),
+          
+          // Away value
+          Expanded(
+            flex: 2,
+            child: Center(
+              child: Container(
+                width: 40,
+                padding: EdgeInsets.symmetric(vertical: 6, horizontal: 8),
+                decoration: BoxDecoration(
+                  color: accentColor.withOpacity(0.1),
+                  borderRadius: BorderRadius.circular(8),
+                  border: Border.all(color: accentColor.withOpacity(0.3)),
+                ),
+                child: Text(
+                  awayValue.toString(),
+                  style: TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.bold,
+                    color: darkTextColor,
+                  ),
+                  textAlign: TextAlign.center,
+                ),
+              ),
+            ),
+          ),
+        ],
       ),
     );
   }
 
   Widget _buildContent() {
     return SingleChildScrollView(
-      physics: const BouncingScrollPhysics(),
+      physics: BouncingScrollPhysics(),
       child: Column(
         children: [
-          // Header Section
-          HeaderSection(
-            stadium: _statistik!.stadium,
-            matchDate: _statistik!.matchDate,
-            homeTeam: widget.homeTeam,
-            awayTeam: widget.awayTeam,
-            homeTeamCode: widget.homeTeamCode,
-            awayTeamCode: widget.awayTeamCode,
-            homeScore: _statistik!.homeScore,
-            awayScore: _statistik!.awayScore,
-          ),
-          
-          const SizedBox(height: 20),
-          
-          // Admin Actions
-          _buildAdminActions(),
-          
-          // Navigation Cards
-          NavigationCards(
-            onForumTap: _navigateToForum,
-            onHighlightTap: _navigateToHighlight,
-            onPredictionTap: _navigateToPrediction,
-            onLineupTap: _navigateToLineup,
-            matchId: widget.matchId,
-          ),
-          
-          const SizedBox(height: 24),
-          
-          // Statistics Section
+          // Navigation Cards di ATAS Header Section
           Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 16),
-            child: Card(
-              elevation: 2,
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(16),
+            padding: EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+            child: _buildNavigationCards(),
+          ),
+          
+          SizedBox(height: 8),
+          
+          // Header Section dengan skor (ketika sudah ada statistik)
+          Padding(
+            padding: EdgeInsets.symmetric(horizontal: 16),
+            child: HeaderSection(
+              stadium: _statistik!.stadium,
+              matchDate: _statistik!.matchDate,
+              homeTeam: widget.homeTeam,
+              awayTeam: widget.awayTeam,
+              homeTeamCode: widget.homeTeamCode,
+              awayTeamCode: widget.awayTeamCode,
+              homeScore: _statistik!.homeScore,
+              awayScore: _statistik!.awayScore,
+            ),
+          ),
+          
+          SizedBox(height: 24),
+          
+          // Statistics Section Title
+          Padding(
+            padding: EdgeInsets.symmetric(horizontal: 16),
+            child: Row(
+              children: [
+                Icon(Icons.analytics, size: 20, color: primaryColor),
+                SizedBox(width: 8),
+                Text(
+                  'STATISTIK PERTANDINGAN',
+                  style: TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.bold,
+                    color: darkTextColor,
+                    letterSpacing: 0.5,
+                  ),
+                ),
+              ],
+            ),
+          ),
+          
+          SizedBox(height: 12),
+          
+          // Statistics Table yang DIKEMBALIKAN ke format asli
+          Padding(
+            padding: EdgeInsets.symmetric(horizontal: 16),
+            child: Container(
+              decoration: BoxDecoration(
+                color: whiteColor,
+                borderRadius: BorderRadius.circular(12),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withOpacity(0.05),
+                    blurRadius: 8,
+                    offset: Offset(0, 2),
+                  ),
+                ],
               ),
-              child: ClipRRect(
-                borderRadius: BorderRadius.circular(16),
-                child: Column(
-                  children: [
-                    // Statistics Header
-                    Container(
-                      padding: const EdgeInsets.all(16),
-                      decoration: const BoxDecoration(
-                        gradient: LinearGradient(
-                          begin: Alignment.topLeft,
-                          end: Alignment.bottomRight,
-                          colors: [Color(0xFF4AA69B), Color(0xFF56BDA9)],
-                        ),
+              child: Column(
+                children: [
+                  // Statistics Header dengan NAMA TIM dan STATISTIK di tengah
+                  Container(
+                    padding: EdgeInsets.all(16),
+                    decoration: BoxDecoration(
+                      color: primaryColor,
+                      borderRadius: BorderRadius.only(
+                        topLeft: Radius.circular(12),
+                        topRight: Radius.circular(12),
                       ),
-                      child: Row(
-                        children: [
-                          Expanded(
+                    ),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        // Home Team
+                        Expanded(
+                          flex: 2,
+                          child: Center(
                             child: Text(
                               widget.homeTeam,
-                              style: const TextStyle(
-                                fontFamily: 'Nunito Sans',
-                                color: Colors.white,
-                                fontWeight: FontWeight.w700,
-                                fontSize: 14,
-                              ),
-                              textAlign: TextAlign.left,
-                              overflow: TextOverflow.ellipsis,
-                            ),
-                          ),
-                          const Expanded(
-                            child: Text(
-                              'TEAM STATISTICS',
                               style: TextStyle(
-                                fontFamily: 'Nunito Sans',
-                                color: Colors.white,
-                                fontWeight: FontWeight.w700,
-                                fontSize: 14,
-                                letterSpacing: 0.5,
+                                color: whiteColor,
+                                fontWeight: FontWeight.bold,
+                                fontSize: 12,
                               ),
                               textAlign: TextAlign.center,
-                            ),
-                          ),
-                          Expanded(
-                            child: Text(
-                              widget.awayTeam,
-                              style: const TextStyle(
-                                fontFamily: 'Nunito Sans',
-                                color: Colors.white,
-                                fontWeight: FontWeight.w700,
-                                fontSize: 14,
-                              ),
-                              textAlign: TextAlign.right,
                               overflow: TextOverflow.ellipsis,
                             ),
                           ),
-                        ],
+                        ),
+                        
+                        // Statistics Title
+                        Expanded(
+                          flex: 1,
+                          child: Center(
+                            child: Container(
+                              padding: EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                              decoration: BoxDecoration(
+                                color: whiteColor.withOpacity(0.2),
+                                borderRadius: BorderRadius.circular(20),
+                              ),
+                              child: Text(
+                                'STATISTIK',
+                                style: TextStyle(
+                                  color: whiteColor,
+                                  fontWeight: FontWeight.bold,
+                                  fontSize: 12,
+                                  letterSpacing: 0.5,
+                                ),
+                              ),
+                            ),
+                          ),
+                        ),
+                        
+                        // Away Team
+                        Expanded(
+                          flex: 2,
+                          child: Center(
+                            child: Text(
+                              widget.awayTeam,
+                              style: TextStyle(
+                                color: whiteColor,
+                                fontWeight: FontWeight.bold,
+                                fontSize: 12,
+                              ),
+                              textAlign: TextAlign.center,
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  
+                  // Statistics Rows dengan DIVIDER antar row
+                  _buildStatistikRowWithCentering(
+                    title: 'Passes',
+                    homeValue: _statistik!.homePasses,
+                    awayValue: _statistik!.awayPasses,
+                    icon: Icons.swap_horiz,
+                  ),
+                  Divider(height: 1, color: Colors.grey[200]),
+                  
+                  _buildStatistikRowWithCentering(
+                    title: 'Total Shots',
+                    homeValue: _statistik!.homeShots,
+                    awayValue: _statistik!.awayShots,
+                    icon: Icons.sports_soccer,
+                  ),
+                  Divider(height: 1, color: Colors.grey[200]),
+                  
+                  _buildStatistikRowWithCentering(
+                    title: 'Shots on Target',
+                    homeValue: _statistik!.homeShotsOnTarget,
+                    awayValue: _statistik!.awayShotsOnTarget,
+                    icon: Icons.flag,
+                  ),
+                  Divider(height: 1, color: Colors.grey[200]),
+                  
+                  // Ball Possession dengan % di samping angka
+                  Container(
+                    padding: EdgeInsets.symmetric(vertical: 14, horizontal: 16),
+                    decoration: BoxDecoration(
+                      border: Border(bottom: BorderSide(color: primaryColor.withOpacity(0.1))),
+                      gradient: LinearGradient(
+                        begin: Alignment.centerLeft,
+                        end: Alignment.centerRight,
+                        colors: [whiteColor, primaryColor.withOpacity(0.05)],
                       ),
                     ),
-                    
-                    // Statistics Rows
-                    StatistikRow(
-                      title: 'Passes',
-                      homeValue: _statistik!.homePasses,
-                      awayValue: _statistik!.awayPasses,
-                      icon: Icons.swap_horiz,
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        // Home value dengan background dan % di samping
+                        Expanded(
+                          flex: 2,
+                          child: Center(
+                            child: Container(
+                              width: 60,
+                              padding: EdgeInsets.symmetric(vertical: 6, horizontal: 8),
+                              decoration: BoxDecoration(
+                                color: primaryColor.withOpacity(0.1),
+                                borderRadius: BorderRadius.circular(8),
+                                border: Border.all(color: primaryColor.withOpacity(0.3)),
+                              ),
+                              child: Row(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  Text(
+                                    _statistik!.homePossession.toStringAsFixed(0),
+                                    style: TextStyle(
+                                      fontSize: 16,
+                                      fontWeight: FontWeight.bold,
+                                      color: darkTextColor,
+                                    ),
+                                  ),
+                                  SizedBox(width: 2),
+                                  Text(
+                                    '%',
+                                    style: TextStyle(
+                                      fontSize: 12,
+                                      fontWeight: FontWeight.w500,
+                                      color: darkTextColor,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ),
+                        ),
+                        
+                        // Title di tengah
+                        Expanded(
+                          flex: 3,
+                          child: Center(
+                            child: Row(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                Icon(Icons.pie_chart, size: 16, color: primaryColor),
+                                SizedBox(width: 6),
+                                Text(
+                                  'Ball Possession',
+                                  style: TextStyle(
+                                    fontSize: 14,
+                                    fontWeight: FontWeight.w600,
+                                    color: darkTextColor,
+                                  ),
+                                  textAlign: TextAlign.center,
+                                ),
+                              ],
+                            ),
+                          ),
+                        ),
+                        
+                        // Away value dengan background dan % di samping
+                        Expanded(
+                          flex: 2,
+                          child: Center(
+                            child: Container(
+                              width: 60,
+                              padding: EdgeInsets.symmetric(vertical: 6, horizontal: 8),
+                              decoration: BoxDecoration(
+                                color: accentColor.withOpacity(0.1),
+                                borderRadius: BorderRadius.circular(8),
+                                border: Border.all(color: accentColor.withOpacity(0.3)),
+                              ),
+                              child: Row(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  Text(
+                                    _statistik!.awayPossession.toStringAsFixed(0),
+                                    style: TextStyle(
+                                      fontSize: 16,
+                                      fontWeight: FontWeight.bold,
+                                      color: darkTextColor,
+                                    ),
+                                  ),
+                                  SizedBox(width: 2),
+                                  Text(
+                                    '%',
+                                    style: TextStyle(
+                                      fontSize: 12,
+                                      fontWeight: FontWeight.w500,
+                                      color: darkTextColor,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ),
+                        ),
+                      ],
                     ),
-                    StatistikRow(
-                      title: 'Shoot',
-                      homeValue: _statistik!.homeShots,
-                      awayValue: _statistik!.awayShots,
-                      icon: Icons.sports_soccer,
-                    ),
-                    StatistikRow(
-                      title: 'Shoot on Target',
-                      homeValue: _statistik!.homeShotsOnTarget,
-                      awayValue: _statistik!.awayShotsOnTarget,
-                      icon: Icons.flag,
-                    ),
-                    StatistikRow(
-                      title: 'Ball Possession',
-                      homeValue: _statistik!.homePossession,
-                      awayValue: _statistik!.awayPossession,
-                      isPercentage: true,
-                      icon: Icons.pie_chart,
-                    ),
-                    StatistikRow(
-                      title: 'Red Card',
-                      homeValue: _statistik!.homeRedCards,
-                      awayValue: _statistik!.awayRedCards,
-                      icon: Icons.error,
-                    ),
-                    StatistikRow(
-                      title: 'Yellow Card',
-                      homeValue: _statistik!.homeYellowCards,
-                      awayValue: _statistik!.awayYellowCards,
-                      icon: Icons.warning,
-                    ),
-                    StatistikRow(
-                      title: 'Offside',
-                      homeValue: _statistik!.homeOffsides,
-                      awayValue: _statistik!.awayOffsides,
-                      icon: Icons.gps_not_fixed,
-                    ),
-                    StatistikRow(
-                      title: 'Corner',
-                      homeValue: _statistik!.homeCorners,
-                      awayValue: _statistik!.awayCorners,
-                      icon: Icons.circle,
-                    ),
-                  ],
-                ),
+                  ),
+                  Divider(height: 1, color: Colors.grey[200]),
+                  
+                  _buildStatistikRowWithCentering(
+                    title: 'Yellow Cards',
+                    homeValue: _statistik!.homeYellowCards,
+                    awayValue: _statistik!.awayYellowCards,
+                    icon: Icons.warning,
+                  ),
+                  Divider(height: 1, color: Colors.grey[200]),
+                  
+                  _buildStatistikRowWithCentering(
+                    title: 'Red Cards',
+                    homeValue: _statistik!.homeRedCards,
+                    awayValue: _statistik!.awayRedCards,
+                    icon: Icons.error,
+                  ),
+                  Divider(height: 1, color: Colors.grey[200]),
+                  
+                  _buildStatistikRowWithCentering(
+                    title: 'Offsides',
+                    homeValue: _statistik!.homeOffsides,
+                    awayValue: _statistik!.awayOffsides,
+                    icon: Icons.gps_not_fixed,
+                  ),
+                  Divider(height: 1, color: Colors.grey[200]),
+                  
+                  _buildStatistikRowWithCentering(
+                    title: 'Corners',
+                    homeValue: _statistik!.homeCorners,
+                    awayValue: _statistik!.awayCorners,
+                    icon: Icons.circle,
+                  ),
+                ],
               ),
             ),
           ),
           
-          const SizedBox(height: 30),
+          SizedBox(height: 32),
+          
+          // Info footer dengan LEBAR KONSISTEN
+          Padding(
+            padding: EdgeInsets.symmetric(horizontal: 16),
+            child: Container(
+              padding: EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                color: primaryColor.withOpacity(0.05),
+                borderRadius: BorderRadius.circular(8),
+                border: Border.all(color: primaryColor.withOpacity(0.1)),
+              ),
+              child: Row(
+                children: [
+                  Icon(Icons.info_outline, size: 16, color: primaryColor),
+                  SizedBox(width: 8),
+                  Expanded(
+                    child: Text(
+                      'Statistik diperbarui secara real-time selama pertandingan berlangsung',
+                      style: TextStyle(
+                        fontSize: 11,
+                        color: mutedTextColor,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+          
+          SizedBox(height: 32),
         ],
       ),
     );
@@ -625,107 +1104,54 @@ class _MatchStatisticsPageState extends State<MatchStatisticsPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFFE8F6F4),
+      backgroundColor: scaffoldBgColor,
       appBar: AppBar(
-        title: const Text(
+        title: Text(
           'Match Statistics',
           style: TextStyle(
-            fontFamily: 'Nunito Sans',
-            fontWeight: FontWeight.w700,
-            fontSize: 20,
+            fontWeight: FontWeight.bold,
+            color: Colors.white,
+            fontSize: 18,
           ),
         ),
-        backgroundColor: const Color(0xFF4AA69B),
-        foregroundColor: const Color(0xFFFFFFFF),
-        elevation: 2,
-        centerTitle: true,
+        backgroundColor: primaryColor,
+        elevation: 0,
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back_ios_new_rounded, size: 20),
+          icon: Icon(Icons.arrow_back_ios_new_rounded, size: 20, color: Colors.white),
           onPressed: _navigateToScoreboard,
         ),
+        centerTitle: true,
         actions: _isAdmin ? [
-          IconButton(
-            icon: const Icon(Icons.settings),
-            onPressed: () {
-              showDialog(
-                context: context,
-                builder: (context) => AlertDialog(
-                  backgroundColor: const Color(0xFFFFFFFF),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(16),
-                  ),
-                  title: const Text(
-                    'Admin Options',
-                    style: TextStyle(
-                      fontFamily: 'Nunito Sans',
-                      fontWeight: FontWeight.w700,
-                      color: Color(0xFF2C5F5A),
-                    ),
-                  ),
-                  content: Column(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      ListTile(
-                        leading: const Icon(Icons.add, color: Color(0xFF4AA69B)),
-                        title: const Text(
-                          'Tambah Statistik',
-                          style: TextStyle(
-                            fontFamily: 'Nunito Sans',
-                            fontWeight: FontWeight.w600,
-                          ),
-                        ),
-                        onTap: () {
-                          Navigator.pop(context);
-                          _addStatistik();
-                        },
-                      ),
-                      if (_statistik != null) ...[
-                        ListTile(
-                          leading: const Icon(Icons.edit, color: Color(0xFF4AA69B)),
-                          title: const Text(
-                            'Edit Statistik',
-                            style: TextStyle(
-                              fontFamily: 'Nunito Sans',
-                              fontWeight: FontWeight.w600,
-                            ),
-                          ),
-                          onTap: () {
-                            Navigator.pop(context);
-                            _editStatistik();
-                          },
-                        ),
-                        ListTile(
-                          leading: const Icon(Icons.delete, color: Color(0xFFEF4444)),
-                          title: const Text(
-                            'Hapus Statistik',
-                            style: TextStyle(
-                              fontFamily: 'Nunito Sans',
-                              fontWeight: FontWeight.w600,
-                              color: Color(0xFFEF4444),
-                            ),
-                          ),
-                          onTap: () {
-                            Navigator.pop(context);
-                            _deleteStatistik();
-                          },
-                        ),
-                      ],
-                    ],
-                  ),
-                ),
-              );
-            },
-          ),
+          if (_hasStatistik)
+            IconButton(
+              icon: Icon(Icons.edit, color: Colors.white),
+              onPressed: _editStatistik,
+              tooltip: 'Edit Statistik',
+            ),
+          if (_hasStatistik)
+            IconButton(
+              icon: Icon(Icons.delete, color: Colors.white),
+              onPressed: _deleteStatistik,
+              tooltip: 'Hapus Statistik',
+            ),
         ] : null,
       ),
       body: _isLoading
           ? _buildLoadingState()
           : _error.isNotEmpty
               ? _buildErrorState()
-              : _statistik == null
+              : !_hasStatistik
                   ? _buildEmptyState()
                   : _buildContent(),
-      floatingActionButton: _buildAdminFab(),
+      floatingActionButton: _isAdmin && !_hasStatistik
+          ? FloatingActionButton(
+              onPressed: _addStatistik,
+              child: Icon(Icons.add),
+              backgroundColor: accentColor,
+              foregroundColor: Colors.white,
+              tooltip: 'Tambah Statistik',
+            )
+          : null,
     );
   }
 }

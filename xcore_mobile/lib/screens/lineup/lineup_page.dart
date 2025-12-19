@@ -40,6 +40,7 @@ class _LineupPageState extends State<LineupPage> {
       final admin_status = await LineupService.fetchAdminStatus(context);
       setState(() {
         _isAdmin = admin_status;
+        debugPrint("🔐 _isAdmin: $_isAdmin");
       });
     } catch (e) {
       setState(() {
@@ -72,8 +73,10 @@ class _LineupPageState extends State<LineupPage> {
           match: _lineupData!.match,
           homeLineup: _lineupData?.homeLineup,
           awayLineup: _lineupData?.awayLineup,
-          isEdit: _lineupData != null &&
-              (_lineupData!.homeLineup != null || _lineupData!.awayLineup != null),
+          isEdit:
+              _lineupData != null &&
+              (_lineupData!.homeLineup != null ||
+                  _lineupData!.awayLineup != null),
         ),
       ),
     ).then((_) {
@@ -107,10 +110,14 @@ class _LineupPageState extends State<LineupPage> {
 
         // Delete both home and away lineups
         if (_lineupData?.homeLineup != null) {
-          success = await LineupService.deleteLineup(_lineupData!.homeLineup!.id) && success;
+          success =
+              await LineupService.deleteLineup(_lineupData!.homeLineup!.id) &&
+              success;
         }
         if (_lineupData?.awayLineup != null) {
-          success = await LineupService.deleteLineup(_lineupData!.awayLineup!.id) && success;
+          success =
+              await LineupService.deleteLineup(_lineupData!.awayLineup!.id) &&
+              success;
         }
 
         if (success) {
@@ -148,10 +155,7 @@ class _LineupPageState extends State<LineupPage> {
           SizedBox(height: 16),
           Text(
             'Loading Lineup...',
-            style: TextStyle(
-              fontSize: 16,
-              color: Colors.grey[600],
-            ),
+            style: TextStyle(fontSize: 16, color: Colors.grey[600]),
           ),
         ],
       ),
@@ -169,10 +173,7 @@ class _LineupPageState extends State<LineupPage> {
             SizedBox(height: 16),
             Text(
               'Failed to Load Lineup',
-              style: TextStyle(
-                fontSize: 18,
-                fontWeight: FontWeight.bold,
-              ),
+              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
             ),
             SizedBox(height: 8),
             Text(
@@ -181,10 +182,7 @@ class _LineupPageState extends State<LineupPage> {
               style: TextStyle(color: Colors.grey[600]),
             ),
             SizedBox(height: 20),
-            ElevatedButton(
-              onPressed: _loadLineup,
-              child: Text('Try Again'),
-            ),
+            ElevatedButton(onPressed: _loadLineup, child: Text('Try Again')),
           ],
         ),
       ),
@@ -202,10 +200,7 @@ class _LineupPageState extends State<LineupPage> {
             SizedBox(height: 16),
             Text(
               'No Lineup Available',
-              style: TextStyle(
-                fontSize: 18,
-                fontWeight: FontWeight.bold,
-              ),
+              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
             ),
             SizedBox(height: 8),
             Text(
@@ -237,10 +232,7 @@ class _LineupPageState extends State<LineupPage> {
       appBar: AppBar(
         title: Text(
           'Match Lineup',
-          style: TextStyle(
-            fontWeight: FontWeight.bold,
-            color: Colors.white,
-          ),
+          style: TextStyle(fontWeight: FontWeight.bold, color: Colors.white),
         ),
         backgroundColor: Colors.green[700],
         elevation: 0,
@@ -248,18 +240,20 @@ class _LineupPageState extends State<LineupPage> {
           icon: Icon(Icons.arrow_back, color: Colors.white),
           onPressed: () => Navigator.pop(context),
         ),
-        actions: _isAdmin ? [
-          if (_hasLineup)
-            IconButton(
-              icon: Icon(Icons.edit, color: Colors.white),
-              onPressed: _navigateToCreateEditLineup,
-            ),
-          if (_hasLineup)
-            IconButton(
-              icon: Icon(Icons.delete, color: Colors.white),
-              onPressed: _deleteLineup,
-            ),
-        ] : null,
+        actions: _isAdmin
+            ? [
+                if (_hasLineup)
+                  IconButton(
+                    icon: Icon(Icons.edit, color: Colors.white),
+                    onPressed: _navigateToCreateEditLineup,
+                  ),
+                if (_hasLineup)
+                  IconButton(
+                    icon: Icon(Icons.delete, color: Colors.white),
+                    onPressed: _deleteLineup,
+                  ),
+              ]
+            : null,
       ),
       body: _isLoading
           ? _buildLoadingState()
@@ -270,10 +264,10 @@ class _LineupPageState extends State<LineupPage> {
           : LineupDetailScreen(lineupData: _lineupData!),
       floatingActionButton: _isAdmin && !_hasLineup
           ? FloatingActionButton(
-        onPressed: _navigateToCreateEditLineup,
-        child: Icon(Icons.add),
-        backgroundColor: Colors.orange,
-      )
+              onPressed: _navigateToCreateEditLineup,
+              child: Icon(Icons.add),
+              backgroundColor: Colors.orange,
+            )
           : null,
     );
   }

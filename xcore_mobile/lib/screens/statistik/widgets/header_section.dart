@@ -41,7 +41,7 @@ class HeaderSection extends StatelessWidget {
         gradient: LinearGradient(
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
-          colors: [Colors.green[700]!, Colors.green[500]!],
+          colors: [Color(0xFF4AA69B), Color(0xFF34C6B8)],
         ),
         borderRadius: BorderRadius.only(
           bottomLeft: Radius.circular(20),
@@ -141,7 +141,7 @@ class HeaderSection extends StatelessWidget {
                         style: TextStyle(
                           fontSize: 24,
                           fontWeight: FontWeight.bold,
-                          color: Colors.green[700],
+                          color: Color(0xFF2C5F5A),
                         ),
                       ),
                       Padding(
@@ -151,7 +151,7 @@ class HeaderSection extends StatelessWidget {
                           style: TextStyle(
                             fontSize: 20,
                             fontWeight: FontWeight.bold,
-                            color: Colors.grey[700],
+                            color: Color(0xFF6B8E8A),
                           ),
                         ),
                       ),
@@ -160,7 +160,7 @@ class HeaderSection extends StatelessWidget {
                         style: TextStyle(
                           fontSize: 24,
                           fontWeight: FontWeight.bold,
-                          color: Colors.green[700],
+                          color: Color(0xFF2C5F5A),
                         ),
                       ),
                     ],
