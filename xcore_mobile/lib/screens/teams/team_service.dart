@@ -1,7 +1,7 @@
 import 'dart:convert';
-// import 'dart:typed_data';
-import 'dart:io';
+import 'dart:typed_data';
 
+import 'package:flutter/foundation.dart';
 import 'package:http/http.dart' as http;
 import 'package:file_picker/file_picker.dart';
 
@@ -9,24 +9,30 @@ import '../../models/team_entry.dart';
 
 class TeamService {
   // 🔥 Change this based on your server
-  static const String baseUrl = "http://10.0.2.2:8000/lineup/api";
+  static const String baseUrl = "http://localhost:8000/lineup/api";
 
-  // ------------------------------------------------------------
   // GET ALL TEAMS
-  // ------------------------------------------------------------
   static Future<List<Team>> getTeams() async {
-    final url = Uri.parse("$baseUrl/teams/");
-    final response = await http.get(url);
+    try {
+      final url = Uri.parse("$baseUrl/teams/");
+      final response = await http.get(url);
+      if (response.statusCode != 200) {
+        throw Exception("Failed to fetch teams: ${response.statusCode}");
+      }
 
-    if (response.statusCode != 200) {
-      throw Exception("Failed to fetch teams");
+      final body = jsonDecode(response.body);
+
+      // API returns: {"teams": [{"id": 1, "code": "ARG", "name": "Argentina"}, ...]}
+      if (body is! Map || body["teams"] == null) {
+        throw Exception("Unexpected response format: expected {teams: [...]}, got $body");
+      }
+
+      final teamsList = (body["teams"] as List).cast<Map<String, dynamic>>();
+
+      return teamsList.map((team) => Team.fromJson(team)).toList();
+    } catch (e) {
+      rethrow;
     }
-
-    final body = jsonDecode(response.body);
-
-    return (body["teams"] as List)
-        .map((team) => Team.fromJson(team))
-        .toList();
   }
 
   // ------------------------------------------------------------
@@ -81,33 +87,40 @@ class TeamService {
     return response.statusCode == 204;
   }
 
-  // ------------------------------------------------------------
-  // PICK ZIP FILE USING file_picker
-  // ------------------------------------------------------------
-  static Future<File?> pickZipFile() async {
+  static Future<Uint8List?> pickZipFile() async {
     final result = await FilePicker.platform.pickFiles(
       type: FileType.custom,
       allowedExtensions: ['zip'],
+      withData: true, // IMPORTANT for web
     );
 
-    if (result == null) return null; // User cancelled
-
-    return File(result.files.single.path!);
+    if (result == null) return null;
+    return result.files.single.bytes;
   }
 
   // ------------------------------------------------------------
-  // UPLOAD ZIP FILE
+  // UPLOAD ZIP FILE (BASE64 JSON)
   // ------------------------------------------------------------
-  static Future<Map<String, dynamic>> uploadTeamsZip(File zipFile) async {
+  static Future<Map<String, dynamic>> uploadTeamsZip(
+    Uint8List zipBytes,
+  ) async {
     final url = Uri.parse("$baseUrl/upload/teams/");
 
-    final request = http.MultipartRequest('POST', url)
-      ..files.add(
-        await http.MultipartFile.fromPath('file', zipFile.path),
-      );
+    final base64Zip = base64Encode(zipBytes);
 
-    final streamed = await request.send();
-    final response = await http.Response.fromStream(streamed);
+    final response = await http.post(
+      url,
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: jsonEncode({
+        "file": base64Zip,
+      }),
+    );
+
+    if (response.statusCode != 200) {
+      throw Exception(response.body);
+    }
 
     return jsonDecode(response.body);
   }

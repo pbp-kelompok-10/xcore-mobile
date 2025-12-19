@@ -1,12 +1,12 @@
-import 'team_entry.dart';
-
 class Player {
   final int id;
   final String nama;
   final String asal;
-  final int umur;
+  final int? umur;
   final int nomor;
-  final Team tim;
+  final int teamId;
+  final String teamName;
+  final String teamCode;
 
   Player({
     required this.id,
@@ -14,7 +14,9 @@ class Player {
     required this.asal,
     required this.umur,
     required this.nomor,
-    required this.tim,
+    required this.teamId,
+    required this.teamName,
+    required this.teamCode,
   });
 
   factory Player.fromJson(Map<String, dynamic> json) {
@@ -24,7 +26,9 @@ class Player {
       asal: json['asal'],
       umur: json['umur'],
       nomor: json['nomor'],
-      tim: Team.fromJson(json['tim']),
+      teamId: json['team_id'],
+      teamName: json['team_name'],
+      teamCode: json['team_code'],
     );
   }
 
@@ -35,7 +39,9 @@ class Player {
       'asal': asal,
       'umur': umur,
       'nomor': nomor,
-      'tim': tim.toJson(),
+      'team_id': teamId,
+      'team_name': teamName,
+      'team_code': teamCode,
     };
   }
 }
