@@ -65,8 +65,8 @@ class _AddStatistikPageState extends State<AddStatistikPage> {
     _awayShotsController.text = '0';
     _homeShotsOnTargetController.text = '0';
     _awayShotsOnTargetController.text = '0';
-    _homePossessionController.text = '50';
-    _awayPossessionController.text = '50';
+    _homePossessionController.text = '0';
+    _awayPossessionController.text = '0';
     _homeRedCardsController.text = '0';
     _awayRedCardsController.text = '0';
     _homeYellowCardsController.text = '0';
@@ -122,20 +122,20 @@ class _AddStatistikPageState extends State<AddStatistikPage> {
 
   // Metode untuk decrement possession
   void _decrementPossession(TextEditingController controller) {
-    double currentValue = double.tryParse(controller.text) ?? 50.0;
+    double currentValue = double.tryParse(controller.text) ?? 0.0;
     if (currentValue > 0) {
       setState(() {
-        controller.text = (currentValue - 1).toStringAsFixed(1);
+        controller.text = (currentValue - 1).toStringAsFixed(0);
       });
     }
   }
 
   // Metode untuk increment possession
   void _incrementPossession(TextEditingController controller) {
-    double currentValue = double.tryParse(controller.text) ?? 50.0;
+    double currentValue = double.tryParse(controller.text) ?? 0.0;
     if (currentValue < 100) {
       setState(() {
-        controller.text = (currentValue + 1).toStringAsFixed(1);
+        controller.text = (currentValue + 1).toStringAsFixed(0);
       });
     }
   }
@@ -526,7 +526,7 @@ class _AddStatistikPageState extends State<AddStatistikPage> {
                 
                 SizedBox(width: 8),
                 
-                // Home Value
+                // Home Value - UBAH READONLY MENJADI FALSE AGAR BISA DIKETIK MANUAL
                 Container(
                   width: 50,
                   alignment: Alignment.center,
@@ -543,7 +543,9 @@ class _AddStatistikPageState extends State<AddStatistikPage> {
                       color: primaryColor,
                     ),
                     keyboardType: TextInputType.number,
-                    readOnly: true, // Make it read-only since we use buttons
+                    onChanged: (value) {
+                      setState(() {});
+                    },
                   ),
                 ),
                 
@@ -608,7 +610,7 @@ class _AddStatistikPageState extends State<AddStatistikPage> {
                 
                 SizedBox(width: 8),
                 
-                // Away Value
+                // Away Value - UBAH READONLY MENJADI FALSE AGAR BISA DIKETIK MANUAL
                 Container(
                   width: 50,
                   alignment: Alignment.center,
@@ -625,7 +627,9 @@ class _AddStatistikPageState extends State<AddStatistikPage> {
                       color: accentColor,
                     ),
                     keyboardType: TextInputType.number,
-                    readOnly: true,
+                    onChanged: (value) {
+                      setState(() {});
+                    },
                   ),
                 ),
                 
@@ -702,7 +706,7 @@ class _AddStatistikPageState extends State<AddStatistikPage> {
                         
                         SizedBox(width: 12),
                         
-                        // Home Value
+                        // Home Value - UBAH READONLY MENJADI FALSE
                         Container(
                           width: 80,
                           alignment: Alignment.center,
@@ -724,7 +728,9 @@ class _AddStatistikPageState extends State<AddStatistikPage> {
                               color: primaryColor,
                             ),
                             keyboardType: TextInputType.numberWithOptions(decimal: true),
-                            readOnly: true,
+                            onChanged: (value) {
+                              setState(() {});
+                            },
                           ),
                         ),
                         
@@ -802,7 +808,7 @@ class _AddStatistikPageState extends State<AddStatistikPage> {
                         
                         SizedBox(width: 12),
                         
-                        // Away Value
+                        // Away Value - UBAH READONLY MENJADI FALSE
                         Container(
                           width: 80,
                           alignment: Alignment.center,
@@ -824,7 +830,9 @@ class _AddStatistikPageState extends State<AddStatistikPage> {
                               color: accentColor,
                             ),
                             keyboardType: TextInputType.numberWithOptions(decimal: true),
-                            readOnly: true,
+                            onChanged: (value) {
+                              setState(() {});
+                            },
                           ),
                         ),
                         
@@ -866,7 +874,7 @@ class _AddStatistikPageState extends State<AddStatistikPage> {
           
           SizedBox(height: 12),
           
-          // Total possession indicator
+          // Total possession indicator - HAPUS VALIDASI 100%
           Container(
             padding: EdgeInsets.all(8),
             decoration: BoxDecoration(
@@ -888,15 +896,15 @@ class _AddStatistikPageState extends State<AddStatistikPage> {
                 Container(
                   padding: EdgeInsets.symmetric(horizontal: 12, vertical: 4),
                   decoration: BoxDecoration(
-                    color: _getTotalPossessionColor(),
+                    color: primaryColor.withOpacity(0.2),
                     borderRadius: BorderRadius.circular(20),
                   ),
                   child: Text(
-                    '${_getTotalPossession().toStringAsFixed(1)}%',
+                    '${_getTotalPossession().toStringAsFixed(0)}%',
                     style: TextStyle(
                       fontSize: 12,
                       fontWeight: FontWeight.bold,
-                      color: _getTotalPossession() == 100.0 ? Colors.white : Colors.red,
+                      color: darkTextColor,
                     ),
                   ),
                 ),
@@ -978,32 +986,10 @@ class _AddStatistikPageState extends State<AddStatistikPage> {
     return home + away;
   }
 
-  Color _getTotalPossessionColor() {
-    final total = _getTotalPossession();
-    if (total == 100) return primaryColor;
-    if (total > 100) return Colors.orange;
-    return Colors.red;
-  }
-
   void _submitForm() async {
     if (_formKey.currentState!.validate()) {
-      // Validasi possession total = 100%
-      final totalPossession = _getTotalPossession();
-      
-      if (totalPossession != 100.0) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Total possession harus 100% (Saat ini: ${totalPossession.toStringAsFixed(1)}%)'),
-            backgroundColor: Colors.red,
-            duration: Duration(seconds: 3),
-            behavior: SnackBarBehavior.floating,
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(10),
-            ),
-          )
-        );
-        return;
-      }
+      // HAPUS VALIDASI POSESSION TOTAL = 100%
+      // Bisa langsung submit tanpa validasi possession
       
       setState(() {
         _isSubmitting = true;
@@ -1018,8 +1004,8 @@ class _AddStatistikPageState extends State<AddStatistikPage> {
           'away_shots': int.tryParse(_awayShotsController.text) ?? 0,
           'home_shots_on_target': int.tryParse(_homeShotsOnTargetController.text) ?? 0,
           'away_shots_on_target': int.tryParse(_awayShotsOnTargetController.text) ?? 0,
-          'home_possession': double.tryParse(_homePossessionController.text) ?? 50.0,
-          'away_possession': double.tryParse(_awayPossessionController.text) ?? 50.0,
+          'home_possession': double.tryParse(_homePossessionController.text) ?? 0.0,
+          'away_possession': double.tryParse(_awayPossessionController.text) ?? 0.0,
           'home_red_cards': int.tryParse(_homeRedCardsController.text) ?? 0,
           'away_red_cards': int.tryParse(_awayRedCardsController.text) ?? 0,
           'home_yellow_cards': int.tryParse(_homeYellowCardsController.text) ?? 0,

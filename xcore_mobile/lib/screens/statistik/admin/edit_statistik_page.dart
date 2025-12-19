@@ -58,8 +58,8 @@ class _EditStatistikPageState extends State<EditStatistikPage> {
     _awayShotsController.text = widget.statistik.awayShots.toString();
     _homeShotsOnTargetController.text = widget.statistik.homeShotsOnTarget.toString();
     _awayShotsOnTargetController.text = widget.statistik.awayShotsOnTarget.toString();
-    _homePossessionController.text = widget.statistik.homePossession.toStringAsFixed(1);
-    _awayPossessionController.text = widget.statistik.awayPossession.toStringAsFixed(1);
+    _homePossessionController.text = widget.statistik.homePossession.toStringAsFixed(0);
+    _awayPossessionController.text = widget.statistik.awayPossession.toStringAsFixed(0);
     _homeRedCardsController.text = widget.statistik.homeRedCards.toString();
     _awayRedCardsController.text = widget.statistik.awayRedCards.toString();
     _homeYellowCardsController.text = widget.statistik.homeYellowCards.toString();
@@ -111,20 +111,20 @@ class _EditStatistikPageState extends State<EditStatistikPage> {
 
   // Metode untuk decrement possession
   void _decrementPossession(TextEditingController controller) {
-    double currentValue = double.tryParse(controller.text) ?? 50.0;
+    double currentValue = double.tryParse(controller.text) ?? 0.0;
     if (currentValue > 0) {
       setState(() {
-        controller.text = (currentValue - 1).toStringAsFixed(1);
+        controller.text = (currentValue - 1).toStringAsFixed(0);
       });
     }
   }
 
   // Metode untuk increment possession
   void _incrementPossession(TextEditingController controller) {
-    double currentValue = double.tryParse(controller.text) ?? 50.0;
+    double currentValue = double.tryParse(controller.text) ?? 0.0;
     if (currentValue < 100) {
       setState(() {
-        controller.text = (currentValue + 1).toStringAsFixed(1);
+        controller.text = (currentValue + 1).toStringAsFixed(0);
       });
     }
   }
@@ -609,7 +609,7 @@ class _EditStatistikPageState extends State<EditStatistikPage> {
                 
                 SizedBox(width: 8),
                 
-                // Home Value
+                // Home Value - UBAH READONLY MENJADI FALSE
                 Container(
                   width: 50,
                   alignment: Alignment.center,
@@ -626,7 +626,9 @@ class _EditStatistikPageState extends State<EditStatistikPage> {
                       color: primaryColor,
                     ),
                     keyboardType: TextInputType.number,
-                    readOnly: true, // Make it read-only since we use buttons
+                    onChanged: (value) {
+                      setState(() {});
+                    },
                   ),
                 ),
                 
@@ -691,7 +693,7 @@ class _EditStatistikPageState extends State<EditStatistikPage> {
                 
                 SizedBox(width: 8),
                 
-                // Away Value
+                // Away Value - UBAH READONLY MENJADI FALSE
                 Container(
                   width: 50,
                   alignment: Alignment.center,
@@ -708,7 +710,9 @@ class _EditStatistikPageState extends State<EditStatistikPage> {
                       color: accentColor,
                     ),
                     keyboardType: TextInputType.number,
-                    readOnly: true,
+                    onChanged: (value) {
+                      setState(() {});
+                    },
                   ),
                 ),
                 
@@ -785,7 +789,7 @@ class _EditStatistikPageState extends State<EditStatistikPage> {
                         
                         SizedBox(width: 12),
                         
-                        // Home Value
+                        // Home Value - UBAH READONLY MENJADI FALSE
                         Container(
                           width: 80,
                           alignment: Alignment.center,
@@ -807,7 +811,9 @@ class _EditStatistikPageState extends State<EditStatistikPage> {
                               color: primaryColor,
                             ),
                             keyboardType: TextInputType.numberWithOptions(decimal: true),
-                            readOnly: true,
+                            onChanged: (value) {
+                              setState(() {});
+                            },
                           ),
                         ),
                         
@@ -885,7 +891,7 @@ class _EditStatistikPageState extends State<EditStatistikPage> {
                         
                         SizedBox(width: 12),
                         
-                        // Away Value
+                        // Away Value - UBAH READONLY MENJADI FALSE
                         Container(
                           width: 80,
                           alignment: Alignment.center,
@@ -907,7 +913,9 @@ class _EditStatistikPageState extends State<EditStatistikPage> {
                               color: accentColor,
                             ),
                             keyboardType: TextInputType.numberWithOptions(decimal: true),
-                            readOnly: true,
+                            onChanged: (value) {
+                              setState(() {});
+                            },
                           ),
                         ),
                         
@@ -949,7 +957,7 @@ class _EditStatistikPageState extends State<EditStatistikPage> {
           
           SizedBox(height: 12),
           
-          // Total possession indicator
+          // Total possession indicator - UBAH TANPA VALIDASI 100%
           Container(
             padding: EdgeInsets.all(8),
             decoration: BoxDecoration(
@@ -971,15 +979,15 @@ class _EditStatistikPageState extends State<EditStatistikPage> {
                 Container(
                   padding: EdgeInsets.symmetric(horizontal: 12, vertical: 4),
                   decoration: BoxDecoration(
-                    color: _getTotalPossessionColor(),
+                    color: primaryColor.withOpacity(0.2),
                     borderRadius: BorderRadius.circular(20),
                   ),
                   child: Text(
-                    '${_getTotalPossession().toStringAsFixed(1)}%',
+                    '${_getTotalPossession().toStringAsFixed(0)}%',
                     style: TextStyle(
                       fontSize: 12,
                       fontWeight: FontWeight.bold,
-                      color: _getTotalPossession() == 100.0 ? Colors.white : Colors.red,
+                      color: darkTextColor,
                     ),
                   ),
                 ),
@@ -1061,32 +1069,10 @@ class _EditStatistikPageState extends State<EditStatistikPage> {
     return home + away;
   }
 
-  Color _getTotalPossessionColor() {
-    final total = _getTotalPossession();
-    if (total == 100) return primaryColor;
-    if (total > 100) return Colors.orange;
-    return Colors.red;
-  }
-
   void _submitForm() async {
     if (_formKey.currentState!.validate()) {
-      // Validasi possession total = 100%
-      final totalPossession = _getTotalPossession();
-      
-      if (totalPossession != 100.0) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Total possession harus 100% (Saat ini: ${totalPossession.toStringAsFixed(1)}%)'),
-            backgroundColor: Colors.red,
-            duration: Duration(seconds: 3),
-            behavior: SnackBarBehavior.floating,
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(10),
-            ),
-          )
-        );
-        return;
-      }
+      // HAPUS VALIDASI POSESSION TOTAL = 100%
+      // Bisa langsung submit tanpa validasi possession
       
       setState(() {
         _isSubmitting = true;
