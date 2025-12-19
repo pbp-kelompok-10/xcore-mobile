@@ -106,15 +106,11 @@ class _RegisterPageState extends State<RegisterPage> {
                   // Username Field
                   TextField(
                     controller: _usernameController,
-                    style: const TextStyle(
-                      fontFamily: 'Nunito Sans',
-                    ),
+                    style: const TextStyle(fontFamily: 'Nunito Sans'),
                     decoration: InputDecoration(
                       labelText: "Username",
                       hintText: "Enter your username",
-                      labelStyle: const TextStyle(
-                        fontFamily: 'Nunito Sans',
-                      ),
+                      labelStyle: const TextStyle(fontFamily: 'Nunito Sans'),
                       prefixIcon: const Icon(
                         Icons.person_outline,
                         color: Color(0xFF4AA69B),
@@ -148,15 +144,11 @@ class _RegisterPageState extends State<RegisterPage> {
                   // Email Field
                   TextField(
                     controller: _emailController,
-                    style: const TextStyle(
-                      fontFamily: 'Nunito Sans',
-                    ),
+                    style: const TextStyle(fontFamily: 'Nunito Sans'),
                     decoration: InputDecoration(
                       labelText: "Email",
                       hintText: "Enter your email",
-                      labelStyle: const TextStyle(
-                        fontFamily: 'Nunito Sans',
-                      ),
+                      labelStyle: const TextStyle(fontFamily: 'Nunito Sans'),
                       prefixIcon: const Icon(
                         Icons.email_outlined,
                         color: Color(0xFF4AA69B),
@@ -191,15 +183,11 @@ class _RegisterPageState extends State<RegisterPage> {
                   TextField(
                     controller: _passwordController,
                     obscureText: true,
-                    style: const TextStyle(
-                      fontFamily: 'Nunito Sans',
-                    ),
+                    style: const TextStyle(fontFamily: 'Nunito Sans'),
                     decoration: InputDecoration(
                       labelText: "Password",
                       hintText: "Enter your password",
-                      labelStyle: const TextStyle(
-                        fontFamily: 'Nunito Sans',
-                      ),
+                      labelStyle: const TextStyle(fontFamily: 'Nunito Sans'),
                       prefixIcon: const Icon(
                         Icons.lock_outline,
                         color: Color(0xFF4AA69B),
@@ -234,15 +222,11 @@ class _RegisterPageState extends State<RegisterPage> {
                   TextField(
                     controller: _confirmPasswordController,
                     obscureText: true,
-                    style: const TextStyle(
-                      fontFamily: 'Nunito Sans',
-                    ),
+                    style: const TextStyle(fontFamily: 'Nunito Sans'),
                     decoration: InputDecoration(
                       labelText: "Confirm Password",
                       hintText: "Re-enter your password",
-                      labelStyle: const TextStyle(
-                        fontFamily: 'Nunito Sans',
-                      ),
+                      labelStyle: const TextStyle(fontFamily: 'Nunito Sans'),
                       prefixIcon: const Icon(
                         Icons.lock_outline,
                         color: Color(0xFF4AA69B),
@@ -307,7 +291,7 @@ class _RegisterPageState extends State<RegisterPage> {
                                 color: Color(0xFF374151),
                               ),
                             ),
-                          )
+                          ),
                         ],
                       ),
                     ),
@@ -334,17 +318,20 @@ class _RegisterPageState extends State<RegisterPage> {
                         if (password1 != password2) {
                           setState(() {
                             _errors["password2"] = [
-                              {"message": "Password tidak cocok."}
+                              {"message": "Password tidak cocok."},
                             ];
                           });
                           return;
                         }
 
-                        final url =
-                            Uri.parse("http://localhost:8000/auth/register/");
+                        final url = Uri.parse(
+                          "https://alvin-christian-xcore.pbp.cs.ui.ac.id/auth/register/",
+                        );
 
-                        var requestMultipart =
-                            http.MultipartRequest("POST", url);
+                        var requestMultipart = http.MultipartRequest(
+                          "POST",
+                          url,
+                        );
 
                         requestMultipart.fields['username'] = username;
                         requestMultipart.fields['email'] = email;
@@ -365,8 +352,9 @@ class _RegisterPageState extends State<RegisterPage> {
 
                         try {
                           final streamed = await requestMultipart.send();
-                          final response =
-                              await http.Response.fromStream(streamed);
+                          final response = await http.Response.fromStream(
+                            streamed,
+                          );
 
                           final jsonResponse = jsonDecode(response.body);
 
@@ -410,7 +398,8 @@ class _RegisterPageState extends State<RegisterPage> {
                                 ..showSnackBar(
                                   SnackBar(
                                     content: Text(
-                                      jsonResponse["message"] ?? "Pendaftaran gagal",
+                                      jsonResponse["message"] ??
+                                          "Pendaftaran gagal",
                                       style: const TextStyle(
                                         fontFamily: 'Nunito Sans',
                                         fontWeight: FontWeight.w600,

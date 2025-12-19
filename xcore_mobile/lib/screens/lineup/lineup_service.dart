@@ -8,15 +8,14 @@ import 'package:xcore_mobile/models/lineup_entry.dart';
 import 'package:xcore_mobile/models/scoreboard_entry.dart';
 
 class LineupService {
-  static const String baseUrl = 'http://localhost:8000'; // Untuk Android emulator
+  static const String baseUrl =
+      'https://alvin-christian-xcore.pbp.cs.ui.ac.id'; // Untuk Android emulator
 
   static Future<bool> fetchAdminStatus(BuildContext context) async {
     final request = context.watch<CookieRequest>();
 
     try {
-      final response = await request.get(
-        '$baseUrl/auth/is-admin/',
-      );
+      final response = await request.get('$baseUrl/auth/is-admin/');
 
       // Periksa apakah user terautentikasi DAN apakah admin
       if (response['status'] == true) {
@@ -43,7 +42,9 @@ class LineupService {
       } else if (response.statusCode == 404) {
         throw Exception('Lineup not found for match $matchId');
       } else {
-        throw Exception('Failed to load lineup: ${response.statusCode} - ${response.body}');
+        throw Exception(
+          'Failed to load lineup: ${response.statusCode} - ${response.body}',
+        );
       }
     } catch (e) {
       print('Error fetching lineup: $e');
@@ -58,16 +59,15 @@ class LineupService {
   }) async {
     try {
       if (playerIds.length != 11) {
-        throw Exception('Must have exactly 11 players, got ${playerIds.length}');
+        throw Exception(
+          'Must have exactly 11 players, got ${playerIds.length}',
+        );
       }
 
       final response = await http.post(
         Uri.parse('$baseUrl/lineup/flutter/create/$matchId/'),
         headers: {'Content-Type': 'application/json'},
-        body: json.encode({
-          'team_code': teamCode,
-          'players': playerIds,
-        }),
+        body: json.encode({'team_code': teamCode, 'players': playerIds}),
       );
 
       if (response.statusCode == 200) {
@@ -91,15 +91,15 @@ class LineupService {
   }) async {
     try {
       if (playerIds.length != 11) {
-        throw Exception('Must have exactly 11 players, got ${playerIds.length}');
+        throw Exception(
+          'Must have exactly 11 players, got ${playerIds.length}',
+        );
       }
 
       final response = await http.put(
         Uri.parse('$baseUrl/lineup/flutter/update/$lineupId/'),
         headers: {'Content-Type': 'application/json'},
-        body: json.encode({
-          'players': playerIds,
-        }),
+        body: json.encode({'players': playerIds}),
       );
 
       if (response.statusCode == 200) {
@@ -134,7 +134,9 @@ class LineupService {
           // Assuming playerData is {'id': X, 'name': 'Name (#Number)'}
           // We need to parse this string
           final nameString = playerData['name'] as String;
-          final nameMatch = RegExp(r'^(.*?) \(#(\d+)\)$').firstMatch(nameString);
+          final nameMatch = RegExp(
+            r'^(.*?) \(#(\d+)\)$',
+          ).firstMatch(nameString);
 
           String playerName = nameString;
           int playerNumber = 0;
@@ -148,7 +150,7 @@ class LineupService {
             id: playerData['id'].toString(),
             nama: playerName,
             asal: '', // Not available from this endpoint
-            umur: 0,   // Not available from this endpoint
+            umur: 0, // Not available from this endpoint
             nomor: playerNumber,
             timId: teamId,
           );

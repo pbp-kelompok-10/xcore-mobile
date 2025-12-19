@@ -104,7 +104,9 @@ class _TeamsPageState extends State<TeamsPage> {
 
     try {
       final response = await http.get(
-        Uri.parse("http://localhost:8000/lineup/api/teams/"),
+        Uri.parse(
+          "https://alvin-christian-xcore.pbp.cs.ui.ac.id/lineup/api/teams/",
+        ),
       );
 
       if (!mounted) return;
@@ -367,36 +369,38 @@ class _TeamsPageState extends State<TeamsPage> {
         foregroundColor: Colors.white,
         automaticallyImplyLeading: false,
       ),
-      floatingActionButton: _isAdmin ? Column(
-        mainAxisSize: MainAxisSize.min,
-        crossAxisAlignment: CrossAxisAlignment.end,
-        children: [
-          if (fabOpen) ...[
-            FloatingActionButton.extended(
-              heroTag: "addTeamFAB",
-              backgroundColor: Colors.blue,
-              icon: const Icon(Icons.add),
-              label: const Text("Add Team"),
-              onPressed: () => showAddTeamDialog(context),
-            ),
-            const SizedBox(height: 12),
-            FloatingActionButton.extended(
-              heroTag: "uploadTeamFAB",
-              backgroundColor: Colors.green,
-              icon: const Icon(Icons.upload_file),
-              label: const Text("Upload ZIP"),
-              onPressed: () => uploadTeamsZip(context),
-            ),
-            const SizedBox(height: 12),
-          ],
-          FloatingActionButton(
-            heroTag: "toggleTeamFAB",
-            backgroundColor: const Color(0xFF4AA69B),
-            child: Icon(fabOpen ? Icons.close : Icons.add),
-            onPressed: () => setState(() => fabOpen = !fabOpen),
-          ),
-        ],
-      ) : null,
+      floatingActionButton: _isAdmin
+          ? Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.end,
+              children: [
+                if (fabOpen) ...[
+                  FloatingActionButton.extended(
+                    heroTag: "addTeamFAB",
+                    backgroundColor: Colors.blue,
+                    icon: const Icon(Icons.add),
+                    label: const Text("Add Team"),
+                    onPressed: () => showAddTeamDialog(context),
+                  ),
+                  const SizedBox(height: 12),
+                  FloatingActionButton.extended(
+                    heroTag: "uploadTeamFAB",
+                    backgroundColor: Colors.green,
+                    icon: const Icon(Icons.upload_file),
+                    label: const Text("Upload ZIP"),
+                    onPressed: () => uploadTeamsZip(context),
+                  ),
+                  const SizedBox(height: 12),
+                ],
+                FloatingActionButton(
+                  heroTag: "toggleTeamFAB",
+                  backgroundColor: const Color(0xFF4AA69B),
+                  child: Icon(fabOpen ? Icons.close : Icons.add),
+                  onPressed: () => setState(() => fabOpen = !fabOpen),
+                ),
+              ],
+            )
+          : null,
       body: loading
           ? const Center(child: CircularProgressIndicator())
           : teams.isEmpty
@@ -433,14 +437,16 @@ class _TeamsPageState extends State<TeamsPage> {
                           ),
                         );
                       },
-                      trailing: _isAdmin ? IconButton(
-                        icon: const Icon(Icons.edit),
-                        onPressed: () => showEditTeamDialog(
-                          context,
-                          team['id'] ?? '',
-                          team['name'] ?? '',
-                        ),
-                      ) : null,
+                      trailing: _isAdmin
+                          ? IconButton(
+                              icon: const Icon(Icons.edit),
+                              onPressed: () => showEditTeamDialog(
+                                context,
+                                team['id'] ?? '',
+                                team['name'] ?? '',
+                              ),
+                            )
+                          : null,
                     ),
                   ),
               ],

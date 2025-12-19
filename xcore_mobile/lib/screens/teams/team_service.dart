@@ -9,7 +9,8 @@ import '../../models/team_entry.dart';
 
 class TeamService {
   // 🔥 Change this based on your server
-  static const String baseUrl = "http://localhost:8000/lineup/api";
+  static const String baseUrl =
+      "https://alvin-christian-xcore.pbp.cs.ui.ac.id/lineup/api";
 
   // GET ALL TEAMS
   static Future<List<Team>> getTeams() async {
@@ -24,7 +25,9 @@ class TeamService {
 
       // API returns: {"teams": [{"id": 1, "code": "ARG", "name": "Argentina"}, ...]}
       if (body is! Map || body["teams"] == null) {
-        throw Exception("Unexpected response format: expected {teams: [...]}, got $body");
+        throw Exception(
+          "Unexpected response format: expected {teams: [...]}, got $body",
+        );
       }
 
       final teamsList = (body["teams"] as List).cast<Map<String, dynamic>>();
@@ -101,21 +104,15 @@ class TeamService {
   // ------------------------------------------------------------
   // UPLOAD ZIP FILE (BASE64 JSON)
   // ------------------------------------------------------------
-  static Future<Map<String, dynamic>> uploadTeamsZip(
-    Uint8List zipBytes,
-  ) async {
+  static Future<Map<String, dynamic>> uploadTeamsZip(Uint8List zipBytes) async {
     final url = Uri.parse("$baseUrl/upload/teams/");
 
     final base64Zip = base64Encode(zipBytes);
 
     final response = await http.post(
       url,
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: jsonEncode({
-        "file": base64Zip,
-      }),
+      headers: {"Content-Type": "application/json"},
+      body: jsonEncode({"file": base64Zip}),
     );
 
     if (response.statusCode != 200) {

@@ -3,11 +3,12 @@ import 'package:flutter/cupertino.dart';
 import 'package:http/http.dart' as http;
 import 'package:pbp_django_auth/pbp_django_auth.dart';
 import 'package:provider/provider.dart';
-import 'package:xcore_mobile/models/statistik_entry.dart'; 
+import 'package:xcore_mobile/models/statistik_entry.dart';
 
 class StatistikService {
-  // static const String baseUrl = 'http://10.0.2.2:8000'; 
-  static const String baseUrl = 'http://localhost:8000'; // iOS/Web
+  // static const String baseUrl = 'http://10.0.2.2:8000';
+  static const String baseUrl =
+      'https://alvin-christian-xcore.pbp.cs.ui.ac.id'; // iOS/Web
 
   static Future<bool> fetchAdminStatus(BuildContext context) async {
     final request = context.watch<CookieRequest>();
@@ -33,7 +34,9 @@ class StatistikService {
       } else if (response.statusCode == 404) {
         return null;
       } else {
-        print('Error fetching statistik: ${response.statusCode} - ${response.body}');
+        print(
+          'Error fetching statistik: ${response.statusCode} - ${response.body}',
+        );
         return null;
       }
     } catch (e) {
@@ -43,11 +46,14 @@ class StatistikService {
   }
 
   // CREATE statistik - KIRIM SEBAGAI JSON
-  static Future<bool> createStatistik(BuildContext context, Map<String, dynamic> statistikData) async {
+  static Future<bool> createStatistik(
+    BuildContext context,
+    Map<String, dynamic> statistikData,
+  ) async {
     try {
       print('=== CREATE STATISTIK ===');
       print('Data to send: $statistikData');
-      
+
       // Kirim sebagai JSON
       final response = await http.post(
         Uri.parse('$baseUrl/statistik/flutter/create/'),
@@ -60,7 +66,7 @@ class StatistikService {
 
       print('Response status: ${response.statusCode}');
       print('Response body: ${response.body}');
-      
+
       if (response.statusCode == 201 || response.statusCode == 200) {
         try {
           final data = json.decode(response.body);
@@ -71,7 +77,6 @@ class StatistikService {
         }
       }
       return false;
-      
     } catch (e) {
       print('Error creating statistik: $e');
       rethrow;
@@ -79,13 +84,17 @@ class StatistikService {
   }
 
   // UPDATE statistik - KIRIM SEBAGAI JSON PUT
-  static Future<bool> updateStatistik(BuildContext context, String matchId, Map<String, dynamic> statistikData) async {
+  static Future<bool> updateStatistik(
+    BuildContext context,
+    String matchId,
+    Map<String, dynamic> statistikData,
+  ) async {
     try {
       print('=== UPDATE STATISTIK ===');
       print('Match ID: $matchId');
       print('Data to send: $statistikData');
       print('JSON encoded: ${json.encode(statistikData)}');
-      
+
       // Kirim sebagai PUT dengan JSON
       final response = await http.put(
         Uri.parse('$baseUrl/statistik/flutter/update/$matchId/'),
@@ -98,7 +107,7 @@ class StatistikService {
 
       print('Response status: ${response.statusCode}');
       print('Response body: ${response.body}');
-      
+
       if (response.statusCode == 200) {
         try {
           final data = json.decode(response.body);
@@ -109,7 +118,6 @@ class StatistikService {
         }
       }
       return false;
-      
     } catch (e) {
       print('Error updating statistik: $e');
       rethrow;
@@ -117,11 +125,14 @@ class StatistikService {
   }
 
   // DELETE statistik - KIRIM SEBAGAI JSON DELETE
-  static Future<bool> deleteStatistik(BuildContext context, String matchId) async {
+  static Future<bool> deleteStatistik(
+    BuildContext context,
+    String matchId,
+  ) async {
     try {
       print('=== DELETE STATISTIK ===');
       print('Match ID: $matchId');
-      
+
       // Kirim DELETE request dengan JSON header
       final response = await http.delete(
         Uri.parse('$baseUrl/statistik/flutter/delete/$matchId/'),
@@ -133,7 +144,7 @@ class StatistikService {
 
       print('Response status: ${response.statusCode}');
       print('Response body: ${response.body}');
-      
+
       if (response.statusCode == 200) {
         try {
           final data = json.decode(response.body);
@@ -144,21 +155,22 @@ class StatistikService {
         }
       }
       return false;
-      
     } catch (e) {
       print('Error deleting statistik: $e');
       rethrow;
     }
   }
 
-
   // ALTERNATIVE: Gunakan CookieRequest untuk autentikasi
-  static Future<bool> createStatistikWithAuth(BuildContext context, Map<String, dynamic> statistikData) async {
+  static Future<bool> createStatistikWithAuth(
+    BuildContext context,
+    Map<String, dynamic> statistikData,
+  ) async {
     try {
       print('=== CREATE WITH AUTH ===');
-      
+
       final request = context.read<CookieRequest>();
-      
+
       // CookieRequest secara otomatis menangani JSON
       final response = await request.post(
         '$baseUrl/statistik/flutter/create/',
@@ -166,12 +178,11 @@ class StatistikService {
       );
 
       print('Auth response: $response');
-      
+
       if (response is Map) {
         return response['status'] == true;
       }
       return false;
-      
     } catch (e) {
       print('Error with auth: $e');
       return false;

@@ -9,9 +9,9 @@ class VoteDialog extends StatelessWidget {
   final bool isUpdate;
 
   const VoteDialog({
-    super.key, 
-    required this.prediction, 
-    this.isUpdate = false 
+    super.key,
+    required this.prediction,
+    this.isUpdate = false,
   });
 
   @override
@@ -61,7 +61,9 @@ class VoteDialog extends StatelessWidget {
             ),
             const SizedBox(height: 8),
             Text(
-              isUpdate ? "Select your new choice:" : "Cast your vote for the winner!",
+              isUpdate
+                  ? "Select your new choice:"
+                  : "Cast your vote for the winner!",
               style: const TextStyle(
                 fontFamily: 'Nunito Sans',
                 fontSize: 14,
@@ -69,7 +71,7 @@ class VoteDialog extends StatelessWidget {
               ),
             ),
             const SizedBox(height: 30),
-            
+
             // Vote Buttons
             Row(
               children: [
@@ -127,10 +129,15 @@ class VoteDialog extends StatelessWidget {
       elevation: 2,
       child: InkWell(
         onTap: () async {
-          String result = await _submitOrUpdateVote(context, request, prediction.id, choice);
-          
+          String result = await _submitOrUpdateVote(
+            context,
+            request,
+            prediction.id,
+            choice,
+          );
+
           if (context.mounted) {
-            Navigator.pop(context, result); 
+            Navigator.pop(context, result);
           }
         },
         borderRadius: BorderRadius.circular(12),
@@ -161,10 +168,10 @@ class VoteDialog extends StatelessWidget {
   }
 
   Future<String> _submitOrUpdateVote(
-    BuildContext context, 
-    CookieRequest request, 
-    String predictionId, 
-    String choice
+    BuildContext context,
+    CookieRequest request,
+    String predictionId,
+    String choice,
   ) async {
     if (!request.loggedIn) {
       if (context.mounted) {
@@ -181,17 +188,17 @@ class VoteDialog extends StatelessWidget {
           ),
         );
         Navigator.push(
-          context, 
+          context,
           MaterialPageRoute(builder: (context) => const LoginPage()),
         );
       }
       return 'failed';
     }
 
-    final String endpoint = isUpdate 
-        ? 'prediction/update-vote-flutter/' 
+    final String endpoint = isUpdate
+        ? 'prediction/update-vote-flutter/'
         : 'prediction/submit-vote-flutter/';
-    final url = 'http://localhost:8000/$endpoint';
+    final url = 'https://alvin-christian-xcore.pbp.cs.ui.ac.id/$endpoint';
 
     try {
       final response = await request.post(url, {
@@ -215,13 +222,12 @@ class VoteDialog extends StatelessWidget {
           ),
         );
         return 'success';
-      } 
-      // Handle error 409 (Already Voted)
-      else if (response['message'].toString().contains("sudah voting") || 
-               response['status'] == 409) {
-        return 'already_voted';
       }
-      else {
+      // Handle error 409 (Already Voted)
+      else if (response['message'].toString().contains("sudah voting") ||
+          response['status'] == 409) {
+        return 'already_voted';
+      } else {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text(
@@ -238,12 +244,12 @@ class VoteDialog extends StatelessWidget {
       }
     } catch (e) {
       if (!context.mounted) return 'failed';
-      
+
       // Check if error message contains "sudah voting"
       if (e.toString().contains("sudah voting")) {
         return 'already_voted';
       }
-      
+
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(

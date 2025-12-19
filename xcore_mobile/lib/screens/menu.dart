@@ -65,10 +65,7 @@ class MyHomePage extends StatelessWidget {
                 children: [
                   Text(
                     'Selamat Datang di',
-                    style: TextStyle(
-                      color: Colors.white70,
-                      fontSize: 16,
-                    ),
+                    style: TextStyle(color: Colors.white70, fontSize: 16),
                   ),
                   SizedBox(height: 4),
                   Text(
@@ -82,10 +79,7 @@ class MyHomePage extends StatelessWidget {
                   SizedBox(height: 8),
                   Text(
                     'Platform terbaik untuk statistik sepakbola',
-                    style: TextStyle(
-                      color: Colors.white70,
-                      fontSize: 14,
-                    ),
+                    style: TextStyle(color: Colors.white70, fontSize: 14),
                     textAlign: TextAlign.center,
                   ),
                 ],
@@ -156,11 +150,7 @@ class MyHomePage extends StatelessWidget {
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  Icon(
-                    item.icon,
-                    color: Colors.white,
-                    size: 24,
-                  ),
+                  Icon(item.icon, color: Colors.white, size: 24),
                   const SizedBox(height: 6),
                   Text(
                     item.name,
@@ -194,9 +184,7 @@ class MyHomePage extends StatelessWidget {
       case "Prediction":
         Navigator.push(
           context,
-          MaterialPageRoute(
-            builder: (context) => const PredictionPage(),
-          ),
+          MaterialPageRoute(builder: (context) => const PredictionPage()),
         );
         break;
       case "Teams":
@@ -249,31 +237,29 @@ class MyHomePage extends StatelessWidget {
                 Navigator.of(context).pop();
                 _performLogout(context);
               },
-              child: const Text(
-                "Logout",
-                style: TextStyle(color: Colors.red),
-              ),
+              child: const Text("Logout", style: TextStyle(color: Colors.red)),
             ),
           ],
         );
       },
     );
   }
-  
+
   void _performLogout(BuildContext context) async {
     final request = context.read<CookieRequest>();
-    
+
     String snackbarMessage = "Logout berhasil!";
-    
+
     try {
       final response = await request.logout(
-        "http://localhost:8000/auth/logout/",
+        "https://alvin-christian-xcore.pbp.cs.ui.ac.id/auth/logout/",
       );
     } catch (e) {
       print("Logout network error: $e");
-      snackbarMessage = "Logout berhasil secara lokal, tetapi gagal menghubungi server.";
+      snackbarMessage =
+          "Logout berhasil secara lokal, tetapi gagal menghubungi server.";
     }
-    
+
     _navigateToLogin(context, snackbarMessage);
   }
 
@@ -282,7 +268,7 @@ class MyHomePage extends StatelessWidget {
       context,
       MaterialPageRoute(builder: (context) => const LoginPage()),
     );
-    
+
     ScaffoldMessenger.of(context)
       ..hideCurrentSnackBar()
       ..showSnackBar(
