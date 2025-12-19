@@ -45,10 +45,28 @@ class _CreateEditLineupScreenState extends State<CreateEditLineupScreen> {
 
   Future<void> _loadPlayers() async {
     try {
-      // Load players for home team
-      final homePlayers = await LineupService.fetchPlayersByTeam(widget.match.homeTeamCode);
-      // Load players for away team
-      final awayPlayers = await LineupService.fetchPlayersByTeam(widget.match.awayTeamCode);
+      // Get team IDs first
+      final teams = await LineupService.fetchTeamsForMatch(widget.match.id);
+
+      Team? homeTeam;
+      Team? awayTeam;
+
+      // Find home and away teams by name
+      for (var team in teams) {
+        if (team.name == widget.match.homeTeam) {
+          homeTeam = team;
+        } else if (team.name == widget.match.awayTeam) {
+          awayTeam = team;
+        }
+      }
+
+      if (homeTeam == null || awayTeam == null) {
+        throw Exception('Could not find team information');
+      }
+
+      // Load players using team IDs (not codes!)
+      final homePlayers = await LineupService.fetchPlayersByTeam(homeTeam.id);
+      final awayPlayers = await LineupService.fetchPlayersByTeam(awayTeam.id);
 
       setState(() {
         _availableHomePlayers = homePlayers;
@@ -56,6 +74,7 @@ class _CreateEditLineupScreenState extends State<CreateEditLineupScreen> {
         _isLoading = false;
       });
     } catch (e) {
+      print('Error loading players: $e');
       setState(() {
         _error = e.toString();
         _isLoading = false;
@@ -90,70 +109,94 @@ class _CreateEditLineupScreenState extends State<CreateEditLineupScreen> {
   Future<void> _saveLineup() async {
     // Validate selections
     if (_selectedHomePlayers.length != 11) {
-      _showSnackBar('${widget.match.homeTeam} harus memiliki 11 pemain');
+      _showSnackBar('${widget.match.homeTeam} harus memiliki tepat 11 pemain (${_selectedHomePlayers.length} terpilih)');
       return;
     }
 
     if (_selectedAwayPlayers.length != 11) {
-      _showSnackBar('${widget.match.awayTeam} harus memiliki 11 pemain');
+      _showSnackBar('${widget.match.awayTeam} harus memiliki tepat 11 pemain (${_selectedAwayPlayers.length} terpilih)');
       return;
     }
 
     try {
       bool success = true;
+      String? errorMessage;
 
       if (widget.isEdit) {
         // Update existing lineups
         if (widget.homeLineup != null) {
-          success = await LineupService.updateLineup(
-            lineupId: widget.homeLineup!.id,
-            playerIds: _selectedHomePlayers.map((p) => p.id).toList(),
-          ) && success;
-        } else {
-          // Create home lineup if it doesn't exist
-          success = await LineupService.createLineup(
-            matchId: widget.match.id,
-            teamCode: widget.match.homeTeamCode,
-            playerIds: _selectedHomePlayers.map((p) => p.id).toList(),
-          ) && success;
+          try {
+            success = await LineupService.updateLineup(
+              lineupId: widget.homeLineup!.id,
+              playerIds: _selectedHomePlayers.map((p) => p.id).toList(),
+            );
+            if (!success) errorMessage = 'Failed to update home lineup';
+          } catch (e) {
+            success = false;
+            errorMessage = e.toString();
+          }
         }
 
-        if (widget.awayLineup != null) {
-          success = await LineupService.updateLineup(
-            lineupId: widget.awayLineup!.id,
-            playerIds: _selectedAwayPlayers.map((p) => p.id).toList(),
-          ) && success;
-        } else {
-          // Create away lineup if it doesn't exist
-          success = await LineupService.createLineup(
-            matchId: widget.match.id,
-            teamCode: widget.match.awayTeamCode,
-            playerIds: _selectedAwayPlayers.map((p) => p.id).toList(),
-          ) && success;
+        if (success && widget.awayLineup != null) {
+          try {
+            success = await LineupService.updateLineup(
+              lineupId: widget.awayLineup!.id,
+              playerIds: _selectedAwayPlayers.map((p) => p.id).toList(),
+            );
+            if (!success && errorMessage == null) errorMessage = 'Failed to update away lineup';
+          } catch (e) {
+            success = false;
+            errorMessage = e.toString();
+          }
         }
       } else {
-        // Create new lineups
-        success = await LineupService.createLineup(
-          matchId: widget.match.id,
-          teamCode: widget.match.homeTeamCode,
-          playerIds: _selectedHomePlayers.map((p) => p.id).toList(),
-        ) && success;
+        // Create new lineups - perlu team ID, bukan code
+        final teams = await LineupService.fetchTeamsForMatch(widget.match.id);
+        Team? homeTeam = teams.firstWhere((t) => t.name == widget.match.homeTeam);
+        Team? awayTeam = teams.firstWhere((t) => t.name == widget.match.awayTeam);
 
-        success = await LineupService.createLineup(
-          matchId: widget.match.id,
-          teamCode: widget.match.awayTeamCode,
-          playerIds: _selectedAwayPlayers.map((p) => p.id).toList(),
-        ) && success;
+        // Get team codes from match data
+        final homeTeamCode = widget.match.homeTeamCode;
+        final awayTeamCode = widget.match.awayTeamCode;
+
+        // Create home lineup
+        try {
+          success = await LineupService.createLineup(
+            matchId: widget.match.id,
+            teamCode: homeTeamCode,
+            playerIds: _selectedHomePlayers.map((p) => p.id).toList(),
+          );
+          if (!success) errorMessage = 'Failed to create home lineup';
+        } catch (e) {
+          success = false;
+          errorMessage = e.toString();
+        }
+
+        // Create away lineup
+        if (success) {
+          try {
+            success = await LineupService.createLineup(
+              matchId: widget.match.id,
+              teamCode: awayTeamCode,
+              playerIds: _selectedAwayPlayers.map((p) => p.id).toList(),
+            );
+            if (!success && errorMessage == null) errorMessage = 'Failed to create away lineup';
+          } catch (e) {
+            success = false;
+            errorMessage = e.toString();
+          }
+        }
       }
 
       if (success) {
         _showSnackBar(widget.isEdit ? 'Lineup berhasil diupdate!' : 'Lineup berhasil dibuat!');
-        Navigator.pop(context, true); // Return success
+        Navigator.pop(context, true);
       } else {
-        _showSnackBar('Gagal menyimpan lineup');
+        _showSnackBar(errorMessage ?? 'Gagal menyimpan lineup');
       }
     } catch (e) {
-      _showSnackBar('Error: $e');
+      print('Error saving lineup: $e');
+      _showSnackBar('Error: ${e.toString()}');
     }
   }
 

@@ -6,6 +6,10 @@ class StatistikRow extends StatelessWidget {
   final dynamic awayValue;
   final bool isPercentage;
   final IconData? icon;
+  final Color primaryColor;
+  final Color accentColor;
+  final Color textColor;
+  final Color mutedColor;
 
   const StatistikRow({
     super.key,
@@ -14,6 +18,10 @@ class StatistikRow extends StatelessWidget {
     required this.awayValue,
     this.isPercentage = false,
     this.icon,
+    this.primaryColor = const Color(0xFF4AA69B),
+    this.accentColor = const Color(0xFF34C6B8),
+    this.textColor = const Color(0xFF2C5F5A),
+    this.mutedColor = const Color(0xFF6B8E8A),
   });
 
   String _formatValue(dynamic value) {
@@ -33,11 +41,11 @@ class StatistikRow extends StatelessWidget {
     return Container(
       padding: EdgeInsets.symmetric(vertical: 14, horizontal: 16),
       decoration: BoxDecoration(
-        border: Border(bottom: BorderSide(color: Colors.grey[200]!)),
+        border: Border(bottom: BorderSide(color: primaryColor.withOpacity(0.1))),
         gradient: LinearGradient(
           begin: Alignment.centerLeft,
           end: Alignment.centerRight,
-          colors: [Colors.white, Colors.grey[50]!],
+          colors: [Colors.white, primaryColor.withOpacity(0.05)],
         ),
       ),
       child: Row(
@@ -47,16 +55,16 @@ class StatistikRow extends StatelessWidget {
             width: 60,
             padding: EdgeInsets.symmetric(vertical: 6, horizontal: 8),
             decoration: BoxDecoration(
-              color: Colors.green[50],
+              color: primaryColor.withOpacity(0.1),
               borderRadius: BorderRadius.circular(8),
-              border: Border.all(color: Colors.green[100]!),
+              border: Border.all(color: primaryColor.withOpacity(0.3)),
             ),
             child: Text(
               _formatValue(homeValue),
               style: TextStyle(
                 fontSize: 16, 
                 fontWeight: FontWeight.bold,
-                color: Colors.green[800],
+                color: textColor,
               ),
               textAlign: TextAlign.center,
             ),
@@ -67,7 +75,7 @@ class StatistikRow extends StatelessWidget {
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
                 if (icon != null) ...[
-                  Icon(icon, size: 16, color: Colors.grey[600]),
+                  Icon(icon, size: 16, color: primaryColor),
                   SizedBox(width: 6),
                 ],
                 Text(
@@ -75,7 +83,7 @@ class StatistikRow extends StatelessWidget {
                   style: TextStyle(
                     fontSize: 14, 
                     fontWeight: FontWeight.w600,
-                    color: Colors.grey[700],
+                    color: textColor,
                   ),
                   textAlign: TextAlign.center,
                 ),
@@ -88,16 +96,16 @@ class StatistikRow extends StatelessWidget {
             width: 60,
             padding: EdgeInsets.symmetric(vertical: 6, horizontal: 8),
             decoration: BoxDecoration(
-              color: Colors.red[50],
+              color: accentColor.withOpacity(0.1),
               borderRadius: BorderRadius.circular(8),
-              border: Border.all(color: Colors.red[100]!),
+              border: Border.all(color: accentColor.withOpacity(0.3)),
             ),
             child: Text(
               _formatValue(awayValue),
               style: TextStyle(
                 fontSize: 16, 
                 fontWeight: FontWeight.bold,
-                color: Colors.red[800],
+                color: textColor,
               ),
               textAlign: TextAlign.center,
             ),

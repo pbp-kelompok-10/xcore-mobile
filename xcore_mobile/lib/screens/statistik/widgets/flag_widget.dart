@@ -46,7 +46,7 @@ class FlagWidget extends StatelessWidget {
           fit: BoxFit.cover,
           errorBuilder: (context, error, stackTrace) {
             return Container(
-              color: isHome ? Colors.green[500] : Colors.red[500],
+              color: isHome ? Color(0xFF4AA69B) : Color(0xFF34C6B8),
               child: Center(
                 child: Text(
                   effectiveCode.toUpperCase(),
@@ -62,7 +62,7 @@ class FlagWidget extends StatelessWidget {
           loadingBuilder: (context, child, loadingProgress) {
             if (loadingProgress == null) return child;
             return Container(
-              color: Colors.grey[200],
+              color: Color(0xFFE8F6F4),
               child: Center(
                 child: CircularProgressIndicator(
                   value: loadingProgress.expectedTotalBytes != null
@@ -70,6 +70,7 @@ class FlagWidget extends StatelessWidget {
                         loadingProgress.expectedTotalBytes!
                       : null,
                   strokeWidth: 2,
+                  color: Color(0xFF4AA69B),
                 ),
               ),
             );
