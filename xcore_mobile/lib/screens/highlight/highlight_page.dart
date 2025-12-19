@@ -82,6 +82,7 @@ class _HighlightPageState extends State<HighlightPage> {
                 params: const YoutubePlayerParams(
                   showControls: true,
                   showFullscreenButton: true,
+                  origin: 'https://www.youtube-nocookie.com'
                 ),
               );
             });
