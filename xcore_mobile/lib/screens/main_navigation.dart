@@ -30,7 +30,7 @@ class _MainNavigationState extends State<MainNavigation> {
     final List<Widget> pages = [
       ScoreboardPage(onSwitchTab: _onItemTapped), // Index 0
       const PredictionPage(), // Index 1
-      const TeamsPage(), // Index 2
+      TeamsPage(onSwitchTab: _onItemTapped), // Index 2
       const PlayersPage(), // Index 3
       const ProfilePage(), // Index 4
     ];

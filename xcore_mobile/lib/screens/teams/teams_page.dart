@@ -56,7 +56,9 @@ const List<Map<String, String>> countryChoices = [
 ];
 
 class TeamsPage extends StatefulWidget {
-  const TeamsPage({super.key});
+  final Function(int)? onSwitchTab;
+
+  const TeamsPage({super.key, this.onSwitchTab});
 
   @override
   State<TeamsPage> createState() => _TeamsPageState();

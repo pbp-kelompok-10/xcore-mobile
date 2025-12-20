@@ -7,8 +7,13 @@ import '../players/player_service.dart';
 
 class TeamDetailPage extends StatefulWidget {
   final int teamId;
+  final bool isEmbedded;
 
-  const TeamDetailPage({Key? key, required this.teamId}) : super(key: key);
+  const TeamDetailPage({
+    Key? key,
+    required this.teamId,
+    this.isEmbedded = false,
+  }) : super(key: key);
 
   @override
   State<TeamDetailPage> createState() => _TeamDetailPageState();
@@ -343,6 +348,10 @@ class _TeamDetailPageState extends State<TeamDetailPage> {
 
   @override
   Widget build(BuildContext context) {
+    if (widget.isEmbedded) {
+      return _buildDetailContent();
+    }
+
     return Scaffold(
       backgroundColor: scaffoldBgColor,
       appBar: AppBar(
@@ -398,10 +407,9 @@ class _TeamDetailPageState extends State<TeamDetailPage> {
             return _buildErrorState('No team data found');
           }
 
-          final teamData = snapshot.data!;
-          final teamName = teamData['name'] ?? '';
-          final teamCode = teamData['code'] ?? '';
-          final players = (teamData['players'] ?? []) as List;
+        if (!snapshot.hasData) {
+          return const Center(child: Text('No team data found'));
+        }
 
           return SingleChildScrollView(
             padding: const EdgeInsets.all(16.0),
@@ -471,13 +479,14 @@ class _TeamDetailPageState extends State<TeamDetailPage> {
                                 ),
                               ),
                             ),
-                          ],
-                        ),
+                          ),
+                        ],
                       ),
-                    ],
-                  ),
+                    ),
+                  ],
                 ),
-                const SizedBox(height: 24),
+              ),
+              const SizedBox(height: 24),
 
                 // Players Section
                 Container(
