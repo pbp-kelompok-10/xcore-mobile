@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'player_service.dart';
+import '../../services/player_service.dart';
 import 'player_detail_service.dart';
 import 'player_detail_page.dart';
 import 'add_player_page.dart';

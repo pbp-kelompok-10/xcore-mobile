@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'team_detail_service.dart';
 import 'team_create_update_service.dart';
 import '../players/player_detail_page.dart';
-import '../players/player_service.dart';
+import '../../services/player_service.dart';
 
 class TeamDetailPage extends StatefulWidget {
   final int teamId;

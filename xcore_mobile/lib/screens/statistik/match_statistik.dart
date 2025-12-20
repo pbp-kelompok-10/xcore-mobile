@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:pbp_django_auth/pbp_django_auth.dart';
 import 'package:provider/provider.dart';
 import 'package:xcore_mobile/models/statistik_entry.dart'; 
-import 'statistik_service.dart';
+import '../../services/statistik_service.dart';
 import '../scoreboard/scoreboard_page.dart';
 import '../forum/forum_page.dart';
 import '../prediction/prediction_page.dart';

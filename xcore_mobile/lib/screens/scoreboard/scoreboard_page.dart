@@ -3,7 +3,7 @@ import 'package:xcore_mobile/models/scoreboard_entry.dart';
 import 'package:xcore_mobile/screens/forum/forum_page.dart';
 import 'package:xcore_mobile/screens/scoreboard/admin/add_match_page.dart';
 import 'package:xcore_mobile/screens/scoreboard/admin/edit_match_page.dart';
-import 'package:xcore_mobile/screens/scoreboard/scoreboard_service.dart';
+import 'package:xcore_mobile/services/scoreboard_service.dart';
 import 'package:xcore_mobile/screens/statistik/match_statistik.dart';
 import 'package:xcore_mobile/screens/prediction/prediction_detail_page.dart';
 import 'package:xcore_mobile/screens/scoreboard/scoreboard_card.dart';

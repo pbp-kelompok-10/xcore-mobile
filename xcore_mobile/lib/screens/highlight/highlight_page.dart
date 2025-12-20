@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:youtube_player_iframe/youtube_player_iframe.dart';
 
-import 'highlight_service.dart';
+import '../../services/highlight_service.dart';
 import '../../models/highlights_entry.dart';
 import '../../models/scoreboard_entry.dart';
 import 'highlight_create_page.dart';

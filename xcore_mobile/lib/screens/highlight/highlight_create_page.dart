@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'highlight_service.dart';
+import '../../services/highlight_service.dart';
 
 class HighlightCreatePage extends StatefulWidget {
   final String matchId;

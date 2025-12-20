@@ -4,7 +4,7 @@ import 'package:pbp_django_auth/pbp_django_auth.dart';
 import 'package:xcore_mobile/screens/landing_page.dart';
 import 'package:xcore_mobile/screens/login.dart';
 import 'package:xcore_mobile/services/auth_service.dart';
-import 'profile_service.dart';
+import '../../services/profile_service.dart';
 
 class ProfilePage extends StatelessWidget {
   const ProfilePage({super.key});

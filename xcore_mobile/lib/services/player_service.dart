@@ -4,8 +4,8 @@ import 'dart:typed_data';
 import 'package:http/http.dart' as http;
 import 'package:file_picker/file_picker.dart';
 import 'package:pbp_django_auth/pbp_django_auth.dart';
-import '../../models/player_entry.dart';
-import 'players_page.dart';
+import '../models/player_entry.dart';
+import '../screens/players/players_page.dart';
 
 import 'package:flutter/cupertino.dart';
 import 'package:provider/provider.dart';

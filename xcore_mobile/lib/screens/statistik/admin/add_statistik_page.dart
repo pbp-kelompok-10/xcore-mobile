@@ -2,7 +2,7 @@ import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:pbp_django_auth/pbp_django_auth.dart';
 import 'package:provider/provider.dart';
-import 'package:xcore_mobile/screens/statistik/statistik_service.dart';
+import 'package:xcore_mobile/services/statistik_service.dart';
 
 class AddStatistikPage extends StatefulWidget {
   final String matchId;

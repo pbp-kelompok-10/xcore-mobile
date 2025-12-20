@@ -7,7 +7,7 @@ import 'package:xcore_mobile/models/post_entry.dart';
 import 'package:pbp_django_auth/pbp_django_auth.dart';
 import 'package:provider/provider.dart';
 
-import '../../services/auth_service.dart';
+import 'auth_service.dart';
 
 class ForumService {
   static const String baseUrl = 'http://localhost:8000'; // Ganti URL Django
