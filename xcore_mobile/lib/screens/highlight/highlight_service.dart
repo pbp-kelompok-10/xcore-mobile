@@ -13,9 +13,7 @@ class HighlightService {
     final request = context.watch<CookieRequest>();
 
     try {
-      final response = await request.get(
-        '$baseUrl/auth/is-admin/',
-      );
+      final response = await request.get('$baseUrl/auth/is-admin/');
 
       // Periksa apakah user terautentikasi DAN apakah admin
       if (response['status'] == true) {

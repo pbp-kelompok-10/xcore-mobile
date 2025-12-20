@@ -8,14 +8,21 @@ import 'package:xcore_mobile/screens/prediction/prediction_detail_page.dart';
 import 'package:xcore_mobile/services/prediction_service.dart'; 
 
 class PredictionPage extends StatefulWidget {
-  const PredictionPage({super.key});
+  final String? matchId;
+
+  const PredictionPage({super.key, this.matchId});
 
   @override
   State<PredictionPage> createState() => _PredictionPageState();
 }
 
-class _PredictionPageState extends State<PredictionPage> with SingleTickerProviderStateMixin {
+class _PredictionPageState extends State<PredictionPage>
+    with SingleTickerProviderStateMixin {
   late TabController _tabController;
+
+  // (Tambahan Abhi) Menambahkan Controller dan Query untuk Search
+  final TextEditingController _searchController = TextEditingController();
+  String _searchQuery = '';
 
   @override
   void initState() {
@@ -26,12 +33,15 @@ class _PredictionPageState extends State<PredictionPage> with SingleTickerProvid
   @override
   void dispose() {
     _tabController.dispose();
+    _searchController.dispose();
     super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
     final request = context.read<CookieRequest>();
+    const Color primaryColor = Color(0xFF4AA69B);
+    const Color mutedTextColor = Color(0xFF6B8E8A);
 
     return Scaffold(
       backgroundColor: const Color(0xFFE8F6F4),
@@ -39,7 +49,7 @@ class _PredictionPageState extends State<PredictionPage> with SingleTickerProvid
         title: const Text("Prediction Center", style: TextStyle(fontFamily: 'Nunito Sans', fontWeight: FontWeight.w700, fontSize: 20)),
         centerTitle: true,
         elevation: 2,
-        backgroundColor: const Color(0xFF4AA69B),
+        backgroundColor: primaryColor,
         foregroundColor: const Color(0xFFFFFFFF),
         automaticallyImplyLeading: false,
         bottom: TabBar(
@@ -53,17 +63,76 @@ class _PredictionPageState extends State<PredictionPage> with SingleTickerProvid
           tabs: const [Tab(text: "All Predictions"), Tab(text: "My Votes")],
         ),
       ),
-      body: TabBarView(
-        controller: _tabController,
+      // (Tambahan Abhi) Ubah body jadi column agar search bar bisa ditaruh di atas TabBarView
+      body: Column(
         children: [
-          _buildPredictionList(request, '/prediction/json/', false),
-          _buildPredictionList(request, '/prediction/json-my-votes/', true),
+          // Widget Search Bar
+          Padding(
+            padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
+            child: TextField(
+              controller: _searchController,
+              onChanged: (value) {
+                setState(() {
+                  _searchQuery = value.toLowerCase();
+                });
+              },
+              decoration: InputDecoration(
+                hintText: "Cari prediksi...",
+                hintStyle: const TextStyle(
+                  fontFamily: 'Nunito Sans',
+                  color: mutedTextColor,
+                ),
+                prefixIcon: const Icon(Icons.search, color: primaryColor),
+                filled: true,
+                fillColor: Colors.white,
+                contentPadding: const EdgeInsets.symmetric(
+                  vertical: 0,
+                  horizontal: 20,
+                ),
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(30),
+                  borderSide: BorderSide.none,
+                ),
+                enabledBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(30),
+                  borderSide: BorderSide(
+                    color: primaryColor.withOpacity(0.1),
+                    width: 1,
+                  ),
+                ),
+                focusedBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(30),
+                  borderSide: const BorderSide(color: primaryColor, width: 1.5),
+                ),
+              ),
+            ),
+          ),
+
+          Expanded(
+            child: TabBarView(
+              controller: _tabController,
+              children: [
+                _buildPredictionList(request, '/prediction/json/', false),
+                _buildPredictionList(
+                  request,
+                  '/prediction/json-my-votes/',
+                  true,
+                ),
+              ],
+            ),
+          ),
         ],
       ),
     );
   }
 
-  Widget _buildPredictionList(CookieRequest request, String endpoint, bool isMyVotes) {
+  Widget _buildPredictionList(
+    CookieRequest request,
+    String endpoint,
+    bool isMyVotes,
+  ) {
+    const Color mutedTextColor = Color(0xFF6B8E8A);
+
     return FutureBuilder<List<Prediction>>(
       future: PredictionService.fetchPredictions(request, endpoint),
       builder: (context, snapshot) {
@@ -87,16 +156,48 @@ class _PredictionPageState extends State<PredictionPage> with SingleTickerProvid
           );
         }
 
+        // (Tambahan Abhi) Logika Filtering
+        final allPredictions = snapshot.data!;
+        final filteredPredictions = allPredictions.where((prediction) {
+          return prediction.homeTeam.toLowerCase().contains(_searchQuery) ||
+              prediction.awayTeam.toLowerCase().contains(_searchQuery);
+        }).toList();
+
+        if (filteredPredictions.isEmpty) {
+          return Center(
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                const Icon(
+                  Icons.search_off_rounded,
+                  size: 64,
+                  color: mutedTextColor,
+                ),
+                const SizedBox(height: 16),
+                Text(
+                  "Tidak ditemukan prediksi untuk \"$_searchQuery\"",
+                  style: const TextStyle(
+                    fontFamily: 'Nunito Sans',
+                    color: mutedTextColor,
+                  ),
+                ),
+              ],
+            ),
+          );
+        }
+
         return RefreshIndicator(
           color: const Color(0xFF4AA69B),
           backgroundColor: const Color(0xFFFFFFFF),
-          onRefresh: () async { setState(() {}); },
+          onRefresh: () async {
+            setState(() {});
+          },
           child: ListView.builder(
             padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 16),
-            itemCount: snapshot.data!.length,
+            itemCount: filteredPredictions.length,
             itemBuilder: (context, index) {
-              final prediction = snapshot.data![index];
-              
+              final prediction = filteredPredictions[index];
+
               return PredictionEntryCard(
                 prediction: prediction,
                 showActions: isMyVotes,

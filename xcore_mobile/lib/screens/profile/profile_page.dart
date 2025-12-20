@@ -1,7 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:pbp_django_auth/pbp_django_auth.dart';
+import 'package:xcore_mobile/screens/landing_page.dart';
 import 'package:xcore_mobile/screens/login.dart';
+import 'package:xcore_mobile/services/auth_service.dart';
+import 'profile_service.dart';
 
 class ProfilePage extends StatelessWidget {
   const ProfilePage({super.key});
@@ -25,10 +28,7 @@ class ProfilePage extends StatelessWidget {
                 Navigator.of(context).pop();
                 _performLogout(context);
               },
-              child: const Text(
-                'Logout',
-                style: TextStyle(color: Colors.red),
-              ),
+              child: const Text('Logout', style: TextStyle(color: Colors.red)),
             ),
           ],
         );
@@ -39,29 +39,42 @@ class ProfilePage extends StatelessWidget {
   // --- FUNGSI LOGOUT DIPERBAIKI ---
   Future<void> _performLogout(BuildContext context) async {
     final request = context.read<CookieRequest>();
-    
+
     try {
       // Ganti URL sesuai device (10.0.2.2 untuk emulator Android)
       final response = await request.logout(
-        "http://10.0.2.2:8000/auth/logout/", 
+        "http://localhost:8000/auth/logout/",
       );
 
-      // Jika sukses, Provider akan otomatis mengubah state 'loggedIn' jadi false.
-      // UI akan rebuild sendiri karena kita pakai context.watch di build().
-      
-      if (context.mounted) {
-        String message = response['message'] ?? "Logout berhasil!";
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(message),
-            backgroundColor: const Color(0xFF4AA69B),
-          ),
-        );
-        // KITA TIDAK MELAKUKAN NAVIGASI APA-APA DISINI
-        // Biarkan halaman tetap di ProfilePage, tapi tampilannya akan berubah sendiri.
-      }
+      debugPrint("✅ Logout response: $response");
 
+      // Clear stored user data
+      await AuthService.clearUserData();
+      debugPrint("✅ User data cleared");
+
+      if (!context.mounted) return;
+
+      String message = response['message'] ?? "Logout berhasil!";
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(message),
+          backgroundColor: const Color(0xFF4AA69B),
+          duration: const Duration(seconds: 1),
+        ),
+      );
+
+      debugPrint("✅ Navigating to LandingPage...");
+
+      // Navigate immediately without delay - the logout() call should have already updated the state
+      if (context.mounted) {
+        Navigator.of(context).pushAndRemoveUntil(
+          MaterialPageRoute(builder: (context) => const LandingPage()),
+          (Route<dynamic> route) => false,
+        );
+        debugPrint("✅ Navigation completed");
+      }
     } catch (e) {
+      debugPrint("❌ Logout error: $e");
       if (context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
@@ -75,7 +88,6 @@ class ProfilePage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // WATCH: Ini kuncinya. Kalau status login berubah, build akan jalan ulang.
     final request = context.watch<CookieRequest>();
     final bool isLoggedIn = request.loggedIn;
 
@@ -84,19 +96,17 @@ class ProfilePage extends StatelessWidget {
         title: const Text("Profile"),
         backgroundColor: const Color(0xFF4AA69B),
         foregroundColor: Colors.white,
-        
-        // --- BAGIAN INI YANG PENTING ---
-        // Set ke false agar tombol back/drawer TIDAK MUNCUL di halaman ini
-        automaticallyImplyLeading: false, 
+
+        automaticallyImplyLeading: false,
         // -------------------------------
       ),
       body: Center(
         child: Padding(
           padding: const EdgeInsets.all(24.0),
           // Logika Switch Tampilan
-          child: isLoggedIn 
+          child: isLoggedIn
               ? _buildLoggedInView(context, request) // Tampilan Profil User
-              : _buildLoggedOutView(context),        // Tampilan Tombol Login
+              : _buildLoggedOutView(context), // Tampilan Tombol Login
         ),
       ),
     );
@@ -104,55 +114,87 @@ class ProfilePage extends StatelessWidget {
 
   // TAMPILAN 1: SUDAH LOGIN
   Widget _buildLoggedInView(BuildContext context, CookieRequest request) {
-    // Ambil username kalau ada di jsonData, kalau tidak pakai default
-    String username = request.jsonData['username'] ?? 'User';
+    return FutureBuilder<Map<String, dynamic>>(
+      future: ProfileService.getUserProfile(request),
+      builder: (context, snapshot) {
+        if (snapshot.connectionState == ConnectionState.waiting) {
+          return const Center(child: CircularProgressIndicator());
+        }
 
-    return Column(
-      mainAxisAlignment: MainAxisAlignment.center,
-      children: [
-        const CircleAvatar(
-          radius: 50,
-          backgroundColor: Color(0xFF4AA69B),
-          child: Icon(Icons.person, size: 50, color: Colors.white),
-        ),
-        const SizedBox(height: 24),
-        Text(
-          username, // Nama dinamis dari Django
-          style: const TextStyle(
-            fontFamily: 'Nunito Sans',
-            fontSize: 24,
-            fontWeight: FontWeight.w700,
-          ),
-        ),
-        const SizedBox(height: 8),
-        Text(
-          'Selamat datang di Xcore',
-          style: const TextStyle(
-            fontFamily: 'Nunito Sans',
-            fontSize: 16,
-            color: Color(0xFF9CA3AF),
-          ),
-        ),
-        const SizedBox(height: 48),
-        SizedBox(
-          width: double.infinity,
-          child: ElevatedButton(
-            onPressed: () => _showLogoutDialog(context),
-            style: ElevatedButton.styleFrom(
-              backgroundColor: Colors.red,
-              foregroundColor: Colors.white,
-              padding: const EdgeInsets.symmetric(vertical: 16),
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(12),
+        if (snapshot.hasError) {
+          return Center(child: Text('Error: ${snapshot.error}'));
+        }
+
+        if (!snapshot.hasData) {
+          return const Center(child: Text('No profile data'));
+        }
+
+        final profileData = snapshot.data!;
+        final String username = profileData['username'] ?? 'User';
+        final String email = profileData['email'] ?? '';
+        final String bio = profileData['bio'] ?? 'No bio yet';
+        final String? profilePictureUrl = profileData['profile_picture'];
+
+        return Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            // Profile Picture
+            CircleAvatar(
+              radius: 50,
+              backgroundColor: const Color(0xFF4AA69B),
+              backgroundImage: profilePictureUrl != null
+                  ? NetworkImage(profilePictureUrl)
+                  : null,
+              onBackgroundImageError: profilePictureUrl != null
+                  ? (exception, stackTrace) {
+                      debugPrint('Error loading profile picture: $exception');
+                    }
+                  : null,
+              child: profilePictureUrl == null
+                  ? const Icon(Icons.person, size: 50, color: Colors.white)
+                  : null,
+            ),
+            const SizedBox(height: 24),
+            Text(
+              username,
+              style: const TextStyle(
+                fontFamily: 'Nunito Sans',
+                fontSize: 24,
+                fontWeight: FontWeight.w700,
               ),
             ),
-            child: const Text(
-              'Logout',
-              style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700),
+            const SizedBox(height: 8),
+            Text(
+              email,
+              style: const TextStyle(
+                fontFamily: 'Nunito Sans',
+                fontSize: 14,
+                color: Color(0xFF9CA3AF),
+              ),
             ),
-          ),
-        ),
-      ],
+
+            const SizedBox(height: 48),
+            SizedBox(
+              width: double.infinity,
+              child: ElevatedButton(
+                onPressed: () => _showLogoutDialog(context),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Colors.red,
+                  foregroundColor: Colors.white,
+                  padding: const EdgeInsets.symmetric(vertical: 16),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                ),
+                child: const Text(
+                  'Logout',
+                  style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700),
+                ),
+              ),
+            ),
+          ],
+        );
+      },
     );
   }
 
@@ -161,11 +203,7 @@ class ProfilePage extends StatelessWidget {
     return Column(
       mainAxisAlignment: MainAxisAlignment.center,
       children: [
-        Icon(
-          Icons.person_off_outlined,
-          size: 100,
-          color: Colors.grey[400],
-        ),
+        Icon(Icons.person_off_outlined, size: 100, color: Colors.grey[400]),
         const SizedBox(height: 24),
         Text(
           'Anda Belum Login',

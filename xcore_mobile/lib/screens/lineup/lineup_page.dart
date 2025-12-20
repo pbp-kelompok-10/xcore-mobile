@@ -23,6 +23,15 @@ class _LineupPageState extends State<LineupPage> {
   String _error = '';
   bool _isAdmin = false;
 
+  // Warna konsisten dengan MatchStatisticsPage dan ForumPage
+  static const Color primaryColor = Color(0xFF4AA69B);
+  static const Color scaffoldBgColor = Color(0xFFE8F6F4);
+  static const Color darkTextColor = Color(0xFF2C5F5A);
+  static const Color mutedTextColor = Color(0xFF6B8E8A);
+  static const Color accentColor = Color(0xFF34C6B8);
+  static const Color lightBgColor = Color(0xFFD1F0EB);
+  static const Color whiteColor = Colors.white;
+
   @override
   void initState() {
     super.initState();
@@ -40,6 +49,7 @@ class _LineupPageState extends State<LineupPage> {
       final admin_status = await LineupService.fetchAdminStatus(context);
       setState(() {
         _isAdmin = admin_status;
+        debugPrint("🔐 _isAdmin: $_isAdmin");
       });
     } catch (e) {
       setState(() {
@@ -72,8 +82,10 @@ class _LineupPageState extends State<LineupPage> {
           match: _lineupData!.match,
           homeLineup: _lineupData?.homeLineup,
           awayLineup: _lineupData?.awayLineup,
-          isEdit: _lineupData != null &&
-              (_lineupData!.homeLineup != null || _lineupData!.awayLineup != null),
+          isEdit:
+          _lineupData != null &&
+              (_lineupData!.homeLineup != null ||
+                  _lineupData!.awayLineup != null),
         ),
       ),
     ).then((_) {
@@ -86,16 +98,43 @@ class _LineupPageState extends State<LineupPage> {
     final confirmed = await showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        title: Text('Hapus Lineup'),
-        content: Text('Yakin ingin menghapus lineup pertandingan ini?'),
+        backgroundColor: whiteColor,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(12),
+        ),
+        title: Text(
+          'Hapus Lineup',
+          style: TextStyle(
+            fontWeight: FontWeight.bold,
+            color: darkTextColor,
+          ),
+        ),
+        content: Text(
+          'Yakin ingin menghapus lineup pertandingan ini?',
+          style: TextStyle(
+            color: mutedTextColor,
+          ),
+        ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context, false),
-            child: Text('Batal'),
+            child: Text(
+              'Batal',
+              style: TextStyle(
+                fontWeight: FontWeight.w600,
+                color: mutedTextColor,
+              ),
+            ),
           ),
           TextButton(
             onPressed: () => Navigator.pop(context, true),
-            child: Text('Hapus', style: TextStyle(color: Colors.red)),
+            child: Text(
+              'Hapus',
+              style: TextStyle(
+                fontWeight: FontWeight.w600,
+                color: Colors.red,
+              ),
+            ),
           ),
         ],
       ),
@@ -107,20 +146,24 @@ class _LineupPageState extends State<LineupPage> {
 
         // Delete both home and away lineups
         if (_lineupData?.homeLineup != null) {
-          success = await LineupService.deleteLineup(_lineupData!.homeLineup!.id) && success;
+          success =
+              await LineupService.deleteLineup(_lineupData!.homeLineup!.id) &&
+                  success;
         }
         if (_lineupData?.awayLineup != null) {
-          success = await LineupService.deleteLineup(_lineupData!.awayLineup!.id) && success;
+          success =
+              await LineupService.deleteLineup(_lineupData!.awayLineup!.id) &&
+                  success;
         }
 
         if (success) {
-          _showSnackBar('Lineup berhasil dihapus');
+          _showSnackBar('✅ Lineup berhasil dihapus');
           _loadLineup(); // Refresh setelah delete
         } else {
-          _showSnackBar('Gagal menghapus lineup');
+          _showSnackBar('❌ Gagal menghapus lineup');
         }
       } catch (e) {
-        _showSnackBar('Error: $e');
+        _showSnackBar('❌ Error: $e');
       }
     }
   }
@@ -131,8 +174,12 @@ class _LineupPageState extends State<LineupPage> {
       ..showSnackBar(
         SnackBar(
           content: Text(message),
-          backgroundColor: Colors.green[600],
+          backgroundColor: primaryColor,
           duration: Duration(seconds: 2),
+          behavior: SnackBarBehavior.floating,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(10),
+          ),
         ),
       );
   }
@@ -143,14 +190,16 @@ class _LineupPageState extends State<LineupPage> {
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
           CircularProgressIndicator(
-            valueColor: AlwaysStoppedAnimation<Color>(Colors.green[700]!),
+            valueColor: AlwaysStoppedAnimation<Color>(primaryColor),
+            strokeWidth: 2,
           ),
           SizedBox(height: 16),
           Text(
             'Loading Lineup...',
             style: TextStyle(
               fontSize: 16,
-              color: Colors.grey[600],
+              fontWeight: FontWeight.w500,
+              color: mutedTextColor,
             ),
           ),
         ],
@@ -162,30 +211,63 @@ class _LineupPageState extends State<LineupPage> {
     return Center(
       child: Padding(
         padding: EdgeInsets.all(24),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Icon(Icons.error_outline, size: 64, color: Colors.red[400]),
-            SizedBox(height: 16),
-            Text(
-              'Failed to Load Lineup',
-              style: TextStyle(
-                fontSize: 18,
-                fontWeight: FontWeight.bold,
+        child: Container(
+          padding: EdgeInsets.all(24),
+          decoration: BoxDecoration(
+            color: whiteColor,
+            borderRadius: BorderRadius.circular(12),
+            border: Border.all(color: Colors.red.withOpacity(0.2)),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withOpacity(0.05),
+                blurRadius: 8,
+                offset: Offset(0, 2),
               ),
-            ),
-            SizedBox(height: 8),
-            Text(
-              _error,
-              textAlign: TextAlign.center,
-              style: TextStyle(color: Colors.grey[600]),
-            ),
-            SizedBox(height: 20),
-            ElevatedButton(
-              onPressed: _loadLineup,
-              child: Text('Try Again'),
-            ),
-          ],
+            ],
+          ),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Container(
+                padding: EdgeInsets.all(16),
+                decoration: BoxDecoration(
+                  color: Colors.red.withOpacity(0.1),
+                  shape: BoxShape.circle,
+                ),
+                child: Icon(Icons.error_outline, size: 40, color: Colors.red),
+              ),
+              SizedBox(height: 20),
+              Text(
+                'Failed to Load Lineup',
+                style: TextStyle(
+                  fontSize: 18,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.red,
+                ),
+              ),
+              SizedBox(height: 8),
+              Text(
+                _error,
+                textAlign: TextAlign.center,
+                style: TextStyle(
+                  fontSize: 14,
+                  color: mutedTextColor,
+                ),
+              ),
+              SizedBox(height: 24),
+              ElevatedButton(
+                onPressed: _loadLineup,
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: primaryColor,
+                  foregroundColor: whiteColor,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                ),
+                child: Text('Try Again'),
+              ),
+            ],
+          ),
         ),
       ),
     );
@@ -194,33 +276,67 @@ class _LineupPageState extends State<LineupPage> {
   Widget _buildEmptyState() {
     return Center(
       child: Padding(
-        padding: EdgeInsets.all(24),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Icon(Icons.people_outline, size: 64, color: Colors.grey[400]),
-            SizedBox(height: 16),
-            Text(
-              'No Lineup Available',
-              style: TextStyle(
-                fontSize: 18,
-                fontWeight: FontWeight.bold,
+        padding: EdgeInsets.all(32),
+        child: Container(
+          padding: EdgeInsets.all(32),
+          decoration: BoxDecoration(
+            color: whiteColor,
+            borderRadius: BorderRadius.circular(12),
+            border: Border.all(color: primaryColor.withOpacity(0.2)),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withOpacity(0.05),
+                blurRadius: 8,
+                offset: Offset(0, 2),
               ),
-            ),
-            SizedBox(height: 8),
-            Text(
-              'Lineup will be available once it\'s created',
-              textAlign: TextAlign.center,
-              style: TextStyle(color: Colors.grey[600]),
-            ),
-            SizedBox(height: 20),
-            if (_isAdmin)
-              ElevatedButton.icon(
-                icon: Icon(Icons.add),
-                label: Text('Create Lineup'),
-                onPressed: _navigateToCreateEditLineup,
+            ],
+          ),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Container(
+                padding: EdgeInsets.all(16),
+                decoration: BoxDecoration(
+                  color: primaryColor.withOpacity(0.1),
+                  shape: BoxShape.circle,
+                ),
+                child: Icon(Icons.people_outline, size: 40, color: primaryColor),
               ),
-          ],
+              SizedBox(height: 20),
+              Text(
+                'No Lineup Available',
+                style: TextStyle(
+                  fontSize: 18,
+                  fontWeight: FontWeight.bold,
+                  color: darkTextColor,
+                ),
+              ),
+              SizedBox(height: 8),
+              Text(
+                'Lineup will be available once it\'s created',
+                textAlign: TextAlign.center,
+                style: TextStyle(
+                  fontSize: 14,
+                  color: mutedTextColor,
+                ),
+              ),
+              SizedBox(height: 24),
+              if (_isAdmin)
+                ElevatedButton.icon(
+                  icon: Icon(Icons.add, size: 18),
+                  label: Text('Create Lineup'),
+                  onPressed: _navigateToCreateEditLineup,
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: accentColor,
+                    foregroundColor: whiteColor,
+                    padding: EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                  ),
+                ),
+            ],
+          ),
         ),
       ),
     );
@@ -234,32 +350,39 @@ class _LineupPageState extends State<LineupPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: scaffoldBgColor,
       appBar: AppBar(
         title: Text(
           'Match Lineup',
           style: TextStyle(
             fontWeight: FontWeight.bold,
-            color: Colors.white,
+            color: whiteColor,
+            fontSize: 18,
           ),
         ),
-        backgroundColor: Colors.green[700],
+        backgroundColor: primaryColor,
         elevation: 0,
+        centerTitle: true,
         leading: IconButton(
-          icon: Icon(Icons.arrow_back, color: Colors.white),
+          icon: Icon(Icons.arrow_back_ios_new_rounded, size: 20, color: whiteColor),
           onPressed: () => Navigator.pop(context),
         ),
-        actions: _isAdmin ? [
+        actions: _isAdmin
+            ? [
           if (_hasLineup)
             IconButton(
-              icon: Icon(Icons.edit, color: Colors.white),
+              icon: Icon(Icons.edit, color: whiteColor),
               onPressed: _navigateToCreateEditLineup,
+              tooltip: 'Edit Lineup',
             ),
           if (_hasLineup)
             IconButton(
-              icon: Icon(Icons.delete, color: Colors.white),
+              icon: Icon(Icons.delete, color: whiteColor),
               onPressed: _deleteLineup,
+              tooltip: 'Hapus Lineup',
             ),
-        ] : null,
+        ]
+            : null,
       ),
       body: _isLoading
           ? _buildLoadingState()
@@ -272,7 +395,9 @@ class _LineupPageState extends State<LineupPage> {
           ? FloatingActionButton(
         onPressed: _navigateToCreateEditLineup,
         child: Icon(Icons.add),
-        backgroundColor: Colors.orange,
+        backgroundColor: accentColor,
+        foregroundColor: whiteColor,
+        tooltip: 'Create Lineup',
       )
           : null,
     );

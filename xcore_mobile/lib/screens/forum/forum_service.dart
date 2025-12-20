@@ -29,14 +29,38 @@ class ForumService {
     }
   }
 
-  // Get posts for a forum dengan informasi user
-  static Future<Map<String, dynamic>> fetchPosts(String forumId, BuildContext context) async {
+  // Get posts for a forum dengan informasi user, search, filter, dan sort
+  static Future<Map<String, dynamic>> fetchPosts(
+      String forumId,
+      BuildContext context, {
+        String? searchQuery,
+        String? authorFilter,
+        String? sortBy,
+      }) async {
     final request = Provider.of<CookieRequest>(context, listen: false);
 
     try {
-      final response = await request.get(
-        '$baseUrl/forum/flutter/$forumId/get_posts/',
-      );
+      // Build query parameters
+      String url = '$baseUrl/forum/flutter/$forumId/get_posts/';
+      List<String> params = [];
+
+      if (searchQuery != null && searchQuery.isNotEmpty) {
+        params.add('search=${Uri.encodeComponent(searchQuery)}');
+      }
+
+      if (authorFilter != null && authorFilter.isNotEmpty) {
+        params.add('author_filter=$authorFilter');
+      }
+
+      if (sortBy != null && sortBy.isNotEmpty) {
+        params.add('sort=$sortBy');
+      }
+
+      if (params.isNotEmpty) {
+        url += '?${params.join('&')}';
+      }
+
+      final response = await request.get(url);
 
       if (response is Map<String, dynamic>) {
         if (response.containsKey('error')) {
@@ -46,7 +70,9 @@ class ForumService {
         final List<dynamic> postsJson = response['posts'];
 
         // Convert ke List<PostEntry>
-        final posts = postsJson.map((json) => PostEntry.fromJson(json)).toList();
+        final posts = postsJson
+            .map((json) => PostEntry.fromJson(json))
+            .toList();
 
         // Kembalikan posts DAN informasi user
         return {
@@ -65,7 +91,11 @@ class ForumService {
   }
 
   // Add new post
-  static Future<void> addPost(String forumId, String message, BuildContext context) async {
+  static Future<void> addPost(
+      String forumId,
+      String message,
+      BuildContext context,
+      ) async {
     final request = context.read<CookieRequest>();
 
     try {
@@ -76,36 +106,35 @@ class ForumService {
       // Menggunakan CookieRequest untuk mengirim request dengan cookies/session
       final response = await request.post(
         '${ForumService.baseUrl}/forum/flutter/$forumId/add_post/',
-        {
-          'message': message,
-        },
+        {'message': message},
       );
 
       if (response['success'] != true) {
-        throw Exception(response['error'] ?? 'Failed to edit post');
+        throw Exception(response['error'] ?? 'Failed to add post');
       }
-
     } catch (e) {
       rethrow;
     }
-
   }
 
   // Edit post
-  static Future<void> editPost(String forumId, String postId, String message, BuildContext context) async {
+  static Future<void> editPost(
+      String forumId,
+      String postId,
+      String message,
+      BuildContext context,
+      ) async {
     final request = context.read<CookieRequest>();
 
     try {
-      if (!request.loggedIn){
+      if (!request.loggedIn) {
         throw Exception('User not logged in. Please login first.');
       }
 
       // Menggunakan CookieRequest untuk mengirim request dengan cookies/session
       final response = await request.post(
         '${ForumService.baseUrl}/forum/flutter/$forumId/edit_post/$postId/',
-        {
-          'message': message,
-        },
+        {'message': message},
       );
 
       if (response['success'] != true) {
@@ -117,13 +146,17 @@ class ForumService {
   }
 
   // Delete post
-  static Future<void> deletePost(String forumId, String postId, BuildContext context) async {
+  static Future<void> deletePost(
+      String forumId,
+      String postId,
+      BuildContext context,
+      ) async {
     final request = context.read<CookieRequest>();
 
     try {
       final response = await request.post(
         '${baseUrl}/forum/flutter/$forumId/delete_post/$postId/',
-        {}
+        {},
       );
 
       if (response['success'] != true) {
@@ -132,6 +165,5 @@ class ForumService {
     } catch (e) {
       rethrow;
     }
-
   }
 }

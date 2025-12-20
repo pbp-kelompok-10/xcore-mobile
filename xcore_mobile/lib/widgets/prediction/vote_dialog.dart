@@ -10,9 +10,9 @@ class VoteDialog extends StatelessWidget {
   final bool isUpdate;
 
   const VoteDialog({
-    super.key, 
-    required this.prediction, 
-    this.isUpdate = false 
+    super.key,
+    required this.prediction,
+    this.isUpdate = false,
   });
 
   @override

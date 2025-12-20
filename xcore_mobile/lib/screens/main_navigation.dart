@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:xcore_mobile/screens/scoreboard/scoreboard_page.dart';
 import 'package:xcore_mobile/screens/prediction/prediction_page.dart';
 import 'package:xcore_mobile/screens/teams/teams_page.dart';
+import 'package:xcore_mobile/screens/players/players_page.dart';
 import 'package:xcore_mobile/screens/profile/profile_page.dart';
 
 class MainNavigation extends StatefulWidget {
@@ -23,10 +24,11 @@ class _MainNavigationState extends State<MainNavigation> {
   @override
   Widget build(BuildContext context) {
     final List<Widget> pages = [
-      ScoreboardPage(onSwitchTab: _onItemTapped),
-      const PredictionPage(),
-      const TeamsPage(),
-      const ProfilePage(),
+      ScoreboardPage(onSwitchTab: _onItemTapped), // Index 0
+      const PredictionPage(), // Index 1
+      TeamsPage(onSwitchTab: _onItemTapped), // Index 2
+      const PlayersPage(), // Index 3
+      const ProfilePage(), // Index 4
     ];
 
     return Scaffold(
@@ -69,8 +71,14 @@ class _MainNavigationState extends State<MainNavigation> {
                 _buildNavItem(
                   icon: Icons.person_outline,
                   activeIcon: Icons.person,
-                  label: 'Profile',
+                  label: 'Players',
                   index: 3,
+                ),
+                _buildNavItem(
+                  icon: Icons.person_outline,
+                  activeIcon: Icons.person,
+                  label: 'Profile',
+                  index: 4,
                 ),
               ],
             ),
@@ -110,8 +118,7 @@ class _MainNavigationState extends State<MainNavigation> {
                 style: TextStyle(
                   fontFamily: 'Nunito Sans',
                   fontSize: 11,
-                  fontWeight:
-                      isSelected ? FontWeight.w700 : FontWeight.w500,
+                  fontWeight: isSelected ? FontWeight.w700 : FontWeight.w500,
                   color: isSelected
                       ? const Color(0xFF4AA69B)
                       : const Color(0xFF9CA3AF),
