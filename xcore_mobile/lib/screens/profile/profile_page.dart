@@ -42,7 +42,7 @@ class ProfilePage extends StatelessWidget {
     try {
       // Ganti URL sesuai device (10.0.2.2 untuk emulator Android)
       final response = await request.logout(
-        "https://alvin-christian-xcore.pbp.cs.ui.ac.id/auth/logout/",
+        "http://localhost:8000/auth/logout/",
       );
 
       debugPrint("✅ Logout response: $response");

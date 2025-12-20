@@ -11,7 +11,7 @@ import '../../services/auth_service.dart';
 
 class ForumService {
   static const String baseUrl =
-      'https://alvin-christian-xcore.pbp.cs.ui.ac.id'; // Ganti URL Django
+      'http://localhost:8000'; // Ganti URL Django
 
   // Get forum by match ID
   static Future<ForumEntry> fetchForumByMatch(String matchId) async {

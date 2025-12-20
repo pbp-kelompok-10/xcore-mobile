@@ -4,7 +4,7 @@ import 'package:flutter/foundation.dart';
 
 class TeamDetailService {
   static const String baseUrl =
-      "https://alvin-christian-xcore.pbp.cs.ui.ac.id/lineup/api";
+      "http://localhost:8000/lineup/api";
 
   // GET TEAM DETAILS
   static Future<Map<String, dynamic>> getTeamDetails(int teamId) async {

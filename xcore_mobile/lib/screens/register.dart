@@ -325,7 +325,7 @@ class _RegisterPageState extends State<RegisterPage> {
                         }
 
                         final url = Uri.parse(
-                          "https://alvin-christian-xcore.pbp.cs.ui.ac.id/auth/register/",
+                          "http://localhost:8000/auth/register/",
                         );
 
                         var requestMultipart = http.MultipartRequest(

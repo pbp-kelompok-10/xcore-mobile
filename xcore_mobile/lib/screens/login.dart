@@ -145,7 +145,7 @@ class _LoginPageState extends State<LoginPage> {
                         String username = _usernameController.text.trim();
                         String password = _passwordController.text.trim();
                         final response = await request.login(
-                          "https://alvin-christian-xcore.pbp.cs.ui.ac.id/auth/login/",
+                          "http://localhost:8000/auth/login/",
                           {'username': username, 'password': password},
                         );
                         if (request.loggedIn && response["status"] == true) {

@@ -7,7 +7,7 @@ import '../../models/highlights_entry.dart';
 import '../../models/scoreboard_entry.dart';
 
 class HighlightService {
-  static const String baseUrl = "https://alvin-christian-xcore.pbp.cs.ui.ac.id";
+  static const String baseUrl = "http://localhost:8000";
 
   static Future<bool> fetchAdminStatus(BuildContext context) async {
     final request = context.watch<CookieRequest>();
