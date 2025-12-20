@@ -3,7 +3,7 @@ import 'package:http/http.dart' as http;
 
 class PlayerDetailService {
   static const String baseUrl =
-      "http://localhost:8000/lineup/api";
+      "https://alvin-christian-xcore.pbp.cs.ui.ac.id/lineup/api";
 
   // -----------------------------------------------------------
   // GET PLAYER DETAILS

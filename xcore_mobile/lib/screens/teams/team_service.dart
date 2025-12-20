@@ -10,7 +10,7 @@ import '../../models/team_entry.dart';
 class TeamService {
   // 🔥 Change this based on your server
   static const String baseUrl =
-      "http://localhost:8000/lineup/api";
+      "https://alvin-christian-xcore.pbp.cs.ui.ac.id/lineup/api";
 
   // GET ALL TEAMS
   static Future<List<Team>> getTeams() async {
