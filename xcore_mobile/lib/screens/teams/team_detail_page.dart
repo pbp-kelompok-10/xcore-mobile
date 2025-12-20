@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'team_detail_service.dart';
 import 'team_create_update_service.dart';
 import '../players/player_detail_page.dart';
-import '../../models/team_entry.dart';
 import '../players/player_service.dart';
 
 class TeamDetailPage extends StatefulWidget {
@@ -22,8 +21,6 @@ class TeamDetailPage extends StatefulWidget {
 class _TeamDetailPageState extends State<TeamDetailPage> {
   late Future<Map<String, dynamic>> _teamDetails;
   bool _isAdmin = false;
-  bool _isLoading = true;
-  String? _error;
 
   // Warna konsisten dengan MatchStatisticsPage dan ForumPage
   static const Color primaryColor = Color(0xFF4AA69B);
@@ -103,10 +100,7 @@ class _TeamDetailPageState extends State<TeamDetailPage> {
         _isAdmin = admin_status;
       });
     } catch (e) {
-      setState(() {
-        _error = e.toString();
-        _isLoading = false;
-      });
+      // Handle error silently
     }
   }
 
@@ -162,7 +156,10 @@ class _TeamDetailPageState extends State<TeamDetailPage> {
             children: [
               DropdownButtonFormField<String>(
                 value: selectedCountryName,
-                hint: Text("Select a country", style: TextStyle(color: mutedTextColor)),
+                hint: Text(
+                  "Select a country",
+                  style: TextStyle(color: mutedTextColor),
+                ),
                 items: countryChoices.map((country) {
                   return DropdownMenuItem<String>(
                     value: country['name'],
@@ -178,8 +175,11 @@ class _TeamDetailPageState extends State<TeamDetailPage> {
                             'https://flagcdn.com/24x18/${country['code']?.toLowerCase() ?? ''}.png',
                             width: 24,
                             height: 16,
-                            errorBuilder: (context, error, stackTrace) =>
-                                Icon(Icons.flag, size: 16, color: mutedTextColor),
+                            errorBuilder: (context, error, stackTrace) => Icon(
+                              Icons.flag,
+                              size: 16,
+                              color: mutedTextColor,
+                            ),
                           ),
                         ),
                         const SizedBox(width: 12),
@@ -203,7 +203,10 @@ class _TeamDetailPageState extends State<TeamDetailPage> {
                     borderRadius: BorderRadius.circular(10),
                     borderSide: BorderSide(color: primaryColor, width: 2),
                   ),
-                  contentPadding: EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+                  contentPadding: EdgeInsets.symmetric(
+                    horizontal: 16,
+                    vertical: 14,
+                  ),
                 ),
               ),
             ],
@@ -229,7 +232,7 @@ class _TeamDetailPageState extends State<TeamDetailPage> {
                 try {
                   // Find the country code from the selected name
                   final selectedCountry = countryChoices.firstWhere(
-                        (country) => country['name'] == selectedCountryName,
+                    (country) => country['name'] == selectedCountryName,
                   );
 
                   await TeamCreateUpdateService.updateTeam(
@@ -261,7 +264,10 @@ class _TeamDetailPageState extends State<TeamDetailPage> {
                   borderRadius: BorderRadius.circular(8),
                 ),
               ),
-              child: Text("Update", style: TextStyle(fontWeight: FontWeight.bold)),
+              child: Text(
+                "Update",
+                style: TextStyle(fontWeight: FontWeight.bold),
+              ),
             ),
           ],
         ),
@@ -334,10 +340,7 @@ class _TeamDetailPageState extends State<TeamDetailPage> {
               Text(
                 error,
                 textAlign: TextAlign.center,
-                style: TextStyle(
-                  fontSize: 14,
-                  color: mutedTextColor,
-                ),
+                style: TextStyle(fontSize: 14, color: mutedTextColor),
               ),
             ],
           ),
@@ -346,12 +349,277 @@ class _TeamDetailPageState extends State<TeamDetailPage> {
     );
   }
 
+  Widget _buildDetailContent({
+    required String teamName,
+    required String teamCode,
+    required List<dynamic> players,
+  }) {
+    return SingleChildScrollView(
+      padding: const EdgeInsets.all(16.0),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // Team Header Card
+          Container(
+            padding: const EdgeInsets.all(20),
+            decoration: BoxDecoration(
+              gradient: LinearGradient(
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+                colors: [primaryColor, accentColor],
+              ),
+              borderRadius: BorderRadius.circular(12),
+              boxShadow: [
+                BoxShadow(
+                  color: primaryColor.withOpacity(0.3),
+                  blurRadius: 8,
+                  offset: Offset(0, 4),
+                ),
+              ],
+            ),
+            child: Row(
+              children: [
+                Container(
+                  padding: EdgeInsets.all(12),
+                  decoration: BoxDecoration(
+                    color: whiteColor.withOpacity(0.2),
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: Image.network(
+                    'https://flagcdn.com/48x36/${teamCode.toLowerCase()}.png',
+                    width: 48,
+                    height: 36,
+                    errorBuilder: (context, error, stackTrace) =>
+                        Icon(Icons.flag, color: whiteColor, size: 36),
+                  ),
+                ),
+                const SizedBox(width: 16),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        teamName,
+                        style: TextStyle(
+                          fontSize: 22,
+                          fontWeight: FontWeight.bold,
+                          color: whiteColor,
+                        ),
+                      ),
+                      SizedBox(height: 4),
+                      Container(
+                        padding: EdgeInsets.symmetric(
+                          horizontal: 8,
+                          vertical: 4,
+                        ),
+                        decoration: BoxDecoration(
+                          color: whiteColor.withOpacity(0.2),
+                          borderRadius: BorderRadius.circular(6),
+                        ),
+                        child: Text(
+                          'Code: $teamCode',
+                          style: TextStyle(
+                            fontSize: 13,
+                            fontWeight: FontWeight.w500,
+                            color: whiteColor,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(height: 24),
+          // Players Section
+          Container(
+            decoration: BoxDecoration(
+              color: whiteColor,
+              borderRadius: BorderRadius.circular(12),
+              border: Border.all(color: primaryColor.withOpacity(0.2)),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withOpacity(0.05),
+                  blurRadius: 8,
+                  offset: Offset(0, 2),
+                ),
+              ],
+            ),
+            child: Theme(
+              data: Theme.of(
+                context,
+              ).copyWith(dividerColor: Colors.transparent),
+              child: ExpansionTile(
+                title: Row(
+                  children: [
+                    Icon(Icons.people, size: 20, color: primaryColor),
+                    SizedBox(width: 8),
+                    Text(
+                      'Players',
+                      style: TextStyle(
+                        fontSize: 18,
+                        fontWeight: FontWeight.bold,
+                        color: darkTextColor,
+                      ),
+                    ),
+                    Spacer(),
+                    Container(
+                      padding: EdgeInsets.symmetric(
+                        horizontal: 10,
+                        vertical: 4,
+                      ),
+                      decoration: BoxDecoration(
+                        color: primaryColor.withOpacity(0.1),
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      child: Text(
+                        '${players.length}',
+                        style: TextStyle(
+                          fontSize: 13,
+                          fontWeight: FontWeight.bold,
+                          color: primaryColor,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+                children: [
+                  if (players.isEmpty)
+                    Padding(
+                      padding: EdgeInsets.all(24),
+                      child: Column(
+                        children: [
+                          Container(
+                            padding: EdgeInsets.all(16),
+                            decoration: BoxDecoration(
+                              color: primaryColor.withOpacity(0.1),
+                              shape: BoxShape.circle,
+                            ),
+                            child: Icon(
+                              Icons.people_outline,
+                              size: 32,
+                              color: primaryColor,
+                            ),
+                          ),
+                          SizedBox(height: 12),
+                          Text(
+                            'No players in this team',
+                            style: TextStyle(
+                              fontSize: 14,
+                              color: mutedTextColor,
+                            ),
+                          ),
+                        ],
+                      ),
+                    )
+                  else
+                    ListView.builder(
+                      shrinkWrap: true,
+                      physics: const NeverScrollableScrollPhysics(),
+                      itemCount: players.length,
+                      itemBuilder: (context, index) {
+                        final player = players[index] as Map<String, dynamic>;
+                        return Container(
+                          margin: EdgeInsets.only(
+                            bottom: index == players.length - 1 ? 0 : 1,
+                          ),
+                          decoration: BoxDecoration(
+                            border: Border(
+                              top: index == 0
+                                  ? BorderSide.none
+                                  : BorderSide(
+                                      color: primaryColor.withOpacity(0.1),
+                                    ),
+                            ),
+                          ),
+                          child: ListTile(
+                            contentPadding: EdgeInsets.symmetric(
+                              horizontal: 16,
+                              vertical: 8,
+                            ),
+                            leading: CircleAvatar(
+                              backgroundColor: primaryColor,
+                              child: Text(
+                                player['nomor']?.toString() ?? '-',
+                                style: TextStyle(
+                                  color: whiteColor,
+                                  fontWeight: FontWeight.bold,
+                                  fontSize: 14,
+                                ),
+                              ),
+                            ),
+                            title: Text(
+                              player['nama'] ?? '-',
+                              style: TextStyle(
+                                fontWeight: FontWeight.w600,
+                                fontSize: 14,
+                                color: darkTextColor,
+                              ),
+                            ),
+                            subtitle: Row(
+                              children: [
+                                if (player['asal'] != null &&
+                                    player['asal'] != '-') ...[
+                                  Icon(
+                                    Icons.public,
+                                    size: 12,
+                                    color: mutedTextColor,
+                                  ),
+                                  SizedBox(width: 4),
+                                  Text(
+                                    player['asal'],
+                                    style: TextStyle(
+                                      fontSize: 12,
+                                      color: mutedTextColor,
+                                    ),
+                                  ),
+                                  SizedBox(width: 8),
+                                ],
+                                Icon(
+                                  Icons.calendar_today,
+                                  size: 12,
+                                  color: mutedTextColor,
+                                ),
+                                SizedBox(width: 4),
+                                Text(
+                                  'Age ${player['umur'] ?? '-'}',
+                                  style: TextStyle(
+                                    fontSize: 12,
+                                    color: mutedTextColor,
+                                  ),
+                                ),
+                              ],
+                            ),
+                            trailing: Icon(
+                              Icons.chevron_right,
+                              color: mutedTextColor,
+                            ),
+                            onTap: () {
+                              Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (_) => PlayerDetailPage(
+                                    playerId: player['id'] as int,
+                                  ),
+                                ),
+                              );
+                            },
+                          ),
+                        );
+                      },
+                    ),
+                ],
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
-    if (widget.isEmbedded) {
-      return _buildDetailContent();
-    }
-
     return Scaffold(
       backgroundColor: scaffoldBgColor,
       appBar: AppBar(
@@ -367,7 +635,11 @@ class _TeamDetailPageState extends State<TeamDetailPage> {
         elevation: 0,
         centerTitle: true,
         leading: IconButton(
-          icon: Icon(Icons.arrow_back_ios_new_rounded, size: 20, color: whiteColor),
+          icon: Icon(
+            Icons.arrow_back_ios_new_rounded,
+            size: 20,
+            color: whiteColor,
+          ),
           onPressed: () => Navigator.pop(context),
         ),
         actions: [
@@ -380,11 +652,11 @@ class _TeamDetailPageState extends State<TeamDetailPage> {
                 final teamCode = teamData['code'] ?? '';
                 return _isAdmin
                     ? IconButton(
-                  icon: Icon(Icons.edit, color: whiteColor),
-                  onPressed: () =>
-                      _showEditTeamDialog(teamName, teamCode),
-                  tooltip: 'Edit Team',
-                )
+                        icon: Icon(Icons.edit, color: whiteColor),
+                        onPressed: () =>
+                            _showEditTeamDialog(teamName, teamCode),
+                        tooltip: 'Edit Team',
+                      )
                     : const SizedBox.shrink();
               }
               return const SizedBox.shrink();
@@ -407,258 +679,15 @@ class _TeamDetailPageState extends State<TeamDetailPage> {
             return _buildErrorState('No team data found');
           }
 
-        if (!snapshot.hasData) {
-          return const Center(child: Text('No team data found'));
-        }
+          final teamData = snapshot.data!;
+          final teamName = teamData['name'] ?? '';
+          final teamCode = teamData['code'] ?? '';
+          final players = teamData['players'] ?? [];
 
-          return SingleChildScrollView(
-            padding: const EdgeInsets.all(16.0),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                // Team Header Card
-                Container(
-                  padding: const EdgeInsets.all(20),
-                  decoration: BoxDecoration(
-                    gradient: LinearGradient(
-                      begin: Alignment.topLeft,
-                      end: Alignment.bottomRight,
-                      colors: [primaryColor, accentColor],
-                    ),
-                    borderRadius: BorderRadius.circular(12),
-                    boxShadow: [
-                      BoxShadow(
-                        color: primaryColor.withOpacity(0.3),
-                        blurRadius: 8,
-                        offset: Offset(0, 4),
-                      ),
-                    ],
-                  ),
-                  child: Row(
-                    children: [
-                      Container(
-                        padding: EdgeInsets.all(12),
-                        decoration: BoxDecoration(
-                          color: whiteColor.withOpacity(0.2),
-                          borderRadius: BorderRadius.circular(12),
-                        ),
-                        child: Image.network(
-                          'https://flagcdn.com/48x36/${teamCode.toLowerCase()}.png',
-                          width: 48,
-                          height: 36,
-                          errorBuilder: (context, error, stackTrace) =>
-                              Icon(Icons.flag, color: whiteColor, size: 36),
-                        ),
-                      ),
-                      const SizedBox(width: 16),
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              teamName,
-                              style: TextStyle(
-                                fontSize: 22,
-                                fontWeight: FontWeight.bold,
-                                color: whiteColor,
-                              ),
-                            ),
-                            SizedBox(height: 4),
-                            Container(
-                              padding: EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                              decoration: BoxDecoration(
-                                color: whiteColor.withOpacity(0.2),
-                                borderRadius: BorderRadius.circular(6),
-                              ),
-                              child: Text(
-                                'Code: $teamCode',
-                                style: TextStyle(
-                                  fontSize: 13,
-                                  fontWeight: FontWeight.w500,
-                                  color: whiteColor,
-                                ),
-                              ),
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-              const SizedBox(height: 24),
-
-                // Players Section
-                Container(
-                  decoration: BoxDecoration(
-                    color: whiteColor,
-                    borderRadius: BorderRadius.circular(12),
-                    border: Border.all(color: primaryColor.withOpacity(0.2)),
-                    boxShadow: [
-                      BoxShadow(
-                        color: Colors.black.withOpacity(0.05),
-                        blurRadius: 8,
-                        offset: Offset(0, 2),
-                      ),
-                    ],
-                  ),
-                  child: Theme(
-                    data: Theme.of(context).copyWith(
-                      dividerColor: Colors.transparent,
-                    ),
-                    child: ExpansionTile(
-                      title: Row(
-                        children: [
-                          Icon(Icons.people, size: 20, color: primaryColor),
-                          SizedBox(width: 8),
-                          Text(
-                            'Players',
-                            style: TextStyle(
-                              fontSize: 18,
-                              fontWeight: FontWeight.bold,
-                              color: darkTextColor,
-                            ),
-                          ),
-                          Spacer(),
-                          Container(
-                            padding: EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-                            decoration: BoxDecoration(
-                              color: primaryColor.withOpacity(0.1),
-                              borderRadius: BorderRadius.circular(12),
-                            ),
-                            child: Text(
-                              '${players.length}',
-                              style: TextStyle(
-                                fontSize: 13,
-                                fontWeight: FontWeight.bold,
-                                color: primaryColor,
-                              ),
-                            ),
-                          ),
-                        ],
-                      ),
-                      children: [
-                        if (players.isEmpty)
-                          Padding(
-                            padding: EdgeInsets.all(24),
-                            child: Column(
-                              children: [
-                                Container(
-                                  padding: EdgeInsets.all(16),
-                                  decoration: BoxDecoration(
-                                    color: primaryColor.withOpacity(0.1),
-                                    shape: BoxShape.circle,
-                                  ),
-                                  child: Icon(
-                                    Icons.people_outline,
-                                    size: 32,
-                                    color: primaryColor,
-                                  ),
-                                ),
-                                SizedBox(height: 12),
-                                Text(
-                                  'No players in this team',
-                                  style: TextStyle(
-                                    fontSize: 14,
-                                    color: mutedTextColor,
-                                  ),
-                                ),
-                              ],
-                            ),
-                          )
-                        else
-                          ListView.builder(
-                            shrinkWrap: true,
-                            physics: const NeverScrollableScrollPhysics(),
-                            itemCount: players.length,
-                            itemBuilder: (context, index) {
-                              final player = players[index] as Map<String, dynamic>;
-                              return Container(
-                                margin: EdgeInsets.only(
-                                  bottom: index == players.length - 1 ? 0 : 1,
-                                ),
-                                decoration: BoxDecoration(
-                                  border: Border(
-                                    top: index == 0
-                                        ? BorderSide.none
-                                        : BorderSide(
-                                      color: primaryColor.withOpacity(0.1),
-                                    ),
-                                  ),
-                                ),
-                                child: ListTile(
-                                  contentPadding: EdgeInsets.symmetric(
-                                    horizontal: 16,
-                                    vertical: 8,
-                                  ),
-                                  leading: CircleAvatar(
-                                    backgroundColor: primaryColor,
-                                    child: Text(
-                                      player['nomor']?.toString() ?? '-',
-                                      style: TextStyle(
-                                        color: whiteColor,
-                                        fontWeight: FontWeight.bold,
-                                        fontSize: 14,
-                                      ),
-                                    ),
-                                  ),
-                                  title: Text(
-                                    player['nama'] ?? '-',
-                                    style: TextStyle(
-                                      fontWeight: FontWeight.w600,
-                                      fontSize: 14,
-                                      color: darkTextColor,
-                                    ),
-                                  ),
-                                  subtitle: Row(
-                                    children: [
-                                      if (player['asal'] != null && player['asal'] != '-') ...[
-                                        Icon(Icons.public, size: 12, color: mutedTextColor),
-                                        SizedBox(width: 4),
-                                        Text(
-                                          player['asal'],
-                                          style: TextStyle(
-                                            fontSize: 12,
-                                            color: mutedTextColor,
-                                          ),
-                                        ),
-                                        SizedBox(width: 8),
-                                      ],
-                                      Icon(Icons.calendar_today, size: 12, color: mutedTextColor),
-                                      SizedBox(width: 4),
-                                      Text(
-                                        'Age ${player['umur'] ?? '-'}',
-                                        style: TextStyle(
-                                          fontSize: 12,
-                                          color: mutedTextColor,
-                                        ),
-                                      ),
-                                    ],
-                                  ),
-                                  trailing: Icon(
-                                    Icons.chevron_right,
-                                    color: mutedTextColor,
-                                  ),
-                                  onTap: () {
-                                    Navigator.push(
-                                      context,
-                                      MaterialPageRoute(
-                                        builder: (_) => PlayerDetailPage(
-                                          playerId: player['id'] as int,
-                                        ),
-                                      ),
-                                    );
-                                  },
-                                ),
-                              );
-                            },
-                          ),
-                      ],
-                    ),
-                  ),
-                ),
-              ],
-            ),
+          return _buildDetailContent(
+            teamName: teamName,
+            teamCode: teamCode,
+            players: players,
           );
         },
       ),

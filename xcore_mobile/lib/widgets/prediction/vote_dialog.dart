@@ -198,7 +198,7 @@ class VoteDialog extends StatelessWidget {
     final String endpoint = isUpdate
         ? 'prediction/update-vote-flutter/'
         : 'prediction/submit-vote-flutter/';
-    final url = 'https://alvin-christian-xcore.pbp.cs.ui.ac.id/$endpoint';
+    final url = 'http://localhost:8000/$endpoint';
 
     try {
       final response = await request.post(url, {

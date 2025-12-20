@@ -6,7 +6,7 @@ class ProfileService {
   ) async {
     try {
       final response = await request.get(
-        'https://alvin-christian-xcore.pbp.cs.ui.ac.id/user/api/profile/',
+        'http://localhost:8000/user/api/profile/',
       );
 
       if (response is Map) {
