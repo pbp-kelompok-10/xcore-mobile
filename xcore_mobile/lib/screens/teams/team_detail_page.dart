@@ -7,8 +7,13 @@ import '../players/player_service.dart';
 
 class TeamDetailPage extends StatefulWidget {
   final int teamId;
+  final bool isEmbedded;
 
-  const TeamDetailPage({Key? key, required this.teamId}) : super(key: key);
+  const TeamDetailPage({
+    Key? key,
+    required this.teamId,
+    this.isEmbedded = false,
+  }) : super(key: key);
 
   @override
   State<TeamDetailPage> createState() => _TeamDetailPageState();
@@ -199,10 +204,14 @@ class _TeamDetailPageState extends State<TeamDetailPage> {
 
   @override
   Widget build(BuildContext context) {
+    if (widget.isEmbedded) {
+      return _buildDetailContent();
+    }
+
     return Scaffold(
       appBar: AppBar(
         title: const Text('Team Details'),
-        backgroundColor: Colors.green[700],
+        backgroundColor: const Color(0xFF4AA69B),
         actions: [
           FutureBuilder<Map<String, dynamic>>(
             future: _teamDetails,
@@ -224,139 +233,144 @@ class _TeamDetailPageState extends State<TeamDetailPage> {
           ),
         ],
       ),
-      body: FutureBuilder<Map<String, dynamic>>(
-        future: _teamDetails,
-        builder: (context, snapshot) {
-          if (snapshot.connectionState == ConnectionState.waiting) {
-            return const Center(child: CircularProgressIndicator());
-          }
+      body: _buildDetailContent(),
+    );
+  }
 
-          if (snapshot.hasError) {
-            return Center(child: Text('Error: ${snapshot.error}'));
-          }
+  Widget _buildDetailContent() {
+    return FutureBuilder<Map<String, dynamic>>(
+      future: _teamDetails,
+      builder: (context, snapshot) {
+        if (snapshot.connectionState == ConnectionState.waiting) {
+          return const Center(child: CircularProgressIndicator());
+        }
 
-          if (!snapshot.hasData) {
-            return const Center(child: Text('No team data found'));
-          }
+        if (snapshot.hasError) {
+          return Center(child: Text('Error: ${snapshot.error}'));
+        }
 
-          final teamData = snapshot.data!;
-          final teamName = teamData['name'] ?? '';
-          final teamCode = teamData['code'] ?? '';
-          final players = (teamData['players'] ?? []) as List;
+        if (!snapshot.hasData) {
+          return const Center(child: Text('No team data found'));
+        }
 
-          return SingleChildScrollView(
-            padding: const EdgeInsets.all(16.0),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                // Team Header
-                Container(
-                  padding: const EdgeInsets.all(16),
-                  decoration: BoxDecoration(
-                    color: Colors.green[700],
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                  child: Row(
-                    children: [
-                      Image.network(
-                        'https://flagcdn.com/48x36/${teamCode.toLowerCase()}.png',
-                        width: 48,
-                        height: 36,
-                        errorBuilder: (context, error, stackTrace) =>
-                            const Icon(Icons.flag, color: Colors.white),
-                      ),
-                      const SizedBox(width: 16),
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              teamName,
-                              style: const TextStyle(
-                                fontSize: 20,
-                                fontWeight: FontWeight.bold,
-                                color: Colors.white,
-                              ),
-                            ),
-                            Text(
-                              'Code: $teamCode',
-                              style: const TextStyle(
-                                fontSize: 14,
-                                color: Colors.white70,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                    ],
-                  ),
+        final teamData = snapshot.data!;
+        final teamName = teamData['name'] ?? '';
+        final teamCode = teamData['code'] ?? '';
+        final players = (teamData['players'] ?? []) as List;
+
+        return SingleChildScrollView(
+          padding: const EdgeInsets.all(16.0),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              // Team Header
+              Container(
+                padding: const EdgeInsets.all(16),
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(color: const Color(0xFFE5E7EB), width: 1),
                 ),
-                const SizedBox(height: 24),
-
-                // Players Section - Dropdown
-                ExpansionTile(
-                  title: Text(
-                    'Players (${players.length})',
-                    style: const TextStyle(
-                      fontSize: 18,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
+                child: Row(
                   children: [
-                    if (players.isEmpty)
-                      const Padding(
-                        padding: EdgeInsets.all(16),
-                        child: Center(child: Text('No players in this team')),
-                      )
-                    else
-                      ListView.builder(
-                        shrinkWrap: true,
-                        physics: const NeverScrollableScrollPhysics(),
-                        itemCount: players.length,
-                        itemBuilder: (context, index) {
-                          final player = players[index] as Map<String, dynamic>;
-                          return Card(
-                            margin: const EdgeInsets.only(
-                              bottom: 8,
-                              left: 16,
-                              right: 16,
+                    Image.network(
+                      'https://flagcdn.com/48x36/${teamCode.toLowerCase()}.png',
+                      width: 48,
+                      height: 36,
+                      errorBuilder: (context, error, stackTrace) =>
+                          const Icon(Icons.flag, color: Color(0xFF9CA3AF)),
+                    ),
+                    const SizedBox(width: 16),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            teamName,
+                            style: const TextStyle(
+                              fontSize: 20,
+                              fontWeight: FontWeight.bold,
+                              color: Color(0xFF2C5F5A),
                             ),
-                            child: ListTile(
-                              leading: CircleAvatar(
-                                backgroundColor: Colors.green[700],
-                                child: Text(
-                                  player['nomor']?.toString() ?? '-',
-                                  style: const TextStyle(
-                                    color: Colors.white,
-                                    fontWeight: FontWeight.bold,
-                                  ),
-                                ),
-                              ),
-                              title: Text(player['nama'] ?? '-'),
-                              subtitle: Text(
-                                '${player['asal'] ?? '-'} • Age ${player['umur'] ?? '-'}',
-                              ),
-                              onTap: () {
-                                Navigator.push(
-                                  context,
-                                  MaterialPageRoute(
-                                    builder: (_) => PlayerDetailPage(
-                                      playerId: player['id'] as int,
-                                    ),
-                                  ),
-                                );
-                              },
+                          ),
+                          Text(
+                            'Code: $teamCode',
+                            style: const TextStyle(
+                              fontSize: 14,
+                              color: Color(0xFF6B8E8A),
                             ),
-                          );
-                        },
+                          ),
+                        ],
                       ),
+                    ),
                   ],
                 ),
-              ],
-            ),
-          );
-        },
-      ),
+              ),
+              const SizedBox(height: 24),
+
+              // Players Section - Dropdown
+              ExpansionTile(
+                title: Text(
+                  'Players (${players.length})',
+                  style: const TextStyle(
+                    fontSize: 18,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+                children: [
+                  if (players.isEmpty)
+                    const Padding(
+                      padding: EdgeInsets.all(16),
+                      child: Center(child: Text('No players in this team')),
+                    )
+                  else
+                    ListView.builder(
+                      shrinkWrap: true,
+                      physics: const NeverScrollableScrollPhysics(),
+                      itemCount: players.length,
+                      itemBuilder: (context, index) {
+                        final player = players[index] as Map<String, dynamic>;
+                        return Card(
+                          margin: const EdgeInsets.only(
+                            bottom: 8,
+                            left: 16,
+                            right: 16,
+                          ),
+                          child: ListTile(
+                            leading: CircleAvatar(
+                              backgroundColor: Colors.green[700],
+                              child: Text(
+                                player['nomor']?.toString() ?? '-',
+                                style: const TextStyle(
+                                  color: Colors.white,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                            ),
+                            title: Text(player['nama'] ?? '-'),
+                            subtitle: Text(
+                              '${player['asal'] ?? '-'} • Age ${player['umur'] ?? '-'}',
+                            ),
+                            onTap: () {
+                              Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (_) => PlayerDetailPage(
+                                    playerId: player['id'] as int,
+                                  ),
+                                ),
+                              );
+                            },
+                          ),
+                        );
+                      },
+                    ),
+                ],
+              ),
+            ],
+          ),
+        );
+      },
     );
   }
 }

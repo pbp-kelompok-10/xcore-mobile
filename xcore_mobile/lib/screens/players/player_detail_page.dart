@@ -166,7 +166,7 @@ class _PlayerDetailPageState extends State<PlayerDetailPage> {
     return Scaffold(
       appBar: AppBar(
         title: const Text('Player Details'),
-        backgroundColor: Colors.green[700],
+        backgroundColor: const Color(0xFF4AA69B),
         actions: [
           if (!_isEditing && _isAdmin)
             IconButton(
@@ -349,7 +349,7 @@ class _PlayerDetailPageState extends State<PlayerDetailPage> {
           style: const TextStyle(
             fontSize: 14,
             fontWeight: FontWeight.bold,
-            color: Colors.grey,
+            color: Colors.black,
           ),
         ),
         const SizedBox(height: 8),
@@ -357,14 +357,13 @@ class _PlayerDetailPageState extends State<PlayerDetailPage> {
           controller: controller,
           enabled: enabled,
           keyboardType: keyboardType,
+          style: const TextStyle(color: Colors.black),
           decoration: InputDecoration(
             border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
             contentPadding: const EdgeInsets.symmetric(
               horizontal: 12,
               vertical: 12,
             ),
-            filled: !enabled,
-            fillColor: !enabled ? Colors.grey[200] : null,
           ),
         ),
       ],

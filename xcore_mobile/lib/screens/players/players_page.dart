@@ -173,6 +173,7 @@ class _PlayersPageState extends State<PlayersPage> {
       return Scaffold(
         appBar: AppBar(
           title: const Text("Players"),
+          backgroundColor: const Color(0xFF4AA69B),
           automaticallyImplyLeading: false,
         ),
         body: const Center(child: CircularProgressIndicator()),
@@ -183,6 +184,7 @@ class _PlayersPageState extends State<PlayersPage> {
       return Scaffold(
         appBar: AppBar(
           title: const Text("Players"),
+          backgroundColor: const Color(0xFF4AA69B),
           automaticallyImplyLeading: false,
         ),
         body: Center(
@@ -196,7 +198,7 @@ class _PlayersPageState extends State<PlayersPage> {
     return Scaffold(
       appBar: AppBar(
         title: const Text("Players"),
-        backgroundColor: const Color(0xFF1e423b),
+        backgroundColor: const Color(0xFF4AA69B),
         automaticallyImplyLeading: false,
       ),
       body: Column(

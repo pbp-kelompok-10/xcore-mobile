@@ -56,7 +56,9 @@ const List<Map<String, String>> countryChoices = [
 ];
 
 class TeamsPage extends StatefulWidget {
-  const TeamsPage({super.key});
+  final Function(int)? onSwitchTab;
+
+  const TeamsPage({super.key, this.onSwitchTab});
 
   @override
   State<TeamsPage> createState() => _TeamsPageState();
@@ -406,7 +408,7 @@ class _TeamsPageState extends State<TeamsPage> {
           : teams.isEmpty
           ? const Center(child: Text("No teams"))
           : ListView(
-              padding: const EdgeInsets.all(12),
+              padding: const EdgeInsets.fromLTRB(12, 12, 12, 80),
               children: [
                 for (final team in teams)
                   Card(
