@@ -141,12 +141,12 @@ class _HighlightPageState extends State<HighlightPage> {
     return Scaffold(
       backgroundColor: const Color(0xfff0f7f5),
       appBar: AppBar(
-        backgroundColor: const Color(0xFF1e423b),
+        backgroundColor: const Color(0xFF4AA69B),
         title: Text("${match.homeTeam} vs ${match.awayTeam}"),
       ),
       floatingActionButton: _isAdmin
           ? FloatingActionButton.extended(
-              backgroundColor: const Color(0xFF1e423b),
+              backgroundColor: const Color(0xFF4AA69B),
               icon: Icon(
                 highlight == null ? Icons.add : Icons.edit,
                 color: Colors.white,
@@ -195,7 +195,7 @@ class _HighlightPageState extends State<HighlightPage> {
             )
           : null,
       body: SingleChildScrollView(
-        padding: const EdgeInsets.all(18),
+        padding: const EdgeInsets.fromLTRB(18, 18, 18, 80),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
@@ -205,7 +205,7 @@ class _HighlightPageState extends State<HighlightPage> {
               style: TextStyle(
                 fontSize: 28,
                 fontWeight: FontWeight.w700,
-                color: Color(0xFF1e423b),
+                color: Color(0xFF4AA69B),
               ),
               textAlign: TextAlign.center,
             ),
@@ -284,7 +284,7 @@ class _HighlightPageState extends State<HighlightPage> {
               Container(
                 height: 200,
                 decoration: BoxDecoration(
-                  color: const Color(0xFF1e423b),
+                  color: const Color(0xFF4AA69B),
                   borderRadius: BorderRadius.circular(12),
                 ),
                 child: const Center(
