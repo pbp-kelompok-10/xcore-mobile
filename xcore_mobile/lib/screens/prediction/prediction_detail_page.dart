@@ -71,7 +71,7 @@ class _PredictionDetailPageState extends State<PredictionDetailPage> {
       backgroundColor: const Color(0xFFE8F6F4),
       appBar: AppBar(
         title: const Text(
-          "Match Detail",
+          "Prediction Detail",
           style: TextStyle(fontFamily: 'Nunito Sans', fontWeight: FontWeight.w700),
         ),
         backgroundColor: const Color(0xFF4AA69B),

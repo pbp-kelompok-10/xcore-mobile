@@ -258,15 +258,11 @@ class _ScoreboardPageState extends State<ScoreboardPage> {
                             onTap: () {
                               final status = item.status.toLowerCase();
                               if (status == "upcoming") {
-                                if (widget.onSwitchTab != null) {
-                                  widget.onSwitchTab!(1); // Pindah ke Prediction
-                                } else {
                                   Navigator.push(
                                     context,
                                     MaterialPageRoute(
                                       builder: (_) => PredictionDetailPage(matchId: item.id)),
                                   );
-                                }
                               } else {
                                 Navigator.push(
                                   context,

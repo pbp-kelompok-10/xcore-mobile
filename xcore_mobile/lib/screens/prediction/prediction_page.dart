@@ -204,13 +204,23 @@ class _PredictionPageState extends State<PredictionPage>
                 // --- ON TAP LOGIC ---
                 onTap: () async {
                   if (!isMyVotes) {
-                    await Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (context) => PredictionDetailPage(matchId: prediction.id),
-                      ),
+                    String? result = await showDialog(
+                      context: context,
+                      builder: (context) => VoteDialog(prediction: prediction, isUpdate: false),
                     );
-                    setState(() {});
+
+                    if (result == 'success') {
+                      setState(() {});
+                    } else if (result == 'already_voted') {
+                      if (mounted) {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(
+                            content: Text("Kamu sudah pernah vote di match ini. Cek tab My Votes."),
+                            backgroundColor: Color(0xFFF59E0B),
+                          ),
+                        );
+                      }
+                    }
                   }
                 },
                 // --- DELETE LOGIC ---
