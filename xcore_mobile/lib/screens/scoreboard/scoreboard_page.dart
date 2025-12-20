@@ -5,7 +5,7 @@ import 'package:xcore_mobile/screens/scoreboard/admin/add_match_page.dart';
 import 'package:xcore_mobile/screens/scoreboard/admin/edit_match_page.dart';
 import 'package:xcore_mobile/screens/scoreboard/scoreboard_service.dart';
 import 'package:xcore_mobile/screens/statistik/match_statistik.dart';
-import 'package:xcore_mobile/screens/prediction/prediction_page.dart';
+import 'package:xcore_mobile/screens/prediction/prediction_detail_page.dart';
 import 'package:xcore_mobile/screens/scoreboard/scoreboard_card.dart';
 
 class ScoreboardPage extends StatefulWidget {
@@ -150,21 +150,11 @@ class _ScoreboardPageState extends State<ScoreboardPage> {
                     onTap: () {
                       final status = item.status.toLowerCase();
 
-                      if (status == "upcoming") {
-                      // CEK LOG DI CONSOLE (DEBUG CONSOLE)
-                      print("DEBUG: Checking onSwitchTab...");
-                      
-                      // Pastikan pakai 'widget.'
-                      if (widget.onSwitchTab != null) {
-                        print("DEBUG: onSwitchTab ADA. Pindah ke Index 1");
-                        widget.onSwitchTab!(1); 
-                      } else {
-                        print("DEBUG: onSwitchTab NULL (Gawat!). Paksa Push (Backup)");
-                        Navigator.push(
+                      if (status == "upcoming") {                      
+                      Navigator.push(
                           context,
-                          MaterialPageRoute(builder: (context) => const PredictionPage()),
-                        );
-                      }
+                          MaterialPageRoute(builder: (context) => PredictionDetailPage(matchId: item.id)),
+                      );
                     } else {
                         Navigator.push(
                           context,

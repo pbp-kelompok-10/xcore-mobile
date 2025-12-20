@@ -14,7 +14,6 @@ class MainNavigation extends StatefulWidget {
 class _MainNavigationState extends State<MainNavigation> {
   int _selectedIndex = 0;
 
-  // Fungsi untuk ganti tab
   void _onItemTapped(int index) {
     setState(() {
       _selectedIndex = index;
@@ -23,21 +22,15 @@ class _MainNavigationState extends State<MainNavigation> {
 
   @override
   Widget build(BuildContext context) {
-    // --- PERUBAHAN: Define pages DI SINI (di dalam build) ---
-    // Ini menjamin ScoreboardPage SELALU dapat fungsi terbaru
-    // tanpa perlu restart aplikasi.
     final List<Widget> pages = [
-      ScoreboardPage(onSwitchTab: _onItemTapped), // Index 0
-      const PredictionPage(),                     // Index 1
-      const TeamsPage(),                          // Index 2
-      const ProfilePage(),                        // Index 3
+      ScoreboardPage(onSwitchTab: _onItemTapped),
+      const PredictionPage(),
+      const TeamsPage(),
+      const ProfilePage(),
     ];
 
     return Scaffold(
-      body: IndexedStack(
-        index: _selectedIndex,
-        children: pages, // Panggil variabel lokal 'pages'
-      ),
+      body: pages[_selectedIndex], 
       bottomNavigationBar: Container(
         decoration: BoxDecoration(
           color: Colors.white,
