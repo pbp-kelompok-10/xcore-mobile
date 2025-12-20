@@ -172,19 +172,7 @@ class ProfilePage extends StatelessWidget {
                 color: Color(0xFF9CA3AF),
               ),
             ),
-            const SizedBox(height: 16),
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16),
-              child: Text(
-                bio,
-                textAlign: TextAlign.center,
-                style: const TextStyle(
-                  fontFamily: 'Nunito Sans',
-                  fontSize: 14,
-                  color: Color(0xFF6B8E8A),
-                ),
-              ),
-            ),
+
             const SizedBox(height: 48),
             SizedBox(
               width: double.infinity,

@@ -115,9 +115,7 @@ class _TeamsPageState extends State<TeamsPage> {
 
     try {
       final response = await http.get(
-        Uri.parse(
-          "https://alvin-christian-xcore.pbp.cs.ui.ac.id/lineup/api/teams/",
-        ),
+        Uri.parse("http://localhost:8000/lineup/api/teams/"),
       );
 
       if (!mounted) return;
@@ -128,11 +126,11 @@ class _TeamsPageState extends State<TeamsPage> {
         final teamData = teamsList
             .map(
               (t) => {
-            'name': t['name'].toString(),
-            'code': t['code'].toString(),
-            'id': t['id'].toString(),
-          },
-        )
+                'name': t['name'].toString(),
+                'code': t['code'].toString(),
+                'id': t['id'].toString(),
+              },
+            )
             .toList();
 
         setState(() {
@@ -200,7 +198,10 @@ class _TeamsPageState extends State<TeamsPage> {
             children: [
               DropdownButtonFormField<String>(
                 value: selectedCountryName,
-                hint: Text("Select a country", style: TextStyle(color: mutedTextColor)),
+                hint: Text(
+                  "Select a country",
+                  style: TextStyle(color: mutedTextColor),
+                ),
                 items: countryChoices.map((country) {
                   return DropdownMenuItem<String>(
                     value: country['name'],
@@ -216,8 +217,11 @@ class _TeamsPageState extends State<TeamsPage> {
                             'https://flagcdn.com/24x18/${country['code']?.toLowerCase() ?? ''}.png',
                             width: 24,
                             height: 16,
-                            errorBuilder: (context, error, stackTrace) =>
-                                Icon(Icons.flag, size: 16, color: mutedTextColor),
+                            errorBuilder: (context, error, stackTrace) => Icon(
+                              Icons.flag,
+                              size: 16,
+                              color: mutedTextColor,
+                            ),
                           ),
                         ),
                         const SizedBox(width: 12),
@@ -241,7 +245,10 @@ class _TeamsPageState extends State<TeamsPage> {
                     borderRadius: BorderRadius.circular(10),
                     borderSide: BorderSide(color: primaryColor, width: 2),
                   ),
-                  contentPadding: EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+                  contentPadding: EdgeInsets.symmetric(
+                    horizontal: 16,
+                    vertical: 14,
+                  ),
                 ),
               ),
             ],
@@ -287,7 +294,10 @@ class _TeamsPageState extends State<TeamsPage> {
                   borderRadius: BorderRadius.circular(8),
                 ),
               ),
-              child: Text("Create", style: TextStyle(fontWeight: FontWeight.bold)),
+              child: Text(
+                "Create",
+                style: TextStyle(fontWeight: FontWeight.bold),
+              ),
             ),
           ],
         ),
@@ -296,10 +306,10 @@ class _TeamsPageState extends State<TeamsPage> {
   }
 
   void showEditTeamDialog(
-      BuildContext context,
-      String teamId,
-      String currentName,
-      ) {
+    BuildContext context,
+    String teamId,
+    String currentName,
+  ) {
     String? selectedCountryName;
 
     showDialog(
@@ -335,7 +345,10 @@ class _TeamsPageState extends State<TeamsPage> {
             children: [
               DropdownButtonFormField<String>(
                 value: selectedCountryName,
-                hint: Text("Select a country", style: TextStyle(color: mutedTextColor)),
+                hint: Text(
+                  "Select a country",
+                  style: TextStyle(color: mutedTextColor),
+                ),
                 items: countryChoices.map((country) {
                   return DropdownMenuItem<String>(
                     value: country['name'],
@@ -351,8 +364,11 @@ class _TeamsPageState extends State<TeamsPage> {
                             'https://flagcdn.com/24x18/${country['code']?.toLowerCase() ?? ''}.png',
                             width: 24,
                             height: 16,
-                            errorBuilder: (context, error, stackTrace) =>
-                                Icon(Icons.flag, size: 16, color: mutedTextColor),
+                            errorBuilder: (context, error, stackTrace) => Icon(
+                              Icons.flag,
+                              size: 16,
+                              color: mutedTextColor,
+                            ),
                           ),
                         ),
                         const SizedBox(width: 12),
@@ -376,7 +392,10 @@ class _TeamsPageState extends State<TeamsPage> {
                     borderRadius: BorderRadius.circular(10),
                     borderSide: BorderSide(color: primaryColor, width: 2),
                   ),
-                  contentPadding: EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+                  contentPadding: EdgeInsets.symmetric(
+                    horizontal: 16,
+                    vertical: 14,
+                  ),
                 ),
               ),
             ],
@@ -402,7 +421,7 @@ class _TeamsPageState extends State<TeamsPage> {
                 try {
                   // Find the country code from the selected name
                   final selectedCountry = countryChoices.firstWhere(
-                        (country) => country['name'] == selectedCountryName,
+                    (country) => country['name'] == selectedCountryName,
                   );
 
                   await TeamCreateUpdateService.updateTeam(
@@ -428,7 +447,10 @@ class _TeamsPageState extends State<TeamsPage> {
                   borderRadius: BorderRadius.circular(8),
                 ),
               ),
-              child: Text("Update", style: TextStyle(fontWeight: FontWeight.bold)),
+              child: Text(
+                "Update",
+                style: TextStyle(fontWeight: FontWeight.bold),
+              ),
             ),
           ],
         ),
@@ -536,7 +558,11 @@ class _TeamsPageState extends State<TeamsPage> {
                   color: primaryColor.withOpacity(0.1),
                   shape: BoxShape.circle,
                 ),
-                child: Icon(Icons.groups_outlined, size: 40, color: primaryColor),
+                child: Icon(
+                  Icons.groups_outlined,
+                  size: 40,
+                  color: primaryColor,
+                ),
               ),
               SizedBox(height: 20),
               Text(
@@ -551,10 +577,7 @@ class _TeamsPageState extends State<TeamsPage> {
               Text(
                 'Teams will appear here once added',
                 textAlign: TextAlign.center,
-                style: TextStyle(
-                  fontSize: 14,
-                  color: mutedTextColor,
-                ),
+                style: TextStyle(fontSize: 14, color: mutedTextColor),
               ),
             ],
           ),
@@ -583,116 +606,125 @@ class _TeamsPageState extends State<TeamsPage> {
       ),
       floatingActionButton: _isAdmin
           ? Column(
-        mainAxisSize: MainAxisSize.min,
-        crossAxisAlignment: CrossAxisAlignment.end,
-        children: [
-          if (fabOpen) ...[
-            FloatingActionButton.extended(
-              heroTag: "addTeamFAB",
-              backgroundColor: accentColor,
-              foregroundColor: whiteColor,
-              icon: const Icon(Icons.add),
-              label: const Text("Add Team", style: TextStyle(fontWeight: FontWeight.bold)),
-              onPressed: () => showAddTeamDialog(context),
-            ),
-            const SizedBox(height: 12),
-            FloatingActionButton.extended(
-              heroTag: "uploadTeamFAB",
-              backgroundColor: primaryColor,
-              foregroundColor: whiteColor,
-              icon: const Icon(Icons.upload_file),
-              label: const Text("Upload ZIP", style: TextStyle(fontWeight: FontWeight.bold)),
-              onPressed: () => uploadTeamsZip(context),
-            ),
-            const SizedBox(height: 12),
-          ],
-          FloatingActionButton(
-            heroTag: "toggleTeamFAB",
-            backgroundColor: primaryColor,
-            foregroundColor: whiteColor,
-            child: Icon(fabOpen ? Icons.close : Icons.add),
-            onPressed: () => setState(() => fabOpen = !fabOpen),
-          ),
-        ],
-      )
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.end,
+              children: [
+                if (fabOpen) ...[
+                  FloatingActionButton.extended(
+                    heroTag: "addTeamFAB",
+                    backgroundColor: accentColor,
+                    foregroundColor: whiteColor,
+                    icon: const Icon(Icons.add),
+                    label: const Text(
+                      "Add Team",
+                      style: TextStyle(fontWeight: FontWeight.bold),
+                    ),
+                    onPressed: () => showAddTeamDialog(context),
+                  ),
+                  const SizedBox(height: 12),
+                  FloatingActionButton.extended(
+                    heroTag: "uploadTeamFAB",
+                    backgroundColor: primaryColor,
+                    foregroundColor: whiteColor,
+                    icon: const Icon(Icons.upload_file),
+                    label: const Text(
+                      "Upload ZIP",
+                      style: TextStyle(fontWeight: FontWeight.bold),
+                    ),
+                    onPressed: () => uploadTeamsZip(context),
+                  ),
+                  const SizedBox(height: 12),
+                ],
+                FloatingActionButton(
+                  heroTag: "toggleTeamFAB",
+                  backgroundColor: primaryColor,
+                  foregroundColor: whiteColor,
+                  child: Icon(fabOpen ? Icons.close : Icons.add),
+                  onPressed: () => setState(() => fabOpen = !fabOpen),
+                ),
+              ],
+            )
           : null,
       body: loading
           ? _buildLoadingState()
           : teams.isEmpty
           ? _buildEmptyState()
           : ListView.builder(
-        padding: const EdgeInsets.all(16),
-        itemCount: teams.length,
-        itemBuilder: (context, index) {
-          final team = teams[index];
-          return Container(
-            margin: const EdgeInsets.only(bottom: 12),
-            decoration: BoxDecoration(
-              color: whiteColor,
-              borderRadius: BorderRadius.circular(12),
-              border: Border.all(color: primaryColor.withOpacity(0.2)),
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.black.withOpacity(0.03),
-                  blurRadius: 4,
-                  offset: Offset(0, 2),
-                ),
-              ],
-            ),
-            child: ListTile(
-              contentPadding: EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-              leading: Container(
-                padding: EdgeInsets.all(8),
-                decoration: BoxDecoration(
-                  color: lightBgColor,
-                  borderRadius: BorderRadius.circular(8),
-                ),
-                child: Image.network(
-                  'https://flagcdn.com/24x18/${team['code']?.toLowerCase() ?? ''}.png',
-                  width: 32,
-                  height: 24,
-                  errorBuilder: (context, error, stackTrace) =>
-                      Icon(Icons.flag, size: 24, color: mutedTextColor),
-                ),
-              ),
-              title: Text(
-                team['name'] ?? '',
-                style: TextStyle(
-                  fontSize: 16,
-                  fontWeight: FontWeight.bold,
-                  color: darkTextColor,
-                ),
-              ),
-              trailing: Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Icon(Icons.chevron_right, color: mutedTextColor),
-                  if (_isAdmin)
-                    IconButton(
-                      icon: Icon(Icons.edit, color: accentColor),
-                      onPressed: () => showEditTeamDialog(
-                        context,
-                        team['id'] ?? '',
-                        team['name'] ?? '',
+              padding: const EdgeInsets.all(16),
+              itemCount: teams.length,
+              itemBuilder: (context, index) {
+                final team = teams[index];
+                return Container(
+                  margin: const EdgeInsets.only(bottom: 12),
+                  decoration: BoxDecoration(
+                    color: whiteColor,
+                    borderRadius: BorderRadius.circular(12),
+                    border: Border.all(color: primaryColor.withOpacity(0.2)),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black.withOpacity(0.03),
+                        blurRadius: 4,
+                        offset: Offset(0, 2),
                       ),
-                      tooltip: 'Edit Team',
+                    ],
+                  ),
+                  child: ListTile(
+                    contentPadding: EdgeInsets.symmetric(
+                      horizontal: 16,
+                      vertical: 8,
                     ),
-                ],
-              ),
-              onTap: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (_) => TeamDetailPage(
-                      teamId: int.parse(team['id'] ?? '0'),
+                    leading: Container(
+                      padding: EdgeInsets.all(8),
+                      decoration: BoxDecoration(
+                        color: lightBgColor,
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      child: Image.network(
+                        'https://flagcdn.com/24x18/${team['code']?.toLowerCase() ?? ''}.png',
+                        width: 32,
+                        height: 24,
+                        errorBuilder: (context, error, stackTrace) =>
+                            Icon(Icons.flag, size: 24, color: mutedTextColor),
+                      ),
                     ),
+                    title: Text(
+                      team['name'] ?? '',
+                      style: TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.bold,
+                        color: darkTextColor,
+                      ),
+                    ),
+                    trailing: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Icon(Icons.chevron_right, color: mutedTextColor),
+                        if (_isAdmin)
+                          IconButton(
+                            icon: Icon(Icons.edit, color: accentColor),
+                            onPressed: () => showEditTeamDialog(
+                              context,
+                              team['id'] ?? '',
+                              team['name'] ?? '',
+                            ),
+                            tooltip: 'Edit Team',
+                          ),
+                      ],
+                    ),
+                    onTap: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (_) => TeamDetailPage(
+                            teamId: int.parse(team['id'] ?? '0'),
+                          ),
+                        ),
+                      );
+                    },
                   ),
                 );
               },
             ),
-          );
-        },
-      ),
     );
   }
 }
