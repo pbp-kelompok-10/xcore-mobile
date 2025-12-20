@@ -30,6 +30,15 @@ class _CreateEditLineupScreenState extends State<CreateEditLineupScreen> {
   bool _isLoading = true;
   String _error = '';
 
+  // Warna konsisten dengan MatchStatisticsPage dan ForumPage
+  static const Color primaryColor = Color(0xFF4AA69B);
+  static const Color scaffoldBgColor = Color(0xFFE8F6F4);
+  static const Color darkTextColor = Color(0xFF2C5F5A);
+  static const Color mutedTextColor = Color(0xFF6B8E8A);
+  static const Color accentColor = Color(0xFF34C6B8);
+  static const Color lightBgColor = Color(0xFFD1F0EB);
+  static const Color whiteColor = Colors.white;
+
   @override
   void initState() {
     super.initState();
@@ -89,7 +98,7 @@ class _CreateEditLineupScreenState extends State<CreateEditLineupScreen> {
       } else if (_selectedHomePlayers.length < 11) {
         _selectedHomePlayers.add(player);
       } else {
-        _showSnackBar('Maksimal 11 pemain untuk ${widget.match.homeTeam}');
+        _showSnackBar('⚠️ Maksimal 11 pemain untuk ${widget.match.homeTeam}');
       }
     });
   }
@@ -101,7 +110,7 @@ class _CreateEditLineupScreenState extends State<CreateEditLineupScreen> {
       } else if (_selectedAwayPlayers.length < 11) {
         _selectedAwayPlayers.add(player);
       } else {
-        _showSnackBar('Maksimal 11 pemain untuk ${widget.match.awayTeam}');
+        _showSnackBar('⚠️ Maksimal 11 pemain untuk ${widget.match.awayTeam}');
       }
     });
   }
@@ -109,12 +118,12 @@ class _CreateEditLineupScreenState extends State<CreateEditLineupScreen> {
   Future<void> _saveLineup() async {
     // Validate selections
     if (_selectedHomePlayers.length != 11) {
-      _showSnackBar('${widget.match.homeTeam} harus memiliki tepat 11 pemain (${_selectedHomePlayers.length} terpilih)');
+      _showSnackBar('⚠️ ${widget.match.homeTeam} harus memiliki tepat 11 pemain (${_selectedHomePlayers.length} terpilih)');
       return;
     }
 
     if (_selectedAwayPlayers.length != 11) {
-      _showSnackBar('${widget.match.awayTeam} harus memiliki tepat 11 pemain (${_selectedAwayPlayers.length} terpilih)');
+      _showSnackBar('⚠️ ${widget.match.awayTeam} harus memiliki tepat 11 pemain (${_selectedAwayPlayers.length} terpilih)');
       return;
     }
 
@@ -189,14 +198,14 @@ class _CreateEditLineupScreenState extends State<CreateEditLineupScreen> {
       }
 
       if (success) {
-        _showSnackBar(widget.isEdit ? 'Lineup berhasil diupdate!' : 'Lineup berhasil dibuat!');
+        _showSnackBar(widget.isEdit ? '✅ Lineup berhasil diupdate!' : '✅ Lineup berhasil dibuat!');
         Navigator.pop(context, true);
       } else {
-        _showSnackBar(errorMessage ?? 'Gagal menyimpan lineup');
+        _showSnackBar('❌ ${errorMessage ?? 'Gagal menyimpan lineup'}');
       }
     } catch (e) {
       print('Error saving lineup: $e');
-      _showSnackBar('Error: ${e.toString()}');
+      _showSnackBar('❌ Error: ${e.toString()}');
     }
   }
 
@@ -206,11 +215,14 @@ class _CreateEditLineupScreenState extends State<CreateEditLineupScreen> {
       ..showSnackBar(
         SnackBar(
           content: Text(message),
-          backgroundColor: message.toLowerCase().contains('error') || message.toLowerCase().contains('gagal')
-              ? Colors.red
-              : Colors.green[600],
+          backgroundColor: message.contains('❌') || message.contains('⚠️')
+              ? Colors.red[600]
+              : primaryColor,
           duration: Duration(seconds: 3),
           behavior: SnackBarBehavior.floating,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(10),
+          ),
         ),
       );
   }
@@ -221,14 +233,16 @@ class _CreateEditLineupScreenState extends State<CreateEditLineupScreen> {
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
           CircularProgressIndicator(
-            valueColor: AlwaysStoppedAnimation<Color>(Colors.green[700]!),
+            valueColor: AlwaysStoppedAnimation<Color>(primaryColor),
+            strokeWidth: 2,
           ),
           SizedBox(height: 16),
           Text(
             'Loading Players...',
             style: TextStyle(
               fontSize: 16,
-              color: Colors.grey[600],
+              fontWeight: FontWeight.w500,
+              color: mutedTextColor,
             ),
           ),
         ],
@@ -240,30 +254,63 @@ class _CreateEditLineupScreenState extends State<CreateEditLineupScreen> {
     return Center(
       child: Padding(
         padding: EdgeInsets.all(24),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Icon(Icons.error_outline, size: 64, color: Colors.red[400]),
-            SizedBox(height: 16),
-            Text(
-              'Failed to Load Players',
-              style: TextStyle(
-                fontSize: 18,
-                fontWeight: FontWeight.bold,
+        child: Container(
+          padding: EdgeInsets.all(24),
+          decoration: BoxDecoration(
+            color: whiteColor,
+            borderRadius: BorderRadius.circular(12),
+            border: Border.all(color: Colors.red.withOpacity(0.2)),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withOpacity(0.05),
+                blurRadius: 8,
+                offset: Offset(0, 2),
               ),
-            ),
-            SizedBox(height: 8),
-            Text(
-              _error,
-              textAlign: TextAlign.center,
-              style: TextStyle(color: Colors.grey[600]),
-            ),
-            SizedBox(height: 20),
-            ElevatedButton(
-              onPressed: _loadPlayers,
-              child: Text('Try Again'),
-            ),
-          ],
+            ],
+          ),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Container(
+                padding: EdgeInsets.all(16),
+                decoration: BoxDecoration(
+                  color: Colors.red.withOpacity(0.1),
+                  shape: BoxShape.circle,
+                ),
+                child: Icon(Icons.error_outline, size: 40, color: Colors.red),
+              ),
+              SizedBox(height: 20),
+              Text(
+                'Failed to Load Players',
+                style: TextStyle(
+                  fontSize: 18,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.red,
+                ),
+              ),
+              SizedBox(height: 8),
+              Text(
+                _error,
+                textAlign: TextAlign.center,
+                style: TextStyle(
+                  fontSize: 14,
+                  color: mutedTextColor,
+                ),
+              ),
+              SizedBox(height: 24),
+              ElevatedButton(
+                onPressed: _loadPlayers,
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: primaryColor,
+                  foregroundColor: whiteColor,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                ),
+                child: Text('Try Again'),
+              ),
+            ],
+          ),
         ),
       ),
     );
@@ -278,7 +325,11 @@ class _CreateEditLineupScreenState extends State<CreateEditLineupScreen> {
   }) {
     return Card(
       elevation: 2,
+      color: whiteColor,
       margin: EdgeInsets.symmetric(vertical: 8),
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(12),
+      ),
       child: Padding(
         padding: EdgeInsets.all(16),
         child: Column(
@@ -286,24 +337,27 @@ class _CreateEditLineupScreenState extends State<CreateEditLineupScreen> {
           children: [
             Row(
               children: [
+                Icon(Icons.sports_soccer, size: 20, color: primaryColor),
+                SizedBox(width: 8),
                 Text(
                   teamName,
                   style: TextStyle(
                     fontSize: 18,
                     fontWeight: FontWeight.bold,
+                    color: darkTextColor,
                   ),
                 ),
                 SizedBox(width: 8),
                 Container(
-                  padding: EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                  padding: EdgeInsets.symmetric(horizontal: 10, vertical: 4),
                   decoration: BoxDecoration(
-                    color: selectedPlayers.length == 11 ? Colors.green : Colors.orange,
+                    color: selectedPlayers.length == 11 ? primaryColor : Colors.orange,
                     borderRadius: BorderRadius.circular(12),
                   ),
                   child: Text(
                     '${selectedPlayers.length}/11',
                     style: TextStyle(
-                      color: Colors.white,
+                      color: whiteColor,
                       fontSize: 12,
                       fontWeight: FontWeight.bold,
                     ),
@@ -315,7 +369,7 @@ class _CreateEditLineupScreenState extends State<CreateEditLineupScreen> {
             Text(
               'Pilih 11 pemain:',
               style: TextStyle(
-                color: Colors.grey[600],
+                color: mutedTextColor,
                 fontSize: 14,
               ),
             ),
@@ -325,13 +379,14 @@ class _CreateEditLineupScreenState extends State<CreateEditLineupScreen> {
               Container(
                 padding: EdgeInsets.all(16),
                 decoration: BoxDecoration(
-                  color: Colors.grey[50],
+                  color: scaffoldBgColor,
                   borderRadius: BorderRadius.circular(8),
+                  border: Border.all(color: primaryColor.withOpacity(0.2)),
                 ),
                 child: Center(
                   child: Text(
                     'Tidak ada data pemain untuk tim ini',
-                    style: TextStyle(color: Colors.grey[500]),
+                    style: TextStyle(color: mutedTextColor),
                   ),
                 ),
               )
@@ -370,9 +425,9 @@ class _CreateEditLineupScreenState extends State<CreateEditLineupScreen> {
       onTap: onTap,
       child: Container(
         decoration: BoxDecoration(
-          color: isSelected ? Colors.green[50] : Colors.grey[50],
+          color: isSelected ? primaryColor.withOpacity(0.1) : scaffoldBgColor,
           border: Border.all(
-            color: isSelected ? Colors.green : Colors.grey[300]!,
+            color: isSelected ? primaryColor : mutedTextColor.withOpacity(0.3),
             width: isSelected ? 2 : 1,
           ),
           borderRadius: BorderRadius.circular(8),
@@ -385,14 +440,14 @@ class _CreateEditLineupScreenState extends State<CreateEditLineupScreen> {
               width: 28,
               height: 28,
               decoration: BoxDecoration(
-                color: isSelected ? Colors.green : Colors.grey[400],
+                color: isSelected ? primaryColor : mutedTextColor,
                 borderRadius: BorderRadius.circular(14),
               ),
               child: Center(
                 child: Text(
                   player.nomor.toString(),
                   style: TextStyle(
-                    color: Colors.white,
+                    color: whiteColor,
                     fontSize: 12,
                     fontWeight: FontWeight.bold,
                   ),
@@ -412,6 +467,7 @@ class _CreateEditLineupScreenState extends State<CreateEditLineupScreen> {
                     style: TextStyle(
                       fontWeight: FontWeight.w600,
                       fontSize: 13,
+                      color: darkTextColor,
                     ),
                     overflow: TextOverflow.ellipsis,
                   ),
@@ -420,7 +476,7 @@ class _CreateEditLineupScreenState extends State<CreateEditLineupScreen> {
                       player.asal,
                       style: TextStyle(
                         fontSize: 11,
-                        color: Colors.grey[600],
+                        color: mutedTextColor,
                       ),
                       overflow: TextOverflow.ellipsis,
                     ),
@@ -431,7 +487,7 @@ class _CreateEditLineupScreenState extends State<CreateEditLineupScreen> {
             // Selection Indicator
             Icon(
               isSelected ? Icons.check_circle : Icons.radio_button_unchecked,
-              color: isSelected ? Colors.green : Colors.grey[400],
+              color: isSelected ? primaryColor : mutedTextColor,
               size: 20,
             ),
           ],
@@ -443,18 +499,21 @@ class _CreateEditLineupScreenState extends State<CreateEditLineupScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: scaffoldBgColor,
       appBar: AppBar(
         title: Text(
           widget.isEdit ? 'Edit Lineup' : 'Create Lineup',
           style: TextStyle(
             fontWeight: FontWeight.bold,
-            color: Colors.white,
+            color: whiteColor,
+            fontSize: 18,
           ),
         ),
-        backgroundColor: Colors.green[700],
+        backgroundColor: primaryColor,
         elevation: 0,
+        centerTitle: true,
         leading: IconButton(
-          icon: Icon(Icons.arrow_back, color: Colors.white),
+          icon: Icon(Icons.arrow_back_ios_new_rounded, size: 20, color: whiteColor),
           onPressed: () => Navigator.pop(context),
         ),
       ),
@@ -470,39 +529,82 @@ class _CreateEditLineupScreenState extends State<CreateEditLineupScreen> {
             // Match Info
             Card(
               elevation: 2,
+              color: whiteColor,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(12),
+              ),
               child: Padding(
                 padding: EdgeInsets.all(16),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(
-                      'Create Lineup for ${widget.match.homeTeam} vs ${widget.match.awayTeam}',
-                      style: TextStyle(
-                        fontSize: 18,
-                        fontWeight: FontWeight.bold,
-                      ),
+                    Row(
+                      children: [
+                        Icon(Icons.stadium, size: 20, color: primaryColor),
+                        SizedBox(width: 8),
+                        Expanded(
+                          child: Text(
+                            '${widget.match.homeTeam} vs ${widget.match.awayTeam}',
+                            style: TextStyle(
+                              fontSize: 18,
+                              fontWeight: FontWeight.bold,
+                              color: darkTextColor,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                    SizedBox(height: 12),
+                    Divider(height: 1, color: mutedTextColor.withOpacity(0.3)),
+                    SizedBox(height: 12),
+                    Row(
+                      children: [
+                        Icon(Icons.home, size: 16, color: mutedTextColor),
+                        SizedBox(width: 6),
+                        Text(
+                          'Home: ${widget.match.homeTeam}',
+                          style: TextStyle(
+                            fontSize: 14,
+                            color: darkTextColor,
+                          ),
+                        ),
+                      ],
+                    ),
+                    SizedBox(height: 6),
+                    Row(
+                      children: [
+                        Icon(Icons.flight_takeoff, size: 16, color: mutedTextColor),
+                        SizedBox(width: 6),
+                        Text(
+                          'Away: ${widget.match.awayTeam}',
+                          style: TextStyle(
+                            fontSize: 14,
+                            color: darkTextColor,
+                          ),
+                        ),
+                      ],
                     ),
                     SizedBox(height: 8),
-                    Text(
-                      'Home: ${widget.match.homeTeam}',
-                      style: TextStyle(
-                        fontSize: 14,
-                        color: Colors.grey[700],
+                    Container(
+                      padding: EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                      decoration: BoxDecoration(
+                        color: primaryColor.withOpacity(0.1),
+                        borderRadius: BorderRadius.circular(6),
                       ),
-                    ),
-                    Text(
-                      'Away: ${widget.match.awayTeam}',
-                      style: TextStyle(
-                        fontSize: 14,
-                        color: Colors.grey[700],
-                      ),
-                    ),
-                    SizedBox(height: 4),
-                    Text(
-                      '${_formatDate(widget.match.matchDate)} • ${widget.match.stadium}',
-                      style: TextStyle(
-                        fontSize: 12,
-                        color: Colors.grey[500],
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Icon(Icons.calendar_today, size: 12, color: primaryColor),
+                          SizedBox(width: 4),
+                          Text(
+                            '${_formatDate(widget.match.matchDate)} • ${widget.match.stadium}',
+                            style: TextStyle(
+                              fontSize: 11,
+                              color: primaryColor,
+                              fontWeight: FontWeight.w500,
+                            ),
+                          ),
+                        ],
                       ),
                     ),
                   ],
@@ -541,11 +643,11 @@ class _CreateEditLineupScreenState extends State<CreateEditLineupScreen> {
                 decoration: BoxDecoration(
                   color: Colors.orange[50],
                   borderRadius: BorderRadius.circular(8),
-                  border: Border.all(color: Colors.orange[200]!),
+                  border: Border.all(color: Colors.orange.withOpacity(0.3)),
                 ),
                 child: Row(
                   children: [
-                    Icon(Icons.info, color: Colors.orange[600], size: 20),
+                    Icon(Icons.info_outline, color: Colors.orange[700], size: 20),
                     SizedBox(width: 8),
                     Expanded(
                       child: Column(
@@ -556,9 +658,10 @@ class _CreateEditLineupScreenState extends State<CreateEditLineupScreen> {
                             style: TextStyle(
                               fontWeight: FontWeight.bold,
                               color: Colors.orange[800],
+                              fontSize: 13,
                             ),
                           ),
-                          SizedBox(height: 2),
+                          SizedBox(height: 4),
                           Text(
                             '${widget.match.homeTeam}: ${_selectedHomePlayers.length}/11 pemain\n'
                                 '${widget.match.awayTeam}: ${_selectedAwayPlayers.length}/11 pemain',
@@ -580,47 +683,67 @@ class _CreateEditLineupScreenState extends State<CreateEditLineupScreen> {
       ),
       persistentFooterButtons: [
         // Action Buttons
-        Row(
-          children: [
-            Expanded(
-              child: ElevatedButton(
-                onPressed: _saveLineup,
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.green[700],
-                  foregroundColor: Colors.white,
-                  padding: EdgeInsets.symmetric(vertical: 16),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(8),
+        Container(
+          padding: EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+          decoration: BoxDecoration(
+            color: whiteColor,
+            border: Border(
+              top: BorderSide(color: primaryColor.withOpacity(0.2)),
+            ),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withOpacity(0.05),
+                blurRadius: 8,
+                offset: Offset(0, -2),
+              ),
+            ],
+          ),
+          child: Row(
+            children: [
+              Expanded(
+                child: ElevatedButton(
+                  onPressed: _saveLineup,
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: primaryColor,
+                    foregroundColor: whiteColor,
+                    padding: EdgeInsets.symmetric(vertical: 16),
+                    elevation: 0,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
                   ),
-                ),
-                child: Text(
-                  widget.isEdit ? 'UPDATE LINEUP' : 'SAVE LINEUP',
-                  style: TextStyle(
-                    fontWeight: FontWeight.bold,
-                    fontSize: 16,
+                  child: Text(
+                    widget.isEdit ? 'UPDATE LINEUP' : 'SAVE LINEUP',
+                    style: TextStyle(
+                      fontWeight: FontWeight.bold,
+                      fontSize: 15,
+                    ),
                   ),
                 ),
               ),
-            ),
-            SizedBox(width: 12),
-            Expanded(
-              child: OutlinedButton(
-                onPressed: () => Navigator.pop(context),
-                style: OutlinedButton.styleFrom(
-                  padding: EdgeInsets.symmetric(vertical: 16),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(8),
+              SizedBox(width: 12),
+              Expanded(
+                child: OutlinedButton(
+                  onPressed: () => Navigator.pop(context),
+                  style: OutlinedButton.styleFrom(
+                    padding: EdgeInsets.symmetric(vertical: 16),
+                    side: BorderSide(color: mutedTextColor),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
                   ),
-                ),
-                child: Text(
-                  'CANCEL',
-                  style: TextStyle(
-                    fontWeight: FontWeight.bold,
+                  child: Text(
+                    'CANCEL',
+                    style: TextStyle(
+                      fontWeight: FontWeight.bold,
+                      fontSize: 15,
+                      color: mutedTextColor,
+                    ),
                   ),
                 ),
               ),
-            ),
-          ],
+            ],
+          ),
         ),
       ],
     );

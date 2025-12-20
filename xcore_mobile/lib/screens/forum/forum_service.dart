@@ -10,8 +10,7 @@ import 'package:provider/provider.dart';
 import '../../services/auth_service.dart';
 
 class ForumService {
-  static const String baseUrl =
-      'https://alvin-christian-xcore.pbp.cs.ui.ac.id'; // Ganti URL Django
+  static const String baseUrl = 'http://localhost:8000'; // Ganti URL Django
 
   // Get forum by match ID
   static Future<ForumEntry> fetchForumByMatch(String matchId) async {
@@ -30,17 +29,38 @@ class ForumService {
     }
   }
 
-  // Get posts for a forum dengan informasi user
+  // Get posts for a forum dengan informasi user, search, filter, dan sort
   static Future<Map<String, dynamic>> fetchPosts(
-    String forumId,
-    BuildContext context,
-  ) async {
+      String forumId,
+      BuildContext context, {
+        String? searchQuery,
+        String? authorFilter,
+        String? sortBy,
+      }) async {
     final request = Provider.of<CookieRequest>(context, listen: false);
 
     try {
-      final response = await request.get(
-        '$baseUrl/forum/flutter/$forumId/get_posts/',
-      );
+      // Build query parameters
+      String url = '$baseUrl/forum/flutter/$forumId/get_posts/';
+      List<String> params = [];
+
+      if (searchQuery != null && searchQuery.isNotEmpty) {
+        params.add('search=${Uri.encodeComponent(searchQuery)}');
+      }
+
+      if (authorFilter != null && authorFilter.isNotEmpty) {
+        params.add('author_filter=$authorFilter');
+      }
+
+      if (sortBy != null && sortBy.isNotEmpty) {
+        params.add('sort=$sortBy');
+      }
+
+      if (params.isNotEmpty) {
+        url += '?${params.join('&')}';
+      }
+
+      final response = await request.get(url);
 
       if (response is Map<String, dynamic>) {
         if (response.containsKey('error')) {
@@ -72,10 +92,10 @@ class ForumService {
 
   // Add new post
   static Future<void> addPost(
-    String forumId,
-    String message,
-    BuildContext context,
-  ) async {
+      String forumId,
+      String message,
+      BuildContext context,
+      ) async {
     final request = context.read<CookieRequest>();
 
     try {
@@ -90,7 +110,7 @@ class ForumService {
       );
 
       if (response['success'] != true) {
-        throw Exception(response['error'] ?? 'Failed to edit post');
+        throw Exception(response['error'] ?? 'Failed to add post');
       }
     } catch (e) {
       rethrow;
@@ -99,11 +119,11 @@ class ForumService {
 
   // Edit post
   static Future<void> editPost(
-    String forumId,
-    String postId,
-    String message,
-    BuildContext context,
-  ) async {
+      String forumId,
+      String postId,
+      String message,
+      BuildContext context,
+      ) async {
     final request = context.read<CookieRequest>();
 
     try {
@@ -127,10 +147,10 @@ class ForumService {
 
   // Delete post
   static Future<void> deletePost(
-    String forumId,
-    String postId,
-    BuildContext context,
-  ) async {
+      String forumId,
+      String postId,
+      BuildContext context,
+      ) async {
     final request = context.read<CookieRequest>();
 
     try {

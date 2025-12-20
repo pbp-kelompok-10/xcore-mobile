@@ -39,7 +39,7 @@ class _PredictionPageState extends State<PredictionPage>
     CookieRequest request,
     String endpoint,
   ) async {
-    final String baseUrl = "https://alvin-christian-xcore.pbp.cs.ui.ac.id";
+    final String baseUrl = "http://localhost:8000";
 
     try {
       final response = await request.get("$baseUrl$endpoint");
@@ -58,7 +58,7 @@ class _PredictionPageState extends State<PredictionPage>
 
   Future<void> _deleteVote(CookieRequest request, String predictionId) async {
     final url =
-        'https://alvin-christian-xcore.pbp.cs.ui.ac.id/prediction/delete-vote-flutter/';
+        'http://localhost:8000/prediction/delete-vote-flutter/';
 
     try {
       final response = await request.post(url, {'prediction_id': predictionId});

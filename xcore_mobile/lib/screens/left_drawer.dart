@@ -5,6 +5,7 @@ import 'package:xcore_mobile/screens/scoreboard/scoreboard_page.dart';
 import 'package:xcore_mobile/screens/prediction/prediction_page.dart';
 import 'package:xcore_mobile/screens/teams/teams_page.dart';
 import 'package:xcore_mobile/screens/players/players_page.dart';
+import 'package:xcore_mobile/screens/profile/profile_page.dart';
 import 'package:xcore_mobile/screens/login.dart';
 
 class LeftDrawer extends StatelessWidget {
@@ -69,9 +70,7 @@ class LeftDrawer extends StatelessWidget {
             icon: Icons.home,
             title: 'Home',
             onTap: () {
-              // _showSnackBar(context, "Kembali ke Home"); // Opsional
               Navigator.pop(context); // Tutup drawer
-              // Logika navigasi ke Home (biasanya Home adalah root, jadi cukup pop drawer atau pushReplacement)
             },
           ),
 
@@ -130,6 +129,21 @@ class LeftDrawer extends StatelessWidget {
           // Divider
           Divider(color: Colors.grey[300]),
 
+          // Profile Menu (Only for logged in users)
+          if (request.loggedIn)
+            _buildDrawerItem(
+              context,
+              icon: Icons.account_circle,
+              title: 'Profile',
+              onTap: () {
+                Navigator.pop(context);
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (context) => const ProfilePage()),
+                );
+              },
+            ),
+
           // 2. LOGIKA TOMBOL LOGIN / LOGOUT
           if (request.loggedIn) ...[
             // JIKA SUDAH LOGIN -> TAMPILKAN LOGOUT
@@ -164,11 +178,11 @@ class LeftDrawer extends StatelessWidget {
   }
 
   Widget _buildDrawerItem(
-    BuildContext context, {
-    required IconData icon,
-    required String title,
-    VoidCallback? onTap,
-  }) {
+      BuildContext context, {
+        required IconData icon,
+        required String title,
+        VoidCallback? onTap,
+      }) {
     return ListTile(
       leading: Container(
         padding: const EdgeInsets.all(8),
@@ -236,17 +250,13 @@ class LeftDrawer extends StatelessWidget {
     String snackbarMessage = "Logout berhasil!";
 
     try {
-      // Pastikan URL konsisten (127.0.0.1 untuk Web)
       final response = await request.logout(
-        "https://alvin-christian-xcore.pbp.cs.ui.ac.id/auth/logout/",
+        "https://localhost:8000/auth/logout/",
       );
-
-      // Cek response status kalau perlu, tapi biasanya request.logout
-      // sudah mengupdate state loggedIn jadi false otomatis.
     } catch (e) {
       print("Logout network error: $e");
       snackbarMessage =
-          "Logout berhasil secara lokal, tetapi gagal menghubungi server.";
+      "Logout berhasil secara lokal, tetapi gagal menghubungi server.";
     }
 
     if (context.mounted) {
