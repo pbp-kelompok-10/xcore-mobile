@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 import 'package:pbp_django_auth/pbp_django_auth.dart';
 import 'package:xcore_mobile/models/prediction_entry.dart';
 import 'package:xcore_mobile/screens/login.dart';
+import 'package:xcore_mobile/services/prediction_service.dart'; 
 
 class VoteDialog extends StatelessWidget {
   final Prediction prediction;
@@ -27,86 +28,36 @@ class VoteDialog extends StatelessWidget {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            // Header
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
                 Expanded(
                   child: Text(
                     isUpdate ? "Change Vote" : "Who will win?",
-                    style: const TextStyle(
-                      fontFamily: 'Nunito Sans',
-                      fontSize: 20,
-                      fontWeight: FontWeight.w700,
-                      color: Color(0xFF2C5F5A),
-                    ),
+                    style: const TextStyle(fontFamily: 'Nunito Sans', fontSize: 20, fontWeight: FontWeight.w700, color: Color(0xFF2C5F5A)),
                   ),
                 ),
                 GestureDetector(
                   onTap: () => Navigator.pop(context),
                   child: Container(
                     padding: const EdgeInsets.all(4),
-                    decoration: BoxDecoration(
-                      color: const Color(0xFFE8F6F4),
-                      borderRadius: BorderRadius.circular(8),
-                    ),
-                    child: const Icon(
-                      Icons.close,
-                      color: Color(0xFF4AA69B),
-                      size: 20,
-                    ),
+                    decoration: BoxDecoration(color: const Color(0xFFE8F6F4), borderRadius: BorderRadius.circular(8)),
+                    child: const Icon(Icons.close, color: Color(0xFF4AA69B), size: 20),
                   ),
                 ),
               ],
             ),
             const SizedBox(height: 8),
-            Text(
-              isUpdate
-                  ? "Select your new choice:"
-                  : "Cast your vote for the winner!",
-              style: const TextStyle(
-                fontFamily: 'Nunito Sans',
-                fontSize: 14,
-                color: Color(0xFF6B8E8A),
-              ),
-            ),
+            Text(isUpdate ? "Select your new choice:" : "Cast your vote for the winner!", style: const TextStyle(fontFamily: 'Nunito Sans', fontSize: 14, color: Color(0xFF6B8E8A))),
             const SizedBox(height: 30),
-
-            // Vote Buttons
             Row(
               children: [
-                Expanded(
-                  child: _buildVoteButton(
-                    context,
-                    request,
-                    teamName: prediction.homeTeam,
-                    color: const Color(0xFF4AA69B),
-                    icon: Icons.sports_soccer,
-                    choice: "home",
-                  ),
-                ),
+                Expanded(child: _buildVoteButton(context, request, teamName: prediction.homeTeam, color: const Color(0xFF4AA69B), icon: Icons.sports_soccer, choice: "home")),
                 const Padding(
                   padding: EdgeInsets.symmetric(horizontal: 12),
-                  child: Text(
-                    "VS",
-                    style: TextStyle(
-                      fontFamily: 'Nunito Sans',
-                      fontWeight: FontWeight.w800,
-                      fontSize: 16,
-                      color: Color(0xFF2C5F5A),
-                    ),
-                  ),
+                  child: Text("VS", style: TextStyle(fontFamily: 'Nunito Sans', fontWeight: FontWeight.w800, fontSize: 16, color: Color(0xFF2C5F5A))),
                 ),
-                Expanded(
-                  child: _buildVoteButton(
-                    context,
-                    request,
-                    teamName: prediction.awayTeam,
-                    color: const Color(0xFF56BDA9),
-                    icon: Icons.sports_soccer,
-                    choice: "away",
-                  ),
-                ),
+                Expanded(child: _buildVoteButton(context, request, teamName: prediction.awayTeam, color: const Color(0xFF56BDA9), icon: Icons.sports_soccer, choice: "away")),
               ],
             ),
           ],
@@ -129,16 +80,7 @@ class VoteDialog extends StatelessWidget {
       elevation: 2,
       child: InkWell(
         onTap: () async {
-          String result = await _submitOrUpdateVote(
-            context,
-            request,
-            prediction.id,
-            choice,
-          );
-
-          if (context.mounted) {
-            Navigator.pop(context, result);
-          }
+          await _handleVote(context, request, choice);
         },
         borderRadius: BorderRadius.circular(12),
         child: Container(
@@ -148,18 +90,7 @@ class VoteDialog extends StatelessWidget {
             children: [
               Icon(icon, color: Colors.white, size: 32),
               const SizedBox(height: 12),
-              Text(
-                teamName,
-                textAlign: TextAlign.center,
-                style: const TextStyle(
-                  fontFamily: 'Nunito Sans',
-                  color: Colors.white,
-                  fontWeight: FontWeight.w700,
-                  fontSize: 14,
-                ),
-                maxLines: 2,
-                overflow: TextOverflow.ellipsis,
-              ),
+              Text(teamName, textAlign: TextAlign.center, style: const TextStyle(fontFamily: 'Nunito Sans', color: Colors.white, fontWeight: FontWeight.w700, fontSize: 14), maxLines: 2, overflow: TextOverflow.ellipsis),
             ],
           ),
         ),
@@ -167,102 +98,35 @@ class VoteDialog extends StatelessWidget {
     );
   }
 
-  Future<String> _submitOrUpdateVote(
-    BuildContext context,
-    CookieRequest request,
-    String predictionId,
-    String choice,
-  ) async {
+  Future<void> _handleVote(BuildContext context, CookieRequest request, String choice) async {
     if (!request.loggedIn) {
-      if (context.mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text(
-              "Silakan login terlebih dahulu.",
-              style: TextStyle(
-                fontFamily: 'Nunito Sans',
-                fontWeight: FontWeight.w600,
-              ),
-            ),
-            backgroundColor: Color(0xFFF59E0B),
-          ),
-        );
-        Navigator.push(
-          context,
-          MaterialPageRoute(builder: (context) => const LoginPage()),
-        );
-      }
-      return 'failed';
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text("Silakan login terlebih dahulu."), backgroundColor: Color(0xFFF59E0B)),
+      );
+      Navigator.push(context, MaterialPageRoute(builder: (context) => const LoginPage()));
+      return;
     }
 
-    final String endpoint = isUpdate
-        ? 'prediction/update-vote-flutter/'
-        : 'prediction/submit-vote-flutter/';
-    final url = 'http://localhost:8000/$endpoint';
+    final result = await PredictionService.voteMatch(
+      request: request,
+      predictionId: prediction.id,
+      choice: choice,
+      isUpdate: isUpdate
+    );
 
-    try {
-      final response = await request.post(url, {
-        'prediction_id': predictionId,
-        'choice': choice,
-      });
-
-      if (!context.mounted) return 'failed';
-
-      if (response['status'] == 'success') {
+    if (context.mounted) {
+      if (result['status'] == 'success') {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(
-              response['message'],
-              style: const TextStyle(
-                fontFamily: 'Nunito Sans',
-                fontWeight: FontWeight.w600,
-              ),
-            ),
-            backgroundColor: const Color(0xFF4AA69B),
-          ),
+          SnackBar(content: Text(result['message']), backgroundColor: const Color(0xFF4AA69B)),
         );
-        return 'success';
-      }
-      // Handle error 409 (Already Voted)
-      else if (response['message'].toString().contains("sudah voting") ||
-          response['status'] == 409) {
-        return 'already_voted';
+        Navigator.pop(context, 'success');
+      } else if (result['status'] == 'already_voted') {
+        Navigator.pop(context, 'already_voted');
       } else {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(
-              response['message'] ?? "Gagal melakukan vote.",
-              style: const TextStyle(
-                fontFamily: 'Nunito Sans',
-                fontWeight: FontWeight.w600,
-              ),
-            ),
-            backgroundColor: const Color(0xFFEF4444),
-          ),
+          SnackBar(content: Text(result['message']), backgroundColor: const Color(0xFFEF4444)),
         );
-        return 'failed';
       }
-    } catch (e) {
-      if (!context.mounted) return 'failed';
-
-      // Check if error message contains "sudah voting"
-      if (e.toString().contains("sudah voting")) {
-        return 'already_voted';
-      }
-
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(
-            "Error: $e",
-            style: const TextStyle(
-              fontFamily: 'Nunito Sans',
-              fontWeight: FontWeight.w600,
-            ),
-          ),
-          backgroundColor: const Color(0xFFEF4444),
-        ),
-      );
-      return 'failed';
     }
   }
 }

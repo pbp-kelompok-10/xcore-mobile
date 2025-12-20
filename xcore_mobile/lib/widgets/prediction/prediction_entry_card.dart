@@ -43,7 +43,7 @@ class PredictionEntryCard extends StatelessWidget {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              // 1. Header Status (Upcoming/Finished)
+              // 1. Header Status
               Align(
                 alignment: Alignment.centerLeft,
                 child: Container(
@@ -70,7 +70,7 @@ class PredictionEntryCard extends StatelessWidget {
               ),
               const SizedBox(height: 20),
               
-              // 2. Team Info Row (Home vs Away)
+              // 2. Team Info Row
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
@@ -124,7 +124,7 @@ class PredictionEntryCard extends StatelessWidget {
               ),
               const SizedBox(height: 18),
               
-              // 3. Date & Location Info
+              // 3. Date & Location
               Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
@@ -158,11 +158,8 @@ class PredictionEntryCard extends StatelessWidget {
               ),
               const SizedBox(height: 22),
 
-              // 4. ACTION BUTTONS AREA (Disini perubahannya)
-              // -----------------------------------------------------------
-              
+              // 4. ACTION BUTTONS
               if (!showActions) 
-                // A. TAMPILAN TAB "ALL": Tombol Vote Now
                 SizedBox(
                   width: double.infinity,
                   height: 48,
@@ -189,11 +186,8 @@ class PredictionEntryCard extends StatelessWidget {
                   ),
                 )
               else 
-                // B. TAMPILAN TAB "MY VOTES": Tombol Delete & Update
-                // (Posisinya menggantikan Vote Now)
                 Row(
                   children: [
-                    // DELETE BUTTON
                     Expanded(
                       child: Container(
                         height: 46,
@@ -212,21 +206,9 @@ class PredictionEntryCard extends StatelessWidget {
                             child: Row(
                               mainAxisAlignment: MainAxisAlignment.center,
                               children: const [
-                                Icon(
-                                  Icons.delete_outline,
-                                  color: Color(0xFFEF4444),
-                                  size: 20,
-                                ),
+                                Icon(Icons.delete_outline, color: Color(0xFFEF4444), size: 20),
                                 SizedBox(width: 8),
-                                Text(
-                                  "Delete",
-                                  style: TextStyle(
-                                    fontFamily: 'Nunito Sans',
-                                    fontWeight: FontWeight.w700,
-                                    fontSize: 15,
-                                    color: Color(0xFFEF4444),
-                                  ),
-                                ),
+                                Text("Delete", style: TextStyle(fontFamily: 'Nunito Sans', fontWeight: FontWeight.w700, fontSize: 15, color: Color(0xFFEF4444))),
                               ],
                             ),
                           ),
@@ -234,8 +216,6 @@ class PredictionEntryCard extends StatelessWidget {
                       ),
                     ),
                     const SizedBox(width: 12),
-                    
-                    // UPDATE BUTTON
                     Expanded(
                       child: Container(
                         height: 46,
@@ -251,21 +231,9 @@ class PredictionEntryCard extends StatelessWidget {
                             child: Row(
                               mainAxisAlignment: MainAxisAlignment.center,
                               children: const [
-                                Icon(
-                                  Icons.edit_outlined,
-                                  color: Color(0xFFFFFFFF),
-                                  size: 20,
-                                ),
+                                Icon(Icons.edit_outlined, color: Color(0xFFFFFFFF), size: 20),
                                 SizedBox(width: 8),
-                                Text(
-                                  "Update",
-                                  style: TextStyle(
-                                    fontFamily: 'Nunito Sans',
-                                    fontWeight: FontWeight.w700,
-                                    fontSize: 15,
-                                    color: Color(0xFFFFFFFF),
-                                  ),
-                                ),
+                                Text("Update", style: TextStyle(fontFamily: 'Nunito Sans', fontWeight: FontWeight.w700, fontSize: 15, color: Color(0xFFFFFFFF))),
                               ],
                             ),
                           ),
@@ -275,11 +243,9 @@ class PredictionEntryCard extends StatelessWidget {
                   ],
                 ),
               
-              // -----------------------------------------------------------
-
               const SizedBox(height: 24),
               
-              // 5. Result Bars (Sekarang ada di bawah tombol aksi)
+              // 5. Result Bars
               Container(
                 padding: const EdgeInsets.all(18),
                 decoration: BoxDecoration(
@@ -292,21 +258,9 @@ class PredictionEntryCard extends StatelessWidget {
                 ),
                 child: Column(
                   children: [
-                    _buildResultRow(
-                      prediction.homeTeam,
-                      homePct,
-                      prediction.votesHomeTeam,
-                      primaryTeal,
-                      textDark,
-                    ),
+                    _buildResultRow(prediction.homeTeam, homePct, prediction.votesHomeTeam, primaryTeal, textDark),
                     const SizedBox(height: 16),
-                    _buildResultRow(
-                      prediction.awayTeam,
-                      awayPct,
-                      prediction.votesAwayTeam,
-                      primaryTeal,
-                      textDark,
-                    ),
+                    _buildResultRow(prediction.awayTeam, awayPct, prediction.votesAwayTeam, primaryTeal, textDark),
                   ],
                 ),
               ),
@@ -325,46 +279,17 @@ class PredictionEntryCard extends StatelessWidget {
         Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
-            Text(
-              teamName,
-              style: TextStyle(
-                fontFamily: 'Nunito Sans',
-                fontWeight: FontWeight.w700,
-                fontSize: 14,
-                color: textColor,
-              ),
-            ),
-            Text(
-              "$percentage%",
-              style: TextStyle(
-                fontFamily: 'Nunito Sans',
-                fontWeight: FontWeight.w800,
-                fontSize: 16,
-                color: barColor,
-              ),
-            ),
+            Text(teamName, style: TextStyle(fontFamily: 'Nunito Sans', fontWeight: FontWeight.w700, fontSize: 14, color: textColor)),
+            Text("$percentage%", style: TextStyle(fontFamily: 'Nunito Sans', fontWeight: FontWeight.w800, fontSize: 16, color: barColor)),
           ],
         ),
         const SizedBox(height: 8),
         ClipRRect(
           borderRadius: BorderRadius.circular(8),
-          child: LinearProgressIndicator(
-            value: value,
-            backgroundColor: const Color(0xFFFFFFFF),
-            color: barColor,
-            minHeight: 10,
-          ),
+          child: LinearProgressIndicator(value: value, backgroundColor: const Color(0xFFFFFFFF), color: barColor, minHeight: 10),
         ),
         const SizedBox(height: 6),
-        Text(
-          "$votes votes",
-          style: const TextStyle(
-            fontFamily: 'Nunito Sans',
-            fontSize: 12,
-            fontWeight: FontWeight.w500,
-            color: Color(0xFF9CA3AF),
-          ),
-        ),
+        Text("$votes votes", style: const TextStyle(fontFamily: 'Nunito Sans', fontSize: 12, fontWeight: FontWeight.w500, color: Color(0xFF9CA3AF))),
       ],
     );
   }
