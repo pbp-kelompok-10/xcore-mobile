@@ -9,7 +9,7 @@ import 'package:xcore_mobile/models/scoreboard_entry.dart';
 
 class LineupService {
   static const String baseUrl =
-      'http://localhost:8000'; // Untuk Android emulator
+      'https://alvin-christian-xcore.pbp.cs.ui.ac.id'; // Untuk Android emulator
 
   static Future<bool> fetchAdminStatus(BuildContext context) async {
     final request = context.watch<CookieRequest>();
@@ -37,16 +37,23 @@ class LineupService {
       );
 
       if (response.statusCode == 200) {
-
         final decoded = utf8.decode(response.bodyBytes);
         final data = json.decode(decoded);
 
         // 🔍 DEBUG RAW
         debugPrint('=== LINEUP DEBUG START ===');
-        debugPrint('Home team code  : ${data['home_lineup']?['team']?['code']}');
-        debugPrint('Away team code  : ${data['away_lineup']?['team']?['code']}');
-        debugPrint('Home team name  : ${data['home_lineup']?['team']?['name']}');
-        debugPrint('Away team name  : ${data['away_lineup']?['team']?['name']}');
+        debugPrint(
+          'Home team code  : ${data['home_lineup']?['team']?['code']}',
+        );
+        debugPrint(
+          'Away team code  : ${data['away_lineup']?['team']?['code']}',
+        );
+        debugPrint(
+          'Home team name  : ${data['home_lineup']?['team']?['name']}',
+        );
+        debugPrint(
+          'Away team name  : ${data['away_lineup']?['team']?['name']}',
+        );
         print('$data');
         debugPrint('=== LINEUP DEBUG END ===');
 

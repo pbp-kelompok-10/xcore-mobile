@@ -4,15 +4,16 @@ import 'dart:typed_data';
 import 'package:http/http.dart' as http;
 import 'package:file_picker/file_picker.dart';
 import 'package:pbp_django_auth/pbp_django_auth.dart';
-import '../../models/player_entry.dart';
-import 'players_page.dart';
+import '../models/player_entry.dart';
+import '../screens/players/players_page.dart';
 
 import 'package:flutter/cupertino.dart';
 import 'package:provider/provider.dart';
 
 class PlayerService {
   // 🔥 Change based on your server
-  static const String baseUrl = "http://localhost:8000/lineup/api";
+  static const String baseUrl =
+      "https://alvin-christian-xcore.pbp.cs.ui.ac.id/lineup/api";
   static bool isAdmin = false;
 
   // GETTER for isAdmin
@@ -43,7 +44,7 @@ class PlayerService {
 
     try {
       final response = await request.get(
-        'http://localhost:8000/auth/is-admin/',
+        'https://alvin-christian-xcore.pbp.cs.ui.ac.id/auth/is-admin/',
       );
 
       // Periksa apakah user terautentikasi DAN apakah admin

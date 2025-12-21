@@ -4,7 +4,7 @@ import 'package:provider/provider.dart';
 import 'package:xcore_mobile/config.dart';
 import 'package:xcore_mobile/models/forum_entry.dart';
 import 'package:xcore_mobile/models/post_entry.dart';
-import 'forum_service.dart';
+import '../../services/forum_service.dart';
 
 class ForumPage extends StatefulWidget {
   final String matchId;

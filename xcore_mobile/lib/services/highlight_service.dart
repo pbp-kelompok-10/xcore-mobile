@@ -3,11 +3,11 @@ import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'package:pbp_django_auth/pbp_django_auth.dart';
 import 'package:provider/provider.dart';
-import '../../models/highlights_entry.dart';
-import '../../models/scoreboard_entry.dart';
+import '../models/highlights_entry.dart';
+import '../models/scoreboard_entry.dart';
 
 class HighlightService {
-  static const String baseUrl = "http://localhost:8000";
+  static const String baseUrl = "https://alvin-christian-xcore.pbp.cs.ui.ac.id";
 
   static Future<bool> fetchAdminStatus(BuildContext context) async {
     final request = context.watch<CookieRequest>();

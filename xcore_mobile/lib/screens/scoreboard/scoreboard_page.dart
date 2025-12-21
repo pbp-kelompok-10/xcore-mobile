@@ -3,9 +3,9 @@ import 'package:xcore_mobile/models/scoreboard_entry.dart';
 import 'package:xcore_mobile/screens/forum/forum_page.dart';
 import 'package:xcore_mobile/screens/scoreboard/admin/add_match_page.dart';
 import 'package:xcore_mobile/screens/scoreboard/admin/edit_match_page.dart';
-import 'package:xcore_mobile/screens/scoreboard/scoreboard_service.dart';
+import 'package:xcore_mobile/services/scoreboard_service.dart';
 import 'package:xcore_mobile/screens/statistik/match_statistik.dart';
-import 'package:xcore_mobile/screens/prediction/prediction_page.dart';
+import 'package:xcore_mobile/screens/prediction/prediction_detail_page.dart';
 import 'package:xcore_mobile/screens/scoreboard/scoreboard_card.dart';
 
 class ScoreboardPage extends StatefulWidget {
@@ -258,15 +258,11 @@ class _ScoreboardPageState extends State<ScoreboardPage> {
                             onTap: () {
                               final status = item.status.toLowerCase();
                               if (status == "upcoming") {
-                                if (widget.onSwitchTab != null) {
-                                  widget.onSwitchTab!(1); // Pindah ke Prediction
-                                } else {
                                   Navigator.push(
                                     context,
                                     MaterialPageRoute(
-                                      builder: (_) => PredictionPage(matchId: item.id)),
+                                      builder: (_) => PredictionDetailPage(matchId: item.id)),
                                   );
-                                }
                               } else {
                                 Navigator.push(
                                   context,

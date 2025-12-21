@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:pbp_django_auth/pbp_django_auth.dart';
 import 'package:provider/provider.dart';
 import 'package:intl/intl.dart';
-import 'package:xcore_mobile/screens/scoreboard/scoreboard_service.dart';
+import 'package:xcore_mobile/services/scoreboard_service.dart';
 
 const List<Map<String, String>> _countryChoices = [
   {'code': 'jp', 'name': 'Japan'},

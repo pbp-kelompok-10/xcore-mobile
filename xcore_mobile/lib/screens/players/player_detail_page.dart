@@ -3,7 +3,7 @@ import 'player_detail_service.dart';
 import '../teams/team_service.dart';
 import '../../models/player_entry.dart';
 import '../../models/team_entry.dart';
-import 'player_service.dart';
+import '../../services/player_service.dart';
 
 class PlayerDetailPage extends StatefulWidget {
   final int playerId;

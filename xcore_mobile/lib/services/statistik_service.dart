@@ -6,9 +6,9 @@ import 'package:provider/provider.dart';
 import 'package:xcore_mobile/models/statistik_entry.dart';
 
 class StatistikService {
-  // static const String baseUrl = 'http://localhost:8000';
+  // static const String baseUrl = 'https://alvin-christian-xcore.pbp.cs.ui.ac.id';
   static const String baseUrl =
-      'http://localhost:8000'; // iOS/Web
+      'https://alvin-christian-xcore.pbp.cs.ui.ac.id'; // iOS/Web
 
   static Future<bool> fetchAdminStatus(BuildContext context) async {
     final request = context.watch<CookieRequest>();

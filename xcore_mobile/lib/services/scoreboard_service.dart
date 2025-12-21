@@ -7,7 +7,7 @@ import 'package:xcore_mobile/models/scoreboard_entry.dart';
 import 'package:xcore_mobile/config.dart';
 
 class ScoreboardService {
-  static const String baseUrl = 'http://localhost:8000';
+  static const String baseUrl = 'https://alvin-christian-xcore.pbp.cs.ui.ac.id';
 
   static Future<bool> fetchAdminStatus(BuildContext context) async {
     final request = context.watch<CookieRequest>();
@@ -28,7 +28,7 @@ class ScoreboardService {
 
   static Future<List<ScoreboardEntry>> fetchScoreboard() async {
     final url = Uri.parse(
-      'http://localhost:8000/scoreboard/json/',
+      'https://alvin-christian-xcore.pbp.cs.ui.ac.id/scoreboard/json/',
     );
 
     final response = await http.get(

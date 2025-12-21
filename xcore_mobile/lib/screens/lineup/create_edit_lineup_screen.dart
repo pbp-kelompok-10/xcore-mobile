@@ -1,6 +1,6 @@
 // lineup/create_edit_lineup_screen.dart
 import 'package:flutter/material.dart';
-import 'package:xcore_mobile/screens/lineup/lineup_service.dart';
+import 'package:xcore_mobile/services/lineup_service.dart';
 import 'package:xcore_mobile/models/lineup_entry.dart';
 import 'package:xcore_mobile/models/scoreboard_entry.dart';
 

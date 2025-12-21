@@ -2,10 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:pbp_django_auth/pbp_django_auth.dart';
 import 'package:provider/provider.dart';
 import 'package:xcore_mobile/models/statistik_entry.dart'; 
-import 'statistik_service.dart';
+import '../../services/statistik_service.dart';
 import '../scoreboard/scoreboard_page.dart';
 import '../forum/forum_page.dart';
-import '../prediction/prediction_page.dart';
+import '../prediction/prediction_detail_page.dart';
 import '../highlight/highlight_page.dart';
 import '../lineup/lineup_page.dart';
 import 'widgets/header_section.dart';
@@ -116,7 +116,8 @@ class _MatchStatisticsPageState extends State<MatchStatisticsPage> {
   void _navigateToPrediction() {
     Navigator.push(
       context,
-      MaterialPageRoute(builder: (context) => PredictionPage()),
+      MaterialPageRoute(
+        builder: (_) => PredictionDetailPage(matchId: widget.matchId)),
     );
   }
 
@@ -652,7 +653,7 @@ class _MatchStatisticsPageState extends State<MatchStatisticsPage> {
     return _statistik != null;
   }
 
-  // Helper method untuk membuat statistik row dengan centering
+  // Helper method untuk membuat statistik row dengan centering - UKURAN LEBIH KECIL LAGI
   Widget _buildStatistikRowWithCentering({
     required String title,
     required int homeValue,
@@ -660,29 +661,29 @@ class _MatchStatisticsPageState extends State<MatchStatisticsPage> {
     required IconData icon,
   }) {
     return Container(
-      padding: EdgeInsets.symmetric(vertical: 14, horizontal: 16),
+      padding: EdgeInsets.symmetric(vertical: 8, horizontal: 8), // Diperkecil lagi
       decoration: BoxDecoration(
         border: Border(bottom: BorderSide(color: primaryColor.withOpacity(0.1))),
       ),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          // Home value
+          // Home value - UKURAN LEBIH KECIL
           Expanded(
             flex: 2,
             child: Center(
               child: Container(
-                width: 40,
-                padding: EdgeInsets.symmetric(vertical: 6, horizontal: 8),
+                width: 28, // Diperkecil lagi
+                padding: EdgeInsets.symmetric(vertical: 3, horizontal: 4), // Diperkecil lagi
                 decoration: BoxDecoration(
                   color: primaryColor.withOpacity(0.1),
-                  borderRadius: BorderRadius.circular(8),
+                  borderRadius: BorderRadius.circular(5),
                   border: Border.all(color: primaryColor.withOpacity(0.3)),
                 ),
                 child: Text(
                   homeValue.toString(),
                   style: TextStyle(
-                    fontSize: 16,
+                    fontSize: 12, // Diperkecil lagi
                     fontWeight: FontWeight.bold,
                     color: darkTextColor,
                   ),
@@ -692,45 +693,49 @@ class _MatchStatisticsPageState extends State<MatchStatisticsPage> {
             ),
           ),
           
-          // Title dengan icon
+          // Title dengan icon - UKURAN LEBIH KECIL
           Expanded(
             flex: 3,
             child: Center(
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  Icon(icon, size: 16, color: primaryColor),
-                  SizedBox(width: 6),
-                  Text(
-                    title,
-                    style: TextStyle(
-                      fontSize: 14,
-                      fontWeight: FontWeight.w600,
-                      color: darkTextColor,
+                  Icon(icon, size: 12, color: primaryColor), // Diperkecil lagi
+                  SizedBox(width: 4), 
+                  Flexible(
+                    child: Text(
+                      title,
+                      style: TextStyle(
+                        fontSize: 10, // Diperkecil lagi
+                        fontWeight: FontWeight.w600,
+                        color: darkTextColor,
+                      ),
+                      textAlign: TextAlign.center,
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
                     ),
-                    textAlign: TextAlign.center,
                   ),
                 ],
               ),
             ),
           ),
           
-          // Away value
+          // Away value - UKURAN LEBIH KECIL
           Expanded(
             flex: 2,
             child: Center(
               child: Container(
-                width: 40,
-                padding: EdgeInsets.symmetric(vertical: 6, horizontal: 8),
+                width: 28, // Diperkecil lagi
+                padding: EdgeInsets.symmetric(vertical: 3, horizontal: 4), // Diperkecil lagi
                 decoration: BoxDecoration(
                   color: accentColor.withOpacity(0.1),
-                  borderRadius: BorderRadius.circular(8),
+                  borderRadius: BorderRadius.circular(5),
                   border: Border.all(color: accentColor.withOpacity(0.3)),
                 ),
                 child: Text(
                   awayValue.toString(),
                   style: TextStyle(
-                    fontSize: 16,
+                    fontSize: 12, // Diperkecil lagi
                     fontWeight: FontWeight.bold,
                     color: darkTextColor,
                   ),
@@ -772,55 +777,55 @@ class _MatchStatisticsPageState extends State<MatchStatisticsPage> {
             ),
           ),
           
-          SizedBox(height: 24),
+          SizedBox(height: 16), // Diperkecil lagi
           
-          // Statistics Section Title
+          // Statistics Section Title - UKURAN LEBIH KECIL
           Padding(
             padding: EdgeInsets.symmetric(horizontal: 16),
             child: Row(
               children: [
-                Icon(Icons.analytics, size: 20, color: primaryColor),
-                SizedBox(width: 8),
+                Icon(Icons.analytics, size: 16, color: primaryColor), // Diperkecil lagi
+                SizedBox(width: 6), 
                 Text(
                   'STATISTIK PERTANDINGAN',
                   style: TextStyle(
-                    fontSize: 16,
+                    fontSize: 13, // Diperkecil lagi
                     fontWeight: FontWeight.bold,
                     color: darkTextColor,
-                    letterSpacing: 0.5,
+                    letterSpacing: 0.2,
                   ),
                 ),
               ],
             ),
           ),
           
-          SizedBox(height: 12),
+          SizedBox(height: 8), // Diperkecil lagi
           
-          // Statistics Table yang DIKEMBALIKAN ke format asli
+          // Statistics Table yang DIKEMBALIKAN ke format asli - UKURAN LEBIH KECIL
           Padding(
             padding: EdgeInsets.symmetric(horizontal: 16),
             child: Container(
               decoration: BoxDecoration(
                 color: whiteColor,
-                borderRadius: BorderRadius.circular(12),
+                borderRadius: BorderRadius.circular(8), // Diperkecil lagi
                 boxShadow: [
                   BoxShadow(
                     color: Colors.black.withOpacity(0.05),
-                    blurRadius: 8,
-                    offset: Offset(0, 2),
+                    blurRadius: 4, // Diperkecil lagi
+                    offset: Offset(0, 1),
                   ),
                 ],
               ),
               child: Column(
                 children: [
-                  // Statistics Header dengan NAMA TIM dan STATISTIK di tengah
+                  // Statistics Header dengan NAMA TIM dan STATISTIK di tengah - UKURAN LEBIH KECIL
                   Container(
-                    padding: EdgeInsets.all(16),
+                    padding: EdgeInsets.symmetric(vertical: 8, horizontal: 8), // Diperkecil lagi
                     decoration: BoxDecoration(
                       color: primaryColor,
                       borderRadius: BorderRadius.only(
-                        topLeft: Radius.circular(12),
-                        topRight: Radius.circular(12),
+                        topLeft: Radius.circular(8),
+                        topRight: Radius.circular(8),
                       ),
                     ),
                     child: Row(
@@ -835,10 +840,11 @@ class _MatchStatisticsPageState extends State<MatchStatisticsPage> {
                               style: TextStyle(
                                 color: whiteColor,
                                 fontWeight: FontWeight.bold,
-                                fontSize: 12,
+                                fontSize: 10, // Diperkecil lagi
                               ),
                               textAlign: TextAlign.center,
                               overflow: TextOverflow.ellipsis,
+                              maxLines: 1,
                             ),
                           ),
                         ),
@@ -848,18 +854,18 @@ class _MatchStatisticsPageState extends State<MatchStatisticsPage> {
                           flex: 1,
                           child: Center(
                             child: Container(
-                              padding: EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                              padding: EdgeInsets.symmetric(horizontal: 6, vertical: 3), // Diperkecil lagi
                               decoration: BoxDecoration(
                                 color: whiteColor.withOpacity(0.2),
-                                borderRadius: BorderRadius.circular(20),
+                                borderRadius: BorderRadius.circular(12), // Diperkecil lagi
                               ),
                               child: Text(
                                 'STATISTIK',
                                 style: TextStyle(
                                   color: whiteColor,
                                   fontWeight: FontWeight.bold,
-                                  fontSize: 12,
-                                  letterSpacing: 0.5,
+                                  fontSize: 9, // Diperkecil lagi
+                                  letterSpacing: 0.2,
                                 ),
                               ),
                             ),
@@ -875,10 +881,11 @@ class _MatchStatisticsPageState extends State<MatchStatisticsPage> {
                               style: TextStyle(
                                 color: whiteColor,
                                 fontWeight: FontWeight.bold,
-                                fontSize: 12,
+                                fontSize: 10, // Diperkecil lagi
                               ),
                               textAlign: TextAlign.center,
                               overflow: TextOverflow.ellipsis,
+                              maxLines: 1,
                             ),
                           ),
                         ),
@@ -893,7 +900,7 @@ class _MatchStatisticsPageState extends State<MatchStatisticsPage> {
                     awayValue: _statistik!.awayPasses,
                     icon: Icons.swap_horiz,
                   ),
-                  Divider(height: 1, color: Colors.grey[200]),
+                  Divider(height: 0.5, color: Colors.grey[200]),
                   
                   _buildStatistikRowWithCentering(
                     title: 'Total Shots',
@@ -901,7 +908,7 @@ class _MatchStatisticsPageState extends State<MatchStatisticsPage> {
                     awayValue: _statistik!.awayShots,
                     icon: Icons.sports_soccer,
                   ),
-                  Divider(height: 1, color: Colors.grey[200]),
+                  Divider(height: 0.5, color: Colors.grey[200]),
                   
                   _buildStatistikRowWithCentering(
                     title: 'Shots on Target',
@@ -909,11 +916,11 @@ class _MatchStatisticsPageState extends State<MatchStatisticsPage> {
                     awayValue: _statistik!.awayShotsOnTarget,
                     icon: Icons.flag,
                   ),
-                  Divider(height: 1, color: Colors.grey[200]),
+                  Divider(height: 0.5, color: Colors.grey[200]),
                   
-                  // Ball Possession dengan % di samping angka
+                  // Ball Possession dengan % di samping angka - UKURAN LEBIH KECIL
                   Container(
-                    padding: EdgeInsets.symmetric(vertical: 14, horizontal: 16),
+                    padding: EdgeInsets.symmetric(vertical: 8, horizontal: 8), // Diperkecil lagi
                     decoration: BoxDecoration(
                       border: Border(bottom: BorderSide(color: primaryColor.withOpacity(0.1))),
                       gradient: LinearGradient(
@@ -930,11 +937,11 @@ class _MatchStatisticsPageState extends State<MatchStatisticsPage> {
                           flex: 2,
                           child: Center(
                             child: Container(
-                              width: 60,
-                              padding: EdgeInsets.symmetric(vertical: 6, horizontal: 8),
+                              width: 40, // Diperkecil lagi
+                              padding: EdgeInsets.symmetric(vertical: 3, horizontal: 4), // Diperkecil lagi
                               decoration: BoxDecoration(
                                 color: primaryColor.withOpacity(0.1),
-                                borderRadius: BorderRadius.circular(8),
+                                borderRadius: BorderRadius.circular(5),
                                 border: Border.all(color: primaryColor.withOpacity(0.3)),
                               ),
                               child: Row(
@@ -944,16 +951,16 @@ class _MatchStatisticsPageState extends State<MatchStatisticsPage> {
                                   Text(
                                     _statistik!.homePossession.toStringAsFixed(0),
                                     style: TextStyle(
-                                      fontSize: 16,
+                                      fontSize: 12, // Diperkecil lagi
                                       fontWeight: FontWeight.bold,
                                       color: darkTextColor,
                                     ),
                                   ),
-                                  SizedBox(width: 2),
+                                  SizedBox(width: 1), // Diperkecil
                                   Text(
                                     '%',
                                     style: TextStyle(
-                                      fontSize: 12,
+                                      fontSize: 9, // Diperkecil lagi
                                       fontWeight: FontWeight.w500,
                                       color: darkTextColor,
                                     ),
@@ -964,23 +971,27 @@ class _MatchStatisticsPageState extends State<MatchStatisticsPage> {
                           ),
                         ),
                         
-                        // Title di tengah
+                        // Title di tengah - UKURAN LEBIH KECIL
                         Expanded(
                           flex: 3,
                           child: Center(
                             child: Row(
                               mainAxisAlignment: MainAxisAlignment.center,
                               children: [
-                                Icon(Icons.pie_chart, size: 16, color: primaryColor),
-                                SizedBox(width: 6),
-                                Text(
-                                  'Ball Possession',
-                                  style: TextStyle(
-                                    fontSize: 14,
-                                    fontWeight: FontWeight.w600,
-                                    color: darkTextColor,
+                                Icon(Icons.pie_chart, size: 12, color: primaryColor), // Diperkecil lagi
+                                SizedBox(width: 4), 
+                                Flexible(
+                                  child: Text(
+                                    'Ball Possession',
+                                    style: TextStyle(
+                                      fontSize: 10, // Diperkecil lagi
+                                      fontWeight: FontWeight.w600,
+                                      color: darkTextColor,
+                                    ),
+                                    textAlign: TextAlign.center,
+                                    maxLines: 1,
+                                    overflow: TextOverflow.ellipsis,
                                   ),
-                                  textAlign: TextAlign.center,
                                 ),
                               ],
                             ),
@@ -992,11 +1003,11 @@ class _MatchStatisticsPageState extends State<MatchStatisticsPage> {
                           flex: 2,
                           child: Center(
                             child: Container(
-                              width: 60,
-                              padding: EdgeInsets.symmetric(vertical: 6, horizontal: 8),
+                              width: 40, // Diperkecil lagi
+                              padding: EdgeInsets.symmetric(vertical: 3, horizontal: 4), // Diperkecil lagi
                               decoration: BoxDecoration(
                                 color: accentColor.withOpacity(0.1),
-                                borderRadius: BorderRadius.circular(8),
+                                borderRadius: BorderRadius.circular(5),
                                 border: Border.all(color: accentColor.withOpacity(0.3)),
                               ),
                               child: Row(
@@ -1006,16 +1017,16 @@ class _MatchStatisticsPageState extends State<MatchStatisticsPage> {
                                   Text(
                                     _statistik!.awayPossession.toStringAsFixed(0),
                                     style: TextStyle(
-                                      fontSize: 16,
+                                      fontSize: 12, // Diperkecil lagi
                                       fontWeight: FontWeight.bold,
                                       color: darkTextColor,
                                     ),
                                   ),
-                                  SizedBox(width: 2),
+                                  SizedBox(width: 1), // Diperkecil
                                   Text(
                                     '%',
                                     style: TextStyle(
-                                      fontSize: 12,
+                                      fontSize: 9, // Diperkecil lagi
                                       fontWeight: FontWeight.w500,
                                       color: darkTextColor,
                                     ),
@@ -1028,7 +1039,7 @@ class _MatchStatisticsPageState extends State<MatchStatisticsPage> {
                       ],
                     ),
                   ),
-                  Divider(height: 1, color: Colors.grey[200]),
+                  Divider(height: 0.5, color: Colors.grey[200]),
                   
                   _buildStatistikRowWithCentering(
                     title: 'Yellow Cards',
@@ -1036,7 +1047,7 @@ class _MatchStatisticsPageState extends State<MatchStatisticsPage> {
                     awayValue: _statistik!.awayYellowCards,
                     icon: Icons.warning,
                   ),
-                  Divider(height: 1, color: Colors.grey[200]),
+                  Divider(height: 0.5, color: Colors.grey[200]),
                   
                   _buildStatistikRowWithCentering(
                     title: 'Red Cards',
@@ -1044,7 +1055,7 @@ class _MatchStatisticsPageState extends State<MatchStatisticsPage> {
                     awayValue: _statistik!.awayRedCards,
                     icon: Icons.error,
                   ),
-                  Divider(height: 1, color: Colors.grey[200]),
+                  Divider(height: 0.5, color: Colors.grey[200]),
                   
                   _buildStatistikRowWithCentering(
                     title: 'Offsides',
@@ -1052,7 +1063,7 @@ class _MatchStatisticsPageState extends State<MatchStatisticsPage> {
                     awayValue: _statistik!.awayOffsides,
                     icon: Icons.gps_not_fixed,
                   ),
-                  Divider(height: 1, color: Colors.grey[200]),
+                  Divider(height: 0.5, color: Colors.grey[200]),
                   
                   _buildStatistikRowWithCentering(
                     title: 'Corners',
@@ -1065,27 +1076,27 @@ class _MatchStatisticsPageState extends State<MatchStatisticsPage> {
             ),
           ),
           
-          SizedBox(height: 32),
+          SizedBox(height: 20), // Diperkecil lagi
           
-          // Info footer dengan LEBAR KONSISTEN
+          // Info footer dengan LEBAR KONSISTEN - UKURAN LEBIH KECIL
           Padding(
             padding: EdgeInsets.symmetric(horizontal: 16),
             child: Container(
-              padding: EdgeInsets.all(12),
+              padding: EdgeInsets.all(8), // Diperkecil lagi
               decoration: BoxDecoration(
                 color: primaryColor.withOpacity(0.05),
-                borderRadius: BorderRadius.circular(8),
+                borderRadius: BorderRadius.circular(6),
                 border: Border.all(color: primaryColor.withOpacity(0.1)),
               ),
               child: Row(
                 children: [
-                  Icon(Icons.info_outline, size: 16, color: primaryColor),
-                  SizedBox(width: 8),
+                  Icon(Icons.info_outline, size: 12, color: primaryColor), // Diperkecil lagi
+                  SizedBox(width: 6), 
                   Expanded(
                     child: Text(
                       'Statistik diperbarui secara real-time selama pertandingan berlangsung',
                       style: TextStyle(
-                        fontSize: 11,
+                        fontSize: 9, // Diperkecil lagi
                         color: mutedTextColor,
                       ),
                     ),
@@ -1095,7 +1106,7 @@ class _MatchStatisticsPageState extends State<MatchStatisticsPage> {
             ),
           ),
           
-          SizedBox(height: 32),
+          SizedBox(height: 20), // Diperkecil lagi
         ],
       ),
     );

@@ -2,7 +2,7 @@
 import 'package:flutter/material.dart';
 import 'package:pbp_django_auth/pbp_django_auth.dart';
 import 'package:provider/provider.dart';
-import 'package:xcore_mobile/screens/lineup/lineup_service.dart';
+import 'package:xcore_mobile/services/lineup_service.dart';
 import 'package:xcore_mobile/models/lineup_entry.dart';
 import 'package:xcore_mobile/models/scoreboard_entry.dart';
 import 'package:xcore_mobile/screens/lineup/lineup_detail_screen.dart';
