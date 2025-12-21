@@ -5,7 +5,7 @@ import 'package:xcore_mobile/models/statistik_entry.dart';
 import '../../services/statistik_service.dart';
 import '../scoreboard/scoreboard_page.dart';
 import '../forum/forum_page.dart';
-import '../prediction/prediction_page.dart';
+import '../prediction/prediction_detail_page.dart';
 import '../highlight/highlight_page.dart';
 import '../lineup/lineup_page.dart';
 import 'widgets/header_section.dart';
@@ -116,7 +116,8 @@ class _MatchStatisticsPageState extends State<MatchStatisticsPage> {
   void _navigateToPrediction() {
     Navigator.push(
       context,
-      MaterialPageRoute(builder: (context) => PredictionPage()),
+      MaterialPageRoute(
+        builder: (_) => PredictionDetailPage(matchId: widget.matchId)),
     );
   }
 

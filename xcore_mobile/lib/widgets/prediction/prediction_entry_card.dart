@@ -28,10 +28,32 @@ class PredictionEntryCard extends StatelessWidget {
     int homePct = prediction.homePercentage.clamp(0, 100);
     int awayPct = prediction.awayPercentage.clamp(0, 100);
 
-    // Format Tanggal gabung jam: "31 Dec, 19:00" (Dipersingkat biar muat 1 baris)
-    final String shortDateString = DateFormat(
-      'd MMM, HH:mm',
-    ).format(prediction.matchDate);
+    // Format Tanggal
+    final String shortDateString = DateFormat('d MMM, HH:mm').format(prediction.matchDate);
+
+    // --- LOGIKA STATUS (UPCOMING / LIVE / FINISHED) ---
+    String statusText;
+    Color statusBgColor;
+    Color statusTextColor;
+    bool isUpcoming = false;
+
+    String rawStatus = prediction.status.toUpperCase(); // Pastikan huruf besar
+
+    if (rawStatus == 'LIVE') {
+      statusText = "● LIVE";
+      statusBgColor = Colors.red.shade50;
+      statusTextColor = Colors.red.shade700;
+    } else if (rawStatus == 'FINISHED') {
+      statusText = "✅ FINISHED";
+      statusBgColor = const Color(0xFFD1FAE5);
+      statusTextColor = const Color(0xFF065F46);
+    } else {
+      // Default: UPCOMING
+      isUpcoming = true; // Tandai kalau ini upcoming
+      statusText = "⏰ UPCOMING";
+      statusBgColor = const Color(0xFFFEF3C7);
+      statusTextColor = const Color(0xFF92400E);
+    }
 
     return Container(
       margin: const EdgeInsets.only(bottom: 16),
@@ -44,28 +66,21 @@ class PredictionEntryCard extends StatelessWidget {
         color: whiteLight,
         child: Column(
           children: [
-            // 1. STATUS BADGE
+            // 1. STATUS BADGE (Dinamis Sesuai Status)
             Align(
               alignment: Alignment.centerLeft,
               child: Container(
                 margin: const EdgeInsets.only(top: 16, left: 16),
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 12,
-                  vertical: 6,
-                ),
+                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                 decoration: BoxDecoration(
-                  color: prediction.status == "UPCOMING"
-                      ? const Color(0xFFFEF3C7)
-                      : const Color(0xFFD1FAE5),
+                  color: statusBgColor,
                   borderRadius: BorderRadius.circular(20),
                 ),
                 child: Text(
-                  prediction.status == "UPCOMING" ? "⏰ UPCOMING" : "✅ FINISHED",
+                  statusText,
                   style: TextStyle(
                     fontFamily: 'Nunito Sans',
-                    color: prediction.status == "UPCOMING"
-                        ? const Color(0xFF92400E)
-                        : const Color(0xFF065F46),
+                    color: statusTextColor,
                     fontWeight: FontWeight.w700,
                     fontSize: 11,
                     letterSpacing: 0.5,
@@ -76,12 +91,7 @@ class PredictionEntryCard extends StatelessWidget {
 
             // 2. TIM & VS
             Padding(
-              padding: const EdgeInsets.fromLTRB(
-                16,
-                16,
-                16,
-                12,
-              ), // Bottom padding dikurangi
+              padding: const EdgeInsets.fromLTRB(16, 16, 16, 12),
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -116,15 +126,9 @@ class PredictionEntryCard extends StatelessWidget {
 
                   // VS
                   Padding(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 8.0,
-                      vertical: 8,
-                    ),
+                    padding: const EdgeInsets.symmetric(horizontal: 8.0, vertical: 8),
                     child: Container(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 12,
-                        vertical: 6,
-                      ),
+                      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                       decoration: BoxDecoration(
                         color: primaryTeal.withOpacity(0.1),
                         borderRadius: BorderRadius.circular(10),
@@ -172,24 +176,18 @@ class PredictionEntryCard extends StatelessWidget {
               ),
             ),
 
-            // 3. INFO BOX (SATU BARIS & WRAP CONTENT)
+            // 3. INFO BOX (Tanggal & Stadium)
             Container(
               padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 16),
               decoration: BoxDecoration(
-                color: const Color(0xFFF8FAFC), // Lebih terang dikit
-                borderRadius: BorderRadius.circular(20), // Lebih bulat
+                color: const Color(0xFFF8FAFC),
+                borderRadius: BorderRadius.circular(20),
                 border: Border.all(color: Colors.grey.shade200),
               ),
               child: Row(
-                mainAxisSize:
-                    MainAxisSize.min, // <--- INI KUNCINYA: Wrap Content
+                mainAxisSize: MainAxisSize.min,
                 children: [
-                  // Tanggal
-                  const Icon(
-                    Icons.calendar_month_rounded,
-                    size: 14,
-                    color: Color(0xFF6B7280),
-                  ),
+                  const Icon(Icons.calendar_month_rounded, size: 14, color: Color(0xFF6B7280)),
                   const SizedBox(width: 6),
                   Text(
                     shortDateString,
@@ -200,24 +198,15 @@ class PredictionEntryCard extends StatelessWidget {
                       color: Color(0xFF374151),
                     ),
                   ),
-
-                  // Divider Kecil
                   Container(
                     margin: const EdgeInsets.symmetric(horizontal: 12),
                     width: 1,
                     height: 12,
                     color: Colors.grey.shade400,
                   ),
-
-                  // Stadium
-                  const Icon(
-                    Icons.location_on_rounded,
-                    size: 14,
-                    color: Color(0xFFEF4444),
-                  ),
+                  const Icon(Icons.location_on_rounded, size: 14, color: Color(0xFFEF4444)),
                   const SizedBox(width: 4),
                   Flexible(
-                    // Pakai Flexible biar kalau kepanjangan dia motong rapi
                     child: Text(
                       prediction.stadium,
                       style: const TextStyle(
@@ -235,90 +224,82 @@ class PredictionEntryCard extends StatelessWidget {
 
             const SizedBox(height: 20),
 
-            // 4. RESULT BARS
+            // 4. RESULT BARS (Selalu muncul di semua status)
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 20),
               child: Column(
                 children: [
-                  _buildResultRow(
-                    prediction.homeTeam,
-                    homePct,
-                    prediction.votesHomeTeam,
-                    primaryTeal,
-                    textDark,
-                  ),
+                  _buildResultRow(prediction.homeTeam, homePct, prediction.votesHomeTeam, primaryTeal, textDark),
                   const SizedBox(height: 12),
-                  _buildResultRow(
-                    prediction.awayTeam,
-                    awayPct,
-                    prediction.votesAwayTeam,
-                    primaryTeal,
-                    textDark,
-                  ),
+                  _buildResultRow(prediction.awayTeam, awayPct, prediction.votesAwayTeam, primaryTeal, textDark),
                 ],
               ),
             ),
 
             const SizedBox(height: 24),
 
-            // 5. ACTION BUTTONS
-            Padding(
-              padding: const EdgeInsets.only(left: 20, right: 20, bottom: 20),
-              child: !showActions
-                  ? SizedBox(
-                      width: double.infinity,
-                      height: 44, // Sedikit lebih ramping
-                      child: ElevatedButton(
-                        onPressed: onTap,
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: primaryTeal,
-                          foregroundColor: whiteLight,
-                          elevation: 0,
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(12),
+            // 5. ACTION BUTTONS (HANYA MUNCUL JIKA UPCOMING)
+            if (isUpcoming) 
+              Padding(
+                padding: const EdgeInsets.only(left: 20, right: 20, bottom: 20),
+                child: !showActions
+                    ? SizedBox(
+                        width: double.infinity,
+                        height: 44,
+                        child: ElevatedButton(
+                          onPressed: onTap,
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: primaryTeal,
+                            foregroundColor: whiteLight,
+                            elevation: 0,
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                          ),
+                          child: const Text(
+                            "🗳️ Vote Now",
+                            style: TextStyle(
+                              fontFamily: 'Nunito Sans',
+                              fontSize: 15,
+                              fontWeight: FontWeight.w700,
+                            ),
                           ),
                         ),
-                        child: const Text(
-                          "🗳️ Vote Now",
-                          style: TextStyle(
-                            fontFamily: 'Nunito Sans',
-                            fontSize: 15,
-                            fontWeight: FontWeight.w700,
+                      )
+                    : Row(
+                        children: [
+                          Expanded(
+                            child: _buildActionButton(
+                              label: "Delete",
+                              icon: Icons.delete_outline,
+                              color: const Color(0xFFEF4444),
+                              isOutlined: true,
+                              onTap: onDelete,
+                            ),
                           ),
-                        ),
+                          const SizedBox(width: 12),
+                          Expanded(
+                            child: _buildActionButton(
+                              label: "Update",
+                              icon: Icons.edit_outlined,
+                              color: primaryTeal,
+                              isOutlined: false,
+                              onTap: onUpdate,
+                            ),
+                          ),
+                        ],
                       ),
-                    )
-                  : Row(
-                      children: [
-                        Expanded(
-                          child: _buildActionButton(
-                            label: "Delete",
-                            icon: Icons.delete_outline,
-                            color: const Color(0xFFEF4444),
-                            isOutlined: true,
-                            onTap: onDelete,
-                          ),
-                        ),
-                        const SizedBox(width: 12),
-                        Expanded(
-                          child: _buildActionButton(
-                            label: "Update",
-                            icon: Icons.edit_outlined,
-                            color: primaryTeal,
-                            isOutlined: false,
-                            onTap: onUpdate,
-                          ),
-                        ),
-                      ],
-                    ),
-            ),
+              )
+            else
+              // Jika LIVE atau FINISHED, beri sedikit jarak bawah saja (tanpa tombol)
+              const SizedBox(height: 20),
           ],
         ),
       ),
     );
   }
 
-  // Helper untuk Button agar kodingan lebih bersih
+  // ... (Helper widgets _buildActionButton dan _buildResultRow tetap sama)
   Widget _buildActionButton({
     required String label,
     required IconData icon,
@@ -332,9 +313,7 @@ class PredictionEntryCard extends StatelessWidget {
         color: isOutlined ? Colors.transparent : color,
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(12),
-          side: isOutlined
-              ? BorderSide(color: color, width: 1.5)
-              : BorderSide.none,
+          side: isOutlined ? BorderSide(color: color, width: 1.5) : BorderSide.none,
         ),
         child: InkWell(
           borderRadius: BorderRadius.circular(12),
@@ -360,13 +339,7 @@ class PredictionEntryCard extends StatelessWidget {
     );
   }
 
-  Widget _buildResultRow(
-    String teamName,
-    int percentage,
-    int votes,
-    Color barColor,
-    Color textColor,
-  ) {
+  Widget _buildResultRow(String teamName, int percentage, int votes, Color barColor, Color textColor) {
     final double value = (percentage.clamp(0, 100)) / 100.0;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -374,46 +347,17 @@ class PredictionEntryCard extends StatelessWidget {
         Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
-            Text(
-              teamName,
-              style: TextStyle(
-                fontFamily: 'Nunito Sans',
-                fontWeight: FontWeight.w700,
-                fontSize: 13,
-                color: textColor,
-              ),
-            ),
-            Text(
-              "$percentage%",
-              style: TextStyle(
-                fontFamily: 'Nunito Sans',
-                fontWeight: FontWeight.w800,
-                fontSize: 14,
-                color: barColor,
-              ),
-            ),
+            Text(teamName, style: TextStyle(fontFamily: 'Nunito Sans', fontWeight: FontWeight.w700, fontSize: 13, color: textColor)),
+            Text("$percentage%", style: TextStyle(fontFamily: 'Nunito Sans', fontWeight: FontWeight.w800, fontSize: 14, color: barColor)),
           ],
         ),
         const SizedBox(height: 6),
         ClipRRect(
           borderRadius: BorderRadius.circular(8),
-          child: LinearProgressIndicator(
-            value: value,
-            backgroundColor: const Color(0xFFF3F4F6),
-            color: barColor,
-            minHeight: 8,
-          ),
+          child: LinearProgressIndicator(value: value, backgroundColor: const Color(0xFFF3F4F6), color: barColor, minHeight: 8),
         ),
         const SizedBox(height: 4),
-        Text(
-          "$votes votes",
-          style: const TextStyle(
-            fontFamily: 'Nunito Sans',
-            fontSize: 11,
-            fontWeight: FontWeight.w500,
-            color: Color(0xFF9CA3AF),
-          ),
-        ),
+        Text("$votes votes", style: const TextStyle(fontFamily: 'Nunito Sans', fontSize: 11, fontWeight: FontWeight.w500, color: Color(0xFF9CA3AF))),
       ],
     );
   }

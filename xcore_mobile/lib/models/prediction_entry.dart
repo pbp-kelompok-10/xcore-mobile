@@ -1,6 +1,6 @@
 // To parse this JSON data, do
 //
-//     final prediction = predictionFromJson(jsonString);
+//    final prediction = predictionFromJson(jsonString);
 
 import 'dart:convert';
 
@@ -57,13 +57,17 @@ class Prediction {
         status: json["status"],
         logoHomeTeam: json["logo_home_team"],
         logoAwayTeam: json["logo_away_team"],
-        homeTeamCode: json["home_team_code"],
-        awayTeamCode: json["away_team_code"],
-        votesHomeTeam: json["votes_home_team"],
-        votesAwayTeam: json["votes_away_team"],
-        totalVotes: json["total_votes"],
-        homePercentage: json["home_percentage"],
-        awayPercentage: json["away_percentage"],
+        
+        homeTeamCode: json["home_team_code"] ?? "", 
+        awayTeamCode: json["away_team_code"] ?? "",
+        
+        votesHomeTeam: (json["votes_home_team"] as num?)?.toInt() ?? 0,
+        votesAwayTeam: (json["votes_away_team"] as num?)?.toInt() ?? 0,
+        totalVotes: (json["total_votes"] as num?)?.toInt() ?? 0,
+        homePercentage: (json["home_percentage"] as num?)?.toInt() ?? 0,
+        awayPercentage: (json["away_percentage"] as num?)?.toInt() ?? 0,
+        // ----------------------------------
+
         votes: List<Vote>.from(json["votes"].map((x) => Vote.fromJson(x))),
     );
 
