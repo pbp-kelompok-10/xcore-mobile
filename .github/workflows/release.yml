@@ -48,7 +48,7 @@ jobs:
         working-directory: xcore_mobile
 
       - name: Build APK
-        run: flutter build apk --split-per-abi
+        run: flutter build apk --release
         working-directory: xcore_mobile
 
       - name: Decode Keystore
