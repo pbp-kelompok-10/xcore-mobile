@@ -46,31 +46,31 @@ jobs:
       - name: Get packages
         run: flutter pub get
         working-directory: xcore_mobile
+        
+      - name: Decode Keystore
+        working-directory: xcore_mobile/android
+        run: echo "${{ secrets.KEY_JKS }}" | base64 -d > release-keystore.jks
 
+      - name: Create key.properties
+        working-directory: xcore_mobile/android
+        run: |
+          cat <<EOF > key.properties
+          storePassword=${{ secrets.KEY_PASSWORD }}
+          keyPassword=${{ secrets.KEY_PASSWORD }}
+          keyAlias=release
+          storeFile=release-keystore.jks
+          EOF
+          
       - name: Build APK
         run: flutter build apk --release
         working-directory: xcore_mobile
 
-      - name: Decode Keystore
-        working-directory: xcore_mobile
-        run: echo "${{ secrets.KEY_JKS }}" | base64 -d > release-keystore.jks
-
-      - name: Sign APKs
-        working-directory: xcore_mobile
-        run: |
-          for apk in build/app/outputs/flutter-apk/*.apk; do
-            echo "Signing $apk..."
-            jarsigner -verbose -sigalg SHA256withRSA -digestalg SHA-256 \
-              -keystore release-keystore.jks \
-              -storepass "${{ secrets.KEY_PASSWORD }}" \
-              -keypass "${{ secrets.KEY_PASSWORD }}" \
-              "$apk" release
-          done
-
-      - name: Cleanup Keystore
+      - name: Cleanup signing files
         if: always()
-        run: rm -f release-keystore.jks
-        working-directory: xcore_mobile
+        working-directory: xcore_mobile/android
+        run: |
+          rm -f release-keystore.jks key.properties
+
 
       - name: Get current date
         id: date
