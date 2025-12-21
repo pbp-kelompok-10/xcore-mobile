@@ -13,9 +13,7 @@ class ProfileService {
     String? imageFilename,
   }) async {
     // Sesuaikan URL (Localhost untuk Web, 10.0.2.2 untuk Emulator Android)
-    String url = kIsWeb
-        ? "https://alvin-christian-xcore.pbp.cs.ui.ac.id/profile/update-flutter/"
-        : "http://10.0.2.2:8000/profile/update-flutter/";
+    String url ="https://alvin-christian-xcore.pbp.cs.ui.ac.id/profile/update-flutter/";
 
     // Konversi Image Bytes ke Base64 String
     String? base64Image;
