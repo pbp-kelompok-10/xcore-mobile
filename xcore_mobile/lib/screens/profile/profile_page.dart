@@ -299,7 +299,7 @@ class _ProfilePageState extends State<ProfilePage> {
                   child: ElevatedButton(
                     onPressed: () => _saveProfile(request),
                     style: ElevatedButton.styleFrom(backgroundColor: const Color(0xFF4AA69B), foregroundColor: Colors.white),
-                    child: const Text("💾 Save Changes"),
+                    child: const Text("Save Changes"),
                   ),
                 ),
                 

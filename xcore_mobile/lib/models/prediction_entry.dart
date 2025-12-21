@@ -18,6 +18,8 @@ class Prediction {
     String status;
     dynamic logoHomeTeam;
     dynamic logoAwayTeam;
+    String homeTeamCode;
+    String awayTeamCode;
     int votesHomeTeam;
     int votesAwayTeam;
     int totalVotes;
@@ -35,6 +37,8 @@ class Prediction {
         required this.status,
         required this.logoHomeTeam,
         required this.logoAwayTeam,
+        required this.homeTeamCode,
+        required this.awayTeamCode,
         required this.votesHomeTeam,
         required this.votesAwayTeam,
         required this.totalVotes,
@@ -53,6 +57,8 @@ class Prediction {
         status: json["status"],
         logoHomeTeam: json["logo_home_team"],
         logoAwayTeam: json["logo_away_team"],
+        homeTeamCode: json["home_team_code"],
+        awayTeamCode: json["away_team_code"],
         votesHomeTeam: json["votes_home_team"],
         votesAwayTeam: json["votes_away_team"],
         totalVotes: json["total_votes"],
@@ -71,6 +77,8 @@ class Prediction {
         "status": status,
         "logo_home_team": logoHomeTeam,
         "logo_away_team": logoAwayTeam,
+        "home_team_code": homeTeamCode,
+        "away_team_code": awayTeamCode,
         "votes_home_team": votesHomeTeam,
         "votes_away_team": votesAwayTeam,
         "total_votes": totalVotes,
