@@ -1,5 +1,4 @@
 import 'dart:typed_data'; // Buat Uint8List
-import 'package:flutter/foundation.dart' show kIsWeb; // Buat cek Web/Mobile
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:provider/provider.dart';
@@ -128,9 +127,7 @@ class _ProfilePageState extends State<ProfilePage> {
     final request = context.read<CookieRequest>();
 
     // Pastikan pakai URL logout khusus Flutter yang tadi kita buat di Django
-    String logoutUrl = kIsWeb
-        ? "https://alvin-christian-xcore.pbp.cs.ui.ac.id/logout-flutter/"
-        : "http://10.0.2.2:8000/logout-flutter/";
+    String logoutUrl = "https://alvin-christian-xcore.pbp.cs.ui.ac.id/logout-flutter/";
 
     try {
       // 1. Panggil Logout ke Django
@@ -223,10 +220,7 @@ class _ProfilePageState extends State<ProfilePage> {
 
     // Logic URL Gambar
     if (profilePictureUrl != null && !profilePictureUrl.startsWith('http')) {
-      // Kalau Web pake localhost, kalau Mobile pake 10.0.2.2
-      String baseUrl = kIsWeb
-          ? "https://alvin-christian-xcore.pbp.cs.ui.ac.id"
-          : "http://10.0.2.2:8000";
+      String baseUrl = "https://alvin-christian-xcore.pbp.cs.ui.ac.id";
       profilePictureUrl = "$baseUrl$profilePictureUrl";
     }
 
