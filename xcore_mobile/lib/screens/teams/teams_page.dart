@@ -115,7 +115,9 @@ class _TeamsPageState extends State<TeamsPage> {
 
     try {
       final response = await http.get(
-        Uri.parse("http://localhost:8000/lineup/api/teams/"),
+        Uri.parse(
+          "https://alvin-christian-xcore.pbp.cs.ui.ac.id/lineup/api/teams/",
+        ),
       );
 
       if (!mounted) return;

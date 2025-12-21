@@ -2,13 +2,16 @@ import 'package:pbp_django_auth/pbp_django_auth.dart';
 import 'package:xcore_mobile/models/prediction_entry.dart';
 
 class PredictionService {
-  static const String baseUrl = "http://localhost:8000"; 
+  static const String baseUrl = "https://alvin-christian-xcore.pbp.cs.ui.ac.id";
 
   // --- 1. FETCH DATA (AMBIL DATA) ---
   static Future<List<Prediction>> fetchPredictions(
-      CookieRequest request, String endpoint) async {
+    CookieRequest request,
+    String endpoint,
+  ) async {
     try {
       final response = await request.get("$baseUrl$endpoint");
+      print("Response from $endpoint: $response");
 
       List<Prediction> listData = [];
       for (var d in response) {
@@ -18,6 +21,7 @@ class PredictionService {
       }
       return listData;
     } catch (e) {
+      print("Error fetching predictions from $endpoint: $e");
       return [];
     }
   }
@@ -58,13 +62,13 @@ class PredictionService {
 
   // --- 3. DELETE VOTE ---
   static Future<Map<String, dynamic>> deleteVote(
-      CookieRequest request, String predictionId) async {
+    CookieRequest request,
+    String predictionId,
+  ) async {
     final url = '$baseUrl/prediction/delete-vote-flutter/';
 
     try {
-      final response = await request.post(url, {
-        'prediction_id': predictionId,
-      });
+      final response = await request.post(url, {'prediction_id': predictionId});
 
       if (response['status'] == 'success') {
         return {'status': 'success', 'message': "Vote berhasil dihapus!"};

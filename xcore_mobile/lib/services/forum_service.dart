@@ -10,7 +10,8 @@ import 'package:provider/provider.dart';
 import 'auth_service.dart';
 
 class ForumService {
-  static const String baseUrl = 'http://localhost:8000'; // Ganti URL Django
+  static const String baseUrl =
+      'https://alvin-christian-xcore.pbp.cs.ui.ac.id'; // Ganti URL Django
 
   // Get forum by match ID
   static Future<ForumEntry> fetchForumByMatch(String matchId) async {
@@ -31,12 +32,12 @@ class ForumService {
 
   // Get posts for a forum dengan informasi user, search, filter, dan sort
   static Future<Map<String, dynamic>> fetchPosts(
-      String forumId,
-      BuildContext context, {
-        String? searchQuery,
-        String? authorFilter,
-        String? sortBy,
-      }) async {
+    String forumId,
+    BuildContext context, {
+    String? searchQuery,
+    String? authorFilter,
+    String? sortBy,
+  }) async {
     final request = Provider.of<CookieRequest>(context, listen: false);
 
     try {
@@ -92,10 +93,10 @@ class ForumService {
 
   // Add new post
   static Future<void> addPost(
-      String forumId,
-      String message,
-      BuildContext context,
-      ) async {
+    String forumId,
+    String message,
+    BuildContext context,
+  ) async {
     final request = context.read<CookieRequest>();
 
     try {
@@ -119,11 +120,11 @@ class ForumService {
 
   // Edit post
   static Future<void> editPost(
-      String forumId,
-      String postId,
-      String message,
-      BuildContext context,
-      ) async {
+    String forumId,
+    String postId,
+    String message,
+    BuildContext context,
+  ) async {
     final request = context.read<CookieRequest>();
 
     try {
@@ -147,10 +148,10 @@ class ForumService {
 
   // Delete post
   static Future<void> deletePost(
-      String forumId,
-      String postId,
-      BuildContext context,
-      ) async {
+    String forumId,
+    String postId,
+    BuildContext context,
+  ) async {
     final request = context.read<CookieRequest>();
 
     try {

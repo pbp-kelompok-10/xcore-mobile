@@ -3,7 +3,8 @@ import 'package:http/http.dart' as http;
 import 'dart:convert';
 
 class AuthService {
-  static const String _baseUrl = 'http://localhost:8000';
+  static const String _baseUrl =
+      'https://alvin-christian-xcore.pbp.cs.ui.ac.id';
 
   // Save user data
   static Future<void> saveUserData(

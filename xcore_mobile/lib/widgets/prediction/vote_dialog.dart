@@ -4,7 +4,7 @@ import 'package:pbp_django_auth/pbp_django_auth.dart';
 import 'package:xcore_mobile/models/prediction_entry.dart';
 import 'package:xcore_mobile/screens/login.dart';
 import 'package:xcore_mobile/services/prediction_service.dart';
-import 'package:xcore_mobile/screens/statistik/widgets/flag_widget.dart'; 
+import 'package:xcore_mobile/screens/statistik/widgets/flag_widget.dart';
 
 class VoteDialog extends StatelessWidget {
   final Prediction prediction;
@@ -23,10 +23,15 @@ class VoteDialog extends StatelessWidget {
 
     return Dialog(
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
-      elevation: 0, 
+      elevation: 0,
       backgroundColor: Colors.transparent,
       child: Container(
-        padding: const EdgeInsets.fromLTRB(24, 16, 24, 32), // Padding atas dikurangi sedikit biar X ga kejauhan
+        padding: const EdgeInsets.fromLTRB(
+          24,
+          16,
+          24,
+          32,
+        ), // Padding atas dikurangi sedikit biar X ga kejauhan
         decoration: BoxDecoration(
           color: Colors.white,
           borderRadius: BorderRadius.circular(24),
@@ -49,11 +54,15 @@ class VoteDialog extends StatelessWidget {
                 // Tanpa Container/Border, icon saja
                 child: const Padding(
                   padding: EdgeInsets.all(4.0), // Hitbox biar gampang dipencet
-                  child: Icon(Icons.close_rounded, color: Color(0xFF9CA3AF), size: 24),
+                  child: Icon(
+                    Icons.close_rounded,
+                    color: Color(0xFF9CA3AF),
+                    size: 24,
+                  ),
                 ),
               ),
             ),
-            
+
             // 2. HEADER TEXT (Judul) - Di bawah X
             const SizedBox(height: 4), // Jarak sedikit dari X
             Text(
@@ -77,7 +86,7 @@ class VoteDialog extends StatelessWidget {
                 fontWeight: FontWeight.w500,
               ),
             ),
-            
+
             const SizedBox(height: 32),
 
             // 3. VOTE BUTTONS (Flags)
@@ -86,16 +95,16 @@ class VoteDialog extends StatelessWidget {
                 // HOME BUTTON
                 Expanded(
                   child: _buildVoteButton(
-                    context, 
-                    request, 
-                    teamName: prediction.homeTeam, 
-                    teamCode: prediction.homeTeamCode, 
+                    context,
+                    request,
+                    teamName: prediction.homeTeam,
+                    teamCode: prediction.homeTeamCode ?? '',
                     isHome: true,
                     choice: "home",
                     primaryColor: primaryTeal,
                   ),
                 ),
-                
+
                 // VS Divider
                 Padding(
                   padding: const EdgeInsets.symmetric(horizontal: 16),
@@ -129,10 +138,10 @@ class VoteDialog extends StatelessWidget {
                 // AWAY BUTTON
                 Expanded(
                   child: _buildVoteButton(
-                    context, 
-                    request, 
-                    teamName: prediction.awayTeam, 
-                    teamCode: prediction.awayTeamCode, 
+                    context,
+                    request,
+                    teamName: prediction.awayTeam,
+                    teamCode: prediction.awayTeamCode ?? '',
                     isHome: false,
                     choice: "away",
                     primaryColor: const Color(0xFF56BDA9),
@@ -157,7 +166,7 @@ class VoteDialog extends StatelessWidget {
     required Color primaryColor,
   }) {
     return Material(
-      color: Colors.white, 
+      color: Colors.white,
       borderRadius: BorderRadius.circular(16),
       child: InkWell(
         onTap: () async {
@@ -170,7 +179,10 @@ class VoteDialog extends StatelessWidget {
           padding: const EdgeInsets.symmetric(vertical: 20, horizontal: 8),
           decoration: BoxDecoration(
             borderRadius: BorderRadius.circular(16),
-            border: Border.all(color: primaryColor.withOpacity(0.3), width: 1.5),
+            border: Border.all(
+              color: primaryColor.withOpacity(0.3),
+              width: 1.5,
+            ),
             boxShadow: [
               BoxShadow(
                 color: primaryColor.withOpacity(0.05),
@@ -201,7 +213,7 @@ class VoteDialog extends StatelessWidget {
                 ),
               ),
               const SizedBox(height: 16),
-              
+
               // NAMA TIM
               Text(
                 teamName,
@@ -223,26 +235,38 @@ class VoteDialog extends StatelessWidget {
     );
   }
 
-  Future<void> _handleVote(BuildContext context, CookieRequest request, String choice) async {
+  Future<void> _handleVote(
+    BuildContext context,
+    CookieRequest request,
+    String choice,
+  ) async {
     if (!request.loggedIn) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text("Silakan login terlebih dahulu."), backgroundColor: Color(0xFFF59E0B)),
+        const SnackBar(
+          content: Text("Silakan login terlebih dahulu."),
+          backgroundColor: Color(0xFFF59E0B),
+        ),
       );
-      Navigator.push(context, MaterialPageRoute(builder: (context) => const LoginPage()));
+      Navigator.push(
+        context,
+        MaterialPageRoute(builder: (context) => const LoginPage()),
+      );
       return;
     }
 
     showDialog(
       context: context,
       barrierDismissible: false,
-      builder: (c) => const Center(child: CircularProgressIndicator(color: Color(0xFF4AA69B))),
+      builder: (c) => const Center(
+        child: CircularProgressIndicator(color: Color(0xFF4AA69B)),
+      ),
     );
 
     final result = await PredictionService.voteMatch(
       request: request,
       predictionId: prediction.id,
       choice: choice,
-      isUpdate: isUpdate
+      isUpdate: isUpdate,
     );
 
     if (context.mounted) Navigator.pop(context);
@@ -250,14 +274,20 @@ class VoteDialog extends StatelessWidget {
     if (context.mounted) {
       if (result['status'] == 'success') {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(result['message']), backgroundColor: const Color(0xFF4AA69B)),
+          SnackBar(
+            content: Text(result['message']),
+            backgroundColor: const Color(0xFF4AA69B),
+          ),
         );
         Navigator.pop(context, 'success');
       } else if (result['status'] == 'already_voted') {
         Navigator.pop(context, 'already_voted');
       } else {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(result['message']), backgroundColor: const Color(0xFFEF4444)),
+          SnackBar(
+            content: Text(result['message']),
+            backgroundColor: const Color(0xFFEF4444),
+          ),
         );
       }
     }

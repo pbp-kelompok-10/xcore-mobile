@@ -2,7 +2,8 @@ import 'dart:convert';
 import 'package:http/http.dart' as http;
 
 class TeamCreateUpdateService {
-  static const String baseUrl = "http://localhost:8000/lineup/api";
+  static const String baseUrl =
+      "https://alvin-christian-xcore.pbp.cs.ui.ac.id/lineup/api";
 
   // -----------------------------------------------------------
   // CREATE TEAM

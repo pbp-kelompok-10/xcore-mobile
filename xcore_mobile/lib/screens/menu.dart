@@ -252,7 +252,7 @@ class MyHomePage extends StatelessWidget {
 
     try {
       final response = await request.logout(
-        "http://localhost:8000/auth/logout/",
+        "https://alvin-christian-xcore.pbp.cs.ui.ac.id/auth/logout/",
       );
     } catch (e) {
       print("Logout network error: $e");

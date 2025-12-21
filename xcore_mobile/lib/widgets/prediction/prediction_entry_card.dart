@@ -29,12 +29,16 @@ class PredictionEntryCard extends StatelessWidget {
     int awayPct = prediction.awayPercentage.clamp(0, 100);
 
     // Format Tanggal gabung jam: "31 Dec, 19:00" (Dipersingkat biar muat 1 baris)
-    final String shortDateString = DateFormat('d MMM, HH:mm').format(prediction.matchDate);
+    final String shortDateString = DateFormat(
+      'd MMM, HH:mm',
+    ).format(prediction.matchDate);
 
     return Container(
       margin: const EdgeInsets.only(bottom: 16),
       child: Card(
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16.0)),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(16.0),
+        ),
         elevation: 3,
         shadowColor: Colors.black12,
         color: whiteLight,
@@ -45,7 +49,10 @@ class PredictionEntryCard extends StatelessWidget {
               alignment: Alignment.centerLeft,
               child: Container(
                 margin: const EdgeInsets.only(top: 16, left: 16),
-                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 12,
+                  vertical: 6,
+                ),
                 decoration: BoxDecoration(
                   color: prediction.status == "UPCOMING"
                       ? const Color(0xFFFEF3C7)
@@ -69,7 +76,12 @@ class PredictionEntryCard extends StatelessWidget {
 
             // 2. TIM & VS
             Padding(
-              padding: const EdgeInsets.fromLTRB(16, 16, 16, 12), // Bottom padding dikurangi
+              padding: const EdgeInsets.fromLTRB(
+                16,
+                16,
+                16,
+                12,
+              ), // Bottom padding dikurangi
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -79,7 +91,7 @@ class PredictionEntryCard extends StatelessWidget {
                     child: Column(
                       children: [
                         FlagWidget(
-                          teamCode: prediction.homeTeamCode,
+                          teamCode: prediction.homeTeamCode ?? '',
                           isHome: true,
                           width: 50,
                           height: 35,
@@ -104,9 +116,15 @@ class PredictionEntryCard extends StatelessWidget {
 
                   // VS
                   Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 8.0, vertical: 8),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 8.0,
+                      vertical: 8,
+                    ),
                     child: Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 12,
+                        vertical: 6,
+                      ),
                       decoration: BoxDecoration(
                         color: primaryTeal.withOpacity(0.1),
                         borderRadius: BorderRadius.circular(10),
@@ -128,7 +146,7 @@ class PredictionEntryCard extends StatelessWidget {
                     child: Column(
                       children: [
                         FlagWidget(
-                          teamCode: prediction.awayTeamCode,
+                          teamCode: prediction.awayTeamCode ?? '',
                           isHome: false,
                           width: 50,
                           height: 35,
@@ -163,10 +181,15 @@ class PredictionEntryCard extends StatelessWidget {
                 border: Border.all(color: Colors.grey.shade200),
               ),
               child: Row(
-                mainAxisSize: MainAxisSize.min, // <--- INI KUNCINYA: Wrap Content
+                mainAxisSize:
+                    MainAxisSize.min, // <--- INI KUNCINYA: Wrap Content
                 children: [
                   // Tanggal
-                  const Icon(Icons.calendar_month_rounded, size: 14, color: Color(0xFF6B7280)),
+                  const Icon(
+                    Icons.calendar_month_rounded,
+                    size: 14,
+                    color: Color(0xFF6B7280),
+                  ),
                   const SizedBox(width: 6),
                   Text(
                     shortDateString,
@@ -177,7 +200,7 @@ class PredictionEntryCard extends StatelessWidget {
                       color: Color(0xFF374151),
                     ),
                   ),
-                  
+
                   // Divider Kecil
                   Container(
                     margin: const EdgeInsets.symmetric(horizontal: 12),
@@ -187,9 +210,14 @@ class PredictionEntryCard extends StatelessWidget {
                   ),
 
                   // Stadium
-                  const Icon(Icons.location_on_rounded, size: 14, color: Color(0xFFEF4444)),
+                  const Icon(
+                    Icons.location_on_rounded,
+                    size: 14,
+                    color: Color(0xFFEF4444),
+                  ),
                   const SizedBox(width: 4),
-                  Flexible( // Pakai Flexible biar kalau kepanjangan dia motong rapi
+                  Flexible(
+                    // Pakai Flexible biar kalau kepanjangan dia motong rapi
                     child: Text(
                       prediction.stadium,
                       style: const TextStyle(
@@ -212,9 +240,21 @@ class PredictionEntryCard extends StatelessWidget {
               padding: const EdgeInsets.symmetric(horizontal: 20),
               child: Column(
                 children: [
-                  _buildResultRow(prediction.homeTeam, homePct, prediction.votesHomeTeam, primaryTeal, textDark),
+                  _buildResultRow(
+                    prediction.homeTeam,
+                    homePct,
+                    prediction.votesHomeTeam,
+                    primaryTeal,
+                    textDark,
+                  ),
                   const SizedBox(height: 12),
-                  _buildResultRow(prediction.awayTeam, awayPct, prediction.votesAwayTeam, primaryTeal, textDark),
+                  _buildResultRow(
+                    prediction.awayTeam,
+                    awayPct,
+                    prediction.votesAwayTeam,
+                    primaryTeal,
+                    textDark,
+                  ),
                 ],
               ),
             ),
@@ -292,7 +332,9 @@ class PredictionEntryCard extends StatelessWidget {
         color: isOutlined ? Colors.transparent : color,
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(12),
-          side: isOutlined ? BorderSide(color: color, width: 1.5) : BorderSide.none,
+          side: isOutlined
+              ? BorderSide(color: color, width: 1.5)
+              : BorderSide.none,
         ),
         child: InkWell(
           borderRadius: BorderRadius.circular(12),
@@ -318,7 +360,13 @@ class PredictionEntryCard extends StatelessWidget {
     );
   }
 
-  Widget _buildResultRow(String teamName, int percentage, int votes, Color barColor, Color textColor) {
+  Widget _buildResultRow(
+    String teamName,
+    int percentage,
+    int votes,
+    Color barColor,
+    Color textColor,
+  ) {
     final double value = (percentage.clamp(0, 100)) / 100.0;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -326,17 +374,46 @@ class PredictionEntryCard extends StatelessWidget {
         Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
-            Text(teamName, style: TextStyle(fontFamily: 'Nunito Sans', fontWeight: FontWeight.w700, fontSize: 13, color: textColor)),
-            Text("$percentage%", style: TextStyle(fontFamily: 'Nunito Sans', fontWeight: FontWeight.w800, fontSize: 14, color: barColor)),
+            Text(
+              teamName,
+              style: TextStyle(
+                fontFamily: 'Nunito Sans',
+                fontWeight: FontWeight.w700,
+                fontSize: 13,
+                color: textColor,
+              ),
+            ),
+            Text(
+              "$percentage%",
+              style: TextStyle(
+                fontFamily: 'Nunito Sans',
+                fontWeight: FontWeight.w800,
+                fontSize: 14,
+                color: barColor,
+              ),
+            ),
           ],
         ),
         const SizedBox(height: 6),
         ClipRRect(
           borderRadius: BorderRadius.circular(8),
-          child: LinearProgressIndicator(value: value, backgroundColor: const Color(0xFFF3F4F6), color: barColor, minHeight: 8),
+          child: LinearProgressIndicator(
+            value: value,
+            backgroundColor: const Color(0xFFF3F4F6),
+            color: barColor,
+            minHeight: 8,
+          ),
         ),
         const SizedBox(height: 4),
-        Text("$votes votes", style: const TextStyle(fontFamily: 'Nunito Sans', fontSize: 11, fontWeight: FontWeight.w500, color: Color(0xFF9CA3AF))),
+        Text(
+          "$votes votes",
+          style: const TextStyle(
+            fontFamily: 'Nunito Sans',
+            fontSize: 11,
+            fontWeight: FontWeight.w500,
+            color: Color(0xFF9CA3AF),
+          ),
+        ),
       ],
     );
   }
