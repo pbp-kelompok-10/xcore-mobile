@@ -307,9 +307,9 @@ class _ProfilePageState extends State<ProfilePage> {
                         _isEditing = false;
                         _imageBytes = null; // Reset
                         _imageFilename = null;
-                        _usernameController.text = _userData!['username'];
-                        _emailController.text = _userData!['email'];
-                        _bioController.text = _userData!['bio'];
+                        _usernameController.text = _userData!['username']??"";
+                        _emailController.text = _userData!['email']??"";
+                        _bioController.text = _userData!['bio']??"";
                       });
                     },
                     child: const Text("Cancel"),
