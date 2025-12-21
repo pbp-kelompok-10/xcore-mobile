@@ -199,7 +199,7 @@ class _ProfilePageState extends State<ProfilePage> {
             return const Center(child: CircularProgressIndicator());
           }
           if (snapshot.hasError || !snapshot.hasData) {
-            return const Center(child: Text('Gagal memuat profil.'));
+            return _buildLoggedOutView(context);
           }
 
           _userData = snapshot.data!;
