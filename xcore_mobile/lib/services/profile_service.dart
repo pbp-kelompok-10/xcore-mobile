@@ -1,7 +1,6 @@
 import 'dart:convert';
 import 'dart:typed_data';
 import 'package:pbp_django_auth/pbp_django_auth.dart';
-import 'package:flutter/foundation.dart' show kIsWeb;
 
 class ProfileService {
   static Future<Map<String, dynamic>> updateProfile({
@@ -12,7 +11,6 @@ class ProfileService {
     Uint8List? imageBytes,
     String? imageFilename,
   }) async {
-    // Sesuaikan URL (Localhost untuk Web, 10.0.2.2 untuk Emulator Android)
     String url ="https://alvin-christian-xcore.pbp.cs.ui.ac.id/profile/update-flutter/";
 
     // Konversi Image Bytes ke Base64 String
@@ -47,9 +45,9 @@ class ProfileService {
   static Future<Map<String, dynamic>> getUserProfile(
     CookieRequest request,
   ) async {
-    String url = kIsWeb
-        ? "https://alvin-christian-xcore.pbp.cs.ui.ac.id/profile/json/"
-        : "http://10.0.2.2:8000/profile/json/";
+    String url = "https://alvin-christian-xcore.pbp.cs.ui.ac.id/profile/json/";
+
+
 
     final response = await request.get(url);
     return response;
