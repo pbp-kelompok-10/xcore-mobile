@@ -98,8 +98,6 @@ https://www.figma.com/design/sTyMbtyzsur2K5reeIWjxo/Untitled?node-id=0-1&t=gH3GW
 - **Zita**: Recheck kode & bikin video
 - **Kasa**: Finishing
 - **Garuga**: Bikin video
-<<<<<<< HEAD
-=======
 
 ## 01-07 Desember:
 - **Alvin**: Membuat API Fitur Teams & Players (bagian dari lineup)
@@ -121,4 +119,3 @@ https://www.figma.com/design/sTyMbtyzsur2K5reeIWjxo/Untitled?node-id=0-1&t=gH3GW
 - **Zita**: Recheck kode & bikin video
 - **Kasa**: Finishing
 - **Garuga**: Bikin video
->>>>>>> origin/prod
